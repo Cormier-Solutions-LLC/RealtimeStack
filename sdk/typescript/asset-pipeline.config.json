@@ -60,7 +60,7 @@
     ]
   },
   "budgets": {
-    "optimizedBytes": 12288,
-    "optimizedGzipBytes": 6144
+    "optimizedBytes": 15360,
+    "optimizedGzipBytes": 6656
   }
 }

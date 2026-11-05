@@ -10,6 +10,17 @@ if (!Uri.TryCreate(configuredEndpoint, UriKind.Absolute, out var endpoint)
     return;
 }
 
+if (args.Length == 2 && args[0] == "--task-status")
+{
+    var httpEndpoint = new UriBuilder(endpoint) { Scheme = endpoint.Scheme == "wss" ? "https" : "http", Path = "/", Query = "" }.Uri;
+    using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = httpEndpoint };
+    http.DefaultRequestHeaders.Add("Origin", Environment.GetEnvironmentVariable("REALTIME_ORIGIN"));
+    http.DefaultRequestHeaders.Add("Cookie", Environment.GetEnvironmentVariable("REALTIME_COOKIE"));
+    var saved = await new RealtimePersistenceClient(http).GetTaskStatusAsync(args[1]);
+    Console.WriteLine(saved is null ? "No task found for this account." : $"Task {saved.TaskId}: state={saved.State}; progress={saved.Progress}; error={saved.Error}; finished={saved.FinishedAt}");
+    return;
+}
+
 using var stopping = new CancellationTokenSource();
 Console.CancelKeyPress += (_, eventArgs) =>
 {

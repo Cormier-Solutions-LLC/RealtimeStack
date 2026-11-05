@@ -26,6 +26,8 @@ var CormierRealtime = (() => {
     RealtimeClient: () => RealtimeClient,
     RealtimeConnectionError: () => RealtimeConnectionError,
     RealtimeError: () => RealtimeError,
+    RealtimePersistenceClient: () => RealtimePersistenceClient,
+    RealtimePersistenceError: () => RealtimePersistenceError,
     RealtimeQueueError: () => RealtimeQueueError,
     SDK_VERSION: () => SDK_VERSION,
     WEBSOCKET_SUBPROTOCOL: () => WEBSOCKET_SUBPROTOCOL,
@@ -39,7 +41,7 @@ var CormierRealtime = (() => {
   });
 
   // src/protocol.ts
-  var SDK_VERSION = "1.0.6-beta";
+  var SDK_VERSION = "1.1.0-beta";
   var PROTOCOL_VERSION = "1.0";
   var WEBSOCKET_SUBPROTOCOL = "cormier.realtime.v1";
   var messageTypes = {
@@ -1313,6 +1315,67 @@ var CormierRealtime = (() => {
       super(`Diagnostics stream failed with HTTP ${status}.`);
       this.name = "DiagnosticsStreamHttpError";
       this.isPermanent = status >= 400 && status < 500 && status !== 408 && status !== 429;
+    }
+  };
+
+  // src/persistence.ts
+  var RealtimePersistenceError = class extends Error {
+    constructor(status) {
+      super(`Persistence request failed (${status}).`);
+      this.status = status;
+      this.name = "RealtimePersistenceError";
+    }
+    status;
+  };
+  var RealtimePersistenceClient = class {
+    constructor(basePath = "/realtime/persistence", request = globalThis.fetch.bind(globalThis)) {
+      this.basePath = basePath;
+      this.request = request;
+      if (!basePath.startsWith("/") || basePath.startsWith("//") || /[?#{}\\]/u.test(basePath) || basePath.endsWith("/")) {
+        throw new TypeError("Persistence basePath must be a same-origin absolute route prefix.");
+      }
+    }
+    basePath;
+    request;
+    async read(streamId, kind, afterSequence = 0, limit = 100, signal) {
+      this.id(streamId);
+      this.sequence(afterSequence);
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1e3) throw new RangeError("limit must be between 1 and 1000.");
+      const response = await this.post("records/read", { streamId, kind: this.kind(kind), afterSequence, limit }, signal);
+      return await response.json();
+    }
+    async acknowledge(streamId, kind, throughSequence, signal) {
+      this.id(streamId);
+      this.sequence(throughSequence);
+      await this.post("records/ack", { streamId, kind: this.kind(kind), throughSequence }, signal);
+    }
+    async getTaskStatus(taskId, signal) {
+      this.id(taskId);
+      const response = await this.post("tasks/read", { taskId }, signal, true);
+      return response.status === 404 ? null : await response.json();
+    }
+    async post(path, body, signal, allowMissing = false) {
+      const response = await this.request(`${this.basePath}/${path}`, {
+        method: "POST",
+        credentials: "same-origin",
+        redirect: "error",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        ...signal ? { signal } : {}
+      });
+      if (!response.ok && !(allowMissing && response.status === 404)) throw new RealtimePersistenceError(response.status);
+      return response;
+    }
+    kind(value) {
+      if (value !== "message" && value !== "notification") throw new TypeError("Unknown inbox kind.");
+      return value === "message" ? 0 : 1;
+    }
+    id(value) {
+      if (typeof value !== "string" || value.trim().length === 0 || value.length > 128) throw new TypeError("IDs must contain 1 to 128 characters.");
+    }
+    sequence(value) {
+      if (!Number.isSafeInteger(value) || value < 0) throw new RangeError("Sequence numbers must be nonnegative safe integers.");
     }
   };
   return __toCommonJS(index_exports);

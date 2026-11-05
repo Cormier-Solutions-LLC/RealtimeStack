@@ -32,4 +32,12 @@
              CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <ProjectReference Condition="'$(UseProjectReferences)' == 'true'" Include="../../src/Cormier.Realtime.Config/Cormier.Realtime.Config.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Realtime.Config" Version="$(ContractsVersion)" />
+  </ItemGroup>
 </Project>

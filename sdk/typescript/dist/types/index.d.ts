@@ -3,4 +3,5 @@ export * from "./errors.js";
 export * from "./protocol.js";
 export * from "./diagnostics.js";
 export * from "./transport.js";
+export * from "./persistence.js";
 //# sourceMappingURL=index.d.ts.map

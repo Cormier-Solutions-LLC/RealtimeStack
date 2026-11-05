@@ -1,13 +1,13 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$AspNetCoreIntegrationVersion = '1.0.6-beta',
+    [string]$AspNetCoreIntegrationVersion = '1.1.0-beta',
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$HttpFallbackVersion = '1.0.6-beta',
+    [string]$HttpFallbackVersion = '1.1.0-beta',
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$ContractsVersion = '1.0.6-beta',
+    [string]$ContractsVersion = '1.1.0-beta',
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$RedisAdapterVersion = '1.0.6-beta',
+    [string]$RedisAdapterVersion = '1.1.0-beta',
     [string]$PackageSource,
     [string]$UpstreamPackageSource = $env:NUGET_UPSTREAM_SOURCE
 )
@@ -42,13 +42,12 @@ try {
 "@ | Set-Content -LiteralPath $nugetConfigPath -Encoding utf8NoBOM
 
     if ([string]::IsNullOrWhiteSpace($PackageSource)) {
-        foreach ($project in @(
-            'src/Cormier.Realtime.Contracts/Cormier.Realtime.Contracts.csproj',
-            'src/Cormier.Realtime.Redis/Cormier.Realtime.Redis.csproj',
-            'src/Cormier.Realtime.AspNetCore/Cormier.Realtime.AspNetCore.csproj',
-            'src/Cormier.Realtime.HttpFallback/Cormier.Realtime.HttpFallback.csproj'
-        )) {
-            dotnet pack (Join-Path $repositoryRoot $project) --configuration Release --no-build --output $feedPath `
+        $packableProjects = Get-ChildItem (Join-Path $repositoryRoot 'src') -Recurse -Filter '*.csproj' | Where-Object {
+            [xml]$projectXml = Get-Content -LiteralPath $_.FullName -Raw
+            $projectXml.SelectSingleNode('//IsPackable')?.InnerText -eq 'true'
+        }
+        foreach ($project in $packableProjects.FullName) {
+            dotnet pack $project --configuration Release --no-build --output $feedPath `
                 -p:AspNetCoreIntegrationVersion=$AspNetCoreIntegrationVersion `
                 -p:HttpFallbackVersion=$HttpFallbackVersion `
                 -p:ContractsVersion=$ContractsVersion `
@@ -58,14 +57,8 @@ try {
     }
     else {
         $resolvedPackageSource = (Resolve-Path -LiteralPath $PackageSource -ErrorAction Stop).Path
-        foreach ($package in @(
-            "Realtime.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg",
-            "Realtime.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg",
-            "Realtime.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg",
-            "Realtime.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg"
-        )) {
-            Copy-Item -LiteralPath (Join-Path $resolvedPackageSource $package) -Destination $feedPath -ErrorAction Stop
-        }
+        Get-ChildItem -LiteralPath $resolvedPackageSource -Filter '*.nupkg' -File | Copy-Item -Destination $feedPath
+
     }
 
     @"
@@ -76,6 +69,9 @@ try {
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Realtime.Config" Version="$ContractsVersion" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="Realtime.AspNetCore" Version="$AspNetCoreIntegrationVersion" />
     <PackageReference Include="Realtime.HttpFallback" Version="$HttpFallbackVersion" />
   </ItemGroup>

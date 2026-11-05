@@ -163,17 +163,43 @@ async function buildPackageConsumer() {
     "src/Cormier.Realtime.AspNetCore/Cormier.Realtime.AspNetCore.csproj",
     "src/Cormier.Realtime.HttpFallback/Cormier.Realtime.HttpFallback.csproj",
     "src/Cormier.Realtime.Browser/Cormier.Realtime.Browser.csproj",
+    "src/Cormier.Realtime.Client/Cormier.Realtime.Client.csproj",
+    "src/Cormier.Realtime.Config/Cormier.Realtime.Config.csproj",
+    "src/Realtime.Plugins.Persistence/Realtime.Plugins.Persistence.csproj",
+    "src/Realtime.Plugins.PostgreSql/Realtime.Plugins.PostgreSql.csproj",
+    "src/Realtime.Plugins.MySql/Realtime.Plugins.MySql.csproj",
+    "src/Realtime.Plugins.MariaDb/Realtime.Plugins.MariaDb.csproj",
+    "src/Realtime.Plugins.SqlServer/Realtime.Plugins.SqlServer.csproj",
+    "src/Realtime.Plugins.AzureSql/Realtime.Plugins.AzureSql.csproj",
+    "src/Realtime.Plugins.Oracle/Realtime.Plugins.Oracle.csproj",
+    "src/Realtime.Plugins.Sqlite/Realtime.Plugins.Sqlite.csproj",
+    "src/Realtime.Plugins.Db2/Realtime.Plugins.Db2.csproj",
+    "src/Realtime.Plugins.CockroachDb/Realtime.Plugins.CockroachDb.csproj",
+    "src/Realtime.Plugins.Snowflake/Realtime.Plugins.Snowflake.csproj",
   ]) {
     await command("dotnet", ["pack", project, "--configuration", "Release", "--no-build", "--output", feed]);
   }
   const consumerLockGraph = JSON.parse(await readFile(consumerLockTemplate, "utf8"));
   const targetGraph = consumerLockGraph.dependencies?.["net10.0"];
   for (const [packageId, packageFile] of [
-    ["Realtime.AspNetCore", "Realtime.AspNetCore.1.0.6-beta.nupkg"],
-    ["Realtime.Browser", "Realtime.Browser.1.0.6-beta.nupkg"],
-    ["Realtime.Contracts", "Realtime.Contracts.1.0.6-beta.nupkg"],
-    ["Realtime.HttpFallback", "Realtime.HttpFallback.1.0.6-beta.nupkg"],
-    ["Realtime.Redis", "Realtime.Redis.1.0.6-beta.nupkg"],
+    ["Realtime.AspNetCore", "Realtime.AspNetCore.1.1.0-beta.nupkg"],
+    ["Realtime.Browser", "Realtime.Browser.1.1.0-beta.nupkg"],
+    ["Realtime.Contracts", "Realtime.Contracts.1.1.0-beta.nupkg"],
+    ["Realtime.HttpFallback", "Realtime.HttpFallback.1.1.0-beta.nupkg"],
+    ["Realtime.Redis", "Realtime.Redis.1.1.0-beta.nupkg"],
+    ["Realtime.Client", "Realtime.Client.1.1.0-beta.nupkg"],
+    ["Realtime.Config", "Realtime.Config.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.Persistence", "Realtime.Plugins.Persistence.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.PostgreSql", "Realtime.Plugins.PostgreSql.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.MySql", "Realtime.Plugins.MySql.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.MariaDb", "Realtime.Plugins.MariaDb.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.SqlServer", "Realtime.Plugins.SqlServer.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.AzureSql", "Realtime.Plugins.AzureSql.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.Oracle", "Realtime.Plugins.Oracle.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.Sqlite", "Realtime.Plugins.Sqlite.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.Db2", "Realtime.Plugins.Db2.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.CockroachDb", "Realtime.Plugins.CockroachDb.1.1.0-beta.nupkg"],
+    ["Realtime.Plugins.Snowflake", "Realtime.Plugins.Snowflake.1.1.0-beta.nupkg"],
   ]) {
     if (targetGraph?.[packageId] === undefined) {
       throw new Error(`The committed consumer lock is missing ${packageId}.`);
@@ -181,7 +207,7 @@ async function buildPackageConsumer() {
     targetGraph[packageId].contentHash = createHash("sha512").update(await readFile(resolve(feed, packageFile))).digest("base64");
   }
   await writeFile(consumerLock, `${JSON.stringify(consumerLockGraph, null, 2)}\n`);
-  await writeFile(config, `<configuration><config><add key="globalPackagesFolder" value="${xml(packages)}" /></config><packageSources><clear /><add key="local" value="${xml(feed)}" /><add key="upstream" value="%NUGET_UPSTREAM_SOURCE%" /></packageSources><packageSourceMapping><packageSource key="local"><package pattern="Realtime.*" /></packageSource><packageSource key="upstream"><package pattern="Microsoft.*" /><package pattern="OpenTelemetry" /><package pattern="OpenTelemetry.*" /><package pattern="StackExchange.Redis" /><package pattern="RESPite" /><package pattern="System.*" /></packageSource></packageSourceMapping></configuration>\n`);
+  await writeFile(config, `<configuration><config><add key="globalPackagesFolder" value="${xml(packages)}" /></config><packageSources><clear /><add key="local" value="${xml(feed)}" /><add key="upstream" value="%NUGET_UPSTREAM_SOURCE%" /></packageSources><packageSourceMapping><packageSource key="local"><package pattern="Realtime.*" /></packageSource><packageSource key="upstream"><package pattern="Microsoft.*" /><package pattern="OpenTelemetry" /><package pattern="OpenTelemetry.*" /><package pattern="StackExchange.Redis" /><package pattern="RESPite" /><package pattern="System.*" /><package pattern="Npgsql" /><package pattern="SQLitePCLRaw.*" /></packageSource></packageSourceMapping></configuration>\n`);
   const project = "examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj";
   const properties = [
     "-p:UseProjectReferences=false",

@@ -222,8 +222,8 @@ public sealed class DiagnosticsContractTests
     {
         var program = Read("src/Cormier.Realtime.Gateway/Program.cs");
         var environmentIndex = program.IndexOf("builder.Configuration.AddEnvironmentVariables();", StringComparison.Ordinal);
-        var commandLineIndex = program.IndexOf("builder.Configuration.AddCommandLine(args);", StringComparison.Ordinal);
-        var registrationIndex = program.IndexOf("builder.Services.AddRealtimeGateway(builder.Configuration);", StringComparison.Ordinal);
+        var commandLineIndex = program.IndexOf("builder.Configuration.AddCommandLine(hostArgs);", StringComparison.Ordinal);
+        var registrationIndex = program.IndexOf("builder.Services.AddRealtimeConfiguration(builder.Configuration,", StringComparison.Ordinal);
 
         Assert.InRange(environmentIndex, 0, commandLineIndex - 1);
         Assert.InRange(commandLineIndex, environmentIndex + 1, registrationIndex - 1);

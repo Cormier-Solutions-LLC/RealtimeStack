@@ -67,6 +67,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Realtime.Plugins.SqlServer"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Realtime.Plugins.Tests", "tests\Realtime.Plugins.Tests\Realtime.Plugins.Tests.csproj", "{6693CE3D-68D1-4191-98AB-9F31682134BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cormier.Realtime.Config", "src\Cormier.Realtime.Config\Cormier.Realtime.Config.csproj", "{7012BB96-CED5-4FB8-9C87-196FA23915F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -413,6 +415,18 @@ Global
 		{6693CE3D-68D1-4191-98AB-9F31682134BC}.Release|x64.Build.0 = Release|Any CPU
 		{6693CE3D-68D1-4191-98AB-9F31682134BC}.Release|x86.ActiveCfg = Release|Any CPU
 		{6693CE3D-68D1-4191-98AB-9F31682134BC}.Release|x86.Build.0 = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|x64.Build.0 = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Debug|x86.Build.0 = Debug|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|x64.ActiveCfg = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|x64.Build.0 = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|x86.ActiveCfg = Release|Any CPU
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -446,5 +460,6 @@ Global
 		{A3E7475F-D6CB-4C0F-BB3B-2FA15F1619B0} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{23EEFF47-B3E7-40A5-80F7-4267CFFCA5B2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{6693CE3D-68D1-4191-98AB-9F31682134BC} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{7012BB96-CED5-4FB8-9C87-196FA23915F7} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

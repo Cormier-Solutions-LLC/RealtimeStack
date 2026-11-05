@@ -90,7 +90,7 @@
       "Realtime.Redis": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.0.6-beta, )",
+          "Realtime.Contracts": "[1.1.0-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

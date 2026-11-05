@@ -11,10 +11,11 @@ $scratch = Join-Path ([IO.Path]::GetTempPath()) ("realtime-persistence-consumer-
 $names = @('Persistence', 'PostgreSql', 'MySql', 'MariaDb', 'SqlServer', 'AzureSql', 'Oracle', 'Sqlite', 'Db2', 'CockroachDb', 'Snowflake')
 try {
     New-Item -ItemType Directory -Path $scratch | Out-Null
-    $references = ($names | ForEach-Object { "<PackageReference Include=`"Realtime.Plugins.$_`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" }) -join "`n"
+    $references = "<PackageReference Include=`"Realtime.Config`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" + ($names | ForEach-Object { "<PackageReference Include=`"Realtime.Plugins.$_`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" }) -join "`n"
     @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
   <ItemGroup>$references</ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'Consumer.csproj')
@@ -23,11 +24,16 @@ try {
     }) -join "`n"
     @"
 using Cormier.Realtime.Plugins.Persistence;
+using Cormier.Realtime.Config;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 RelationalPersistenceStore[] stores = [$constructors];
 foreach (var store in stores) {
     if (!store.CreateTableSql.Contains("PRIMARY KEY")) throw new InvalidOperationException();
 }
-Console.WriteLine("All ten packaged database adapters loaded.");
+using var services = new ServiceCollection().AddRealtimeConfiguration(new ConfigurationBuilder().Build()).BuildServiceProvider();
+if ((await services.GetRequiredService<RealtimeSetupManager>().InspectAsync()).Count != 0) throw new InvalidOperationException();
+Console.WriteLine("Config and all ten packaged database adapters loaded.");
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'Program.cs')
     $escapedFeed = [Security.SecurityElement]::Escape($feed)
     $escapedUpstream = [Security.SecurityElement]::Escape($UpstreamPackageSource)

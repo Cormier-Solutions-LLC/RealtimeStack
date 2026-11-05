@@ -1,3 +1,6 @@
+using Cormier.Realtime.Config;
+using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -45,8 +48,10 @@ builder.Services.AddOptions<FullCircleOptions>()
     .Validate(options => options.AllowedTenants is { Length: > 0 } && options.AllowedTenants.All(IsSafeScope), "FullCircle:AllowedTenants must contain safe fixture identifiers.")
     .Validate(options => options.AllowedUsers is { Length: > 0 } && options.AllowedUsers.All(IsSafeScope), "FullCircle:AllowedUsers must contain safe fixture identifiers.")
     .ValidateOnStart();
-builder.Services.AddRealtimeGateway(builder.Configuration);
-builder.Services.AddRealtimeHttpFallback(builder.Configuration);
+builder.Services.AddRealtimeConfiguration(builder.Configuration, registration => registration
+    .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
+    .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
+    .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
 var diagnosticsEnabled = builder.Configuration.GetValue<bool>("Diagnostics:Enabled");
 if (diagnosticsEnabled)
 {
@@ -91,7 +96,8 @@ if (developmentSharedAssets is null)
     app.MapStaticAssets();
 }
 app.MapRealtimeGateway();
-app.MapRealtimeHttpFallback();
+if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
+app.MapRealtimePersistence(builder.Configuration);
 app.MapRealtimeDiagnostics();
 
 app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOptions<FullCircleOptions> settings,

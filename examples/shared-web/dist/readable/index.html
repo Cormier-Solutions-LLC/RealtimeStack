@@ -33,6 +33,15 @@
       <button id="publish">Publish</button>
     </section>
     <section><h2>Events and diagnostics</h2><pre id="events" aria-live="polite"></pre></section>
+    <details>
+      <summary>Saved messages and background tasks</summary>
+      <p>Requires persistence enabled on the gateway. Imports run on a server worker.</p>
+      <label>Inbox <input id="durable-stream" value="inbox" maxlength="128"></label>
+      <label>Type <select id="durable-kind"><option value="notification">Notifications</option><option value="message">Messages</option></select></label>
+      <button id="durable-read">Read saved items</button><button id="durable-ack" disabled>Acknowledge displayed items</button>
+      <label>Task ID <input id="durable-task" maxlength="128"></label><button id="durable-task-read">Check task</button>
+      <pre id="durable-result" aria-live="polite"></pre>
+    </details>
     <div id="stack-links"></div>
   </main>
   <dialog id="message-modal" aria-labelledby="message-title">
@@ -41,7 +50,7 @@
     <pre id="message-payload"></pre>
     <form method="dialog"><button>Close</button></form>
   </dialog>
-  <script src="/_content/Cormier.Realtime.Browser/cormier-realtime.iife.js" integrity="sha384-T5NMasHwzL6doMN3h2994AEXzXIY/F3eV5irvf+mM+OpwiYhTH1tXkhLkqkL9pwX" crossorigin="anonymous"></script>
-  <script src="/app.js" integrity="sha384-/I2KveMUGVks6tQwdUTKhSf9ngizXZpJ5O4IZ9h5Ml1ySd9zCdIY9utLKgdmPjE9" crossorigin="anonymous"></script>
+  <script src="/_content/Cormier.Realtime.Browser/cormier-realtime.iife.js" integrity="sha384-+KS6ydupJV0+1xNtLvRBaqIdCEIDoJi1n+RiWwDQIUV2YAAB1gfzMDvUHFEhK7+N" crossorigin="anonymous"></script>
+  <script src="/app.js" integrity="sha384-P5oXb5GbJHS/JyDKlp6eQcaq/nkEw6mGNf2RwFhJiS+EQNGh3b/2LypKqj5qu+op" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
     Uses isolated staging and promotes only byte-identical repeatable artifacts. Network endpoints are explicit
     configuration. WhatIf prints the plan without invoking build tools or changing output.
 .NOTES
-    Version: 1.0.6-beta
+    Version: 1.1.0-beta
     Project: Cormier.Realtime
     Requires: PowerShell 7, .NET SDK 10, Node.js 26.10.0, npm 12.1.0, and Git.
     Outputs: artifacts/packages/<commit> by default and a redacted log beneath .logs.
@@ -415,6 +415,7 @@ try {
     )
     $pluginNames = @('Persistence', 'PostgreSql', 'MySql', 'MariaDb', 'SqlServer', 'AzureSql', 'Oracle', 'Sqlite', 'Db2', 'CockroachDb', 'Snowflake')
     $projects += @($pluginNames | ForEach-Object { "src/Realtime.Plugins.$_/Realtime.Plugins.$_.csproj" })
+    $projects += 'src/Cormier.Realtime.Config/Cormier.Realtime.Config.csproj'
     foreach ($destination in @($firstPack, $secondPack)) {
         foreach ($project in $projects) {
             Invoke-ReleaseTool $dotnet (@('pack', $project, '--configuration', 'Release', '--no-build', '--no-restore', '--output', $destination) + $properties)
@@ -460,6 +461,8 @@ try {
             throw "Missing symbols for Realtime.Plugins.$plugin."
         }
     }
+    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Config.$normalizedContractsVersion.nupkg") `
+        @('README.md', 'lib/net10.0/Cormier.Realtime.Config.dll') $metadata
     $npmTarball = Get-ChildItem -LiteralPath $firstPack -Filter '*.tgz' -File | Select-Object -First 1
     $npmConsumer = Join-Path $stageRoot 'npm-consumer'
     New-Item -ItemType Directory -Path $npmConsumer -Force | Out-Null

@@ -67,7 +67,7 @@ This is a teaching adapter, not a production identity system or general-purpose 
 | Ktor | 3.5.2 | Pinned server/client/WebSocket framework |
 | Gradle wrapper | 9.7.1 | Checksum-pinned; dependency locking enabled |
 | Lettuce | 7.6.0 | Pinned Redis client |
-| Cormier.Realtime browser SDK / protocol | 1.0.6-beta / 1.0 | Canonical generated SDK and wire contract |
+| Cormier.Realtime browser SDK / protocol | 1.1.0-beta / 1.0 | Canonical generated SDK and wire contract |
 | Cormier.Realtime gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |
 | Container bases | Gradle 9.7.1 JDK 25; Temurin 25 JRE Alpine | Both OCI indexes are digest-pinned |
@@ -83,3 +83,7 @@ See [UPDATE.md](UPDATE.md) for update/deprecation/rollback guidance and [CHANGEL
 Ticket requests use a five-second connect timeout and 15-second request/socket timeouts; these are not a lifetime limit for WebSockets. Login/ticket bodies and ticket responses are capped at 64 KiB; both WebSocket plugins use a 64 KiB frame limit. The server sends pings every 20 seconds with a 10-second timeout. Keep gateway limits compatible.
 
 Local assets resolve relative to the example directory. Containers use `/app/shared-web/optimized`; select `SHARED_ASSET_ROOT=/app/shared-web/readable` for UI diagnosis. `TOPOLOGY` labels diagnostics and does not provision HA infrastructure.
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

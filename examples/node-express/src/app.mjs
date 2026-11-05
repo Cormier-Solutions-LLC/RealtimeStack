@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import path from "node:path";
 import express from "express";
 import { rateLimit } from "express-rate-limit";
 import session from "express-session";
@@ -253,7 +252,8 @@ export function createApp({
     }
   });
 
-  app.use("/realtime/http", (request, response) => {
+  app.use(["/realtime/http", "/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read"], (request, response) => {
+    if (request.originalUrl.startsWith("/realtime/persistence/") && (request.method !== "POST" || !["/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read"].includes(request.originalUrl.split("?")[0]))) return response.sendStatus(404);
     try {
       request.url = request.originalUrl;
       proxy.web(request, response, {
@@ -270,7 +270,7 @@ export function createApp({
 
   app.use("/_content/Cormier.Realtime.Browser", express.static(config.sdkAssetRoot, { index: false, fallthrough: false }));
   app.use(express.static(config.sharedAssetRoot, { index: false, fallthrough: true }));
-  app.get("/", (_request, response) => response.sendFile(path.join(config.sharedAssetRoot, "index.html")));
+  app.get("/", (_request, response) => response.sendFile("index.html", { root: config.sharedAssetRoot }));
 
   app.use((error, _request, response, next) => {
     if (response.headersSent) {

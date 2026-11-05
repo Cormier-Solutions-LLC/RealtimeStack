@@ -198,6 +198,9 @@ func (a *App) router() http.Handler {
 	router.POST("/api/logout", a.logout)
 	router.POST("/realtime/tickets", a.ticket)
 	router.Any("/realtime/http/*path", a.httpFallback)
+	router.POST("/realtime/persistence/records/read", a.httpFallback)
+	router.POST("/realtime/persistence/records/ack", a.httpFallback)
+	router.POST("/realtime/persistence/tasks/read", a.httpFallback)
 	router.GET("/realtime/ws", a.websocket)
 	return router
 }

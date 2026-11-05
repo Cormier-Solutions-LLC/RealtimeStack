@@ -61,7 +61,7 @@ var status = await tasks.GetAsync(authenticatedTenant, authenticatedOwner, taskI
 
 Run imports outside the HTTP request and WebSocket lifetime. Persist the task ID where the host can rediscover it, such as an application job table or a notification inbox. Store `Failed` with a safe error description and `FinishedAt` when execution fails. Terminal snapshots require a completion time; active snapshots cannot have one. `GetAsync` returns the snapshot with the highest sequence. Hosts enforce legal state transitions and serialize worker updates.
 
-These packages store replay and task history. They do not automatically attach to the gateway, provide an HTTP task API/UI, discover task IDs, queue execution, lease workers, or recover a worker after a server restart. A production durable worker must persist its work request, claim work safely, handle abandoned leases, and make business side effects retry-safe. Closing a page can be supported by a server-owned worker plus this status store; surviving server/process loss additionally requires that worker recovery design.
+The persistence packages store replay and task history. They do not automatically capture gateway traffic, discover task IDs, queue execution, lease workers, or recover a worker after a server restart. Optional `Realtime.Config` integration now supplies an HTTP task/inbox API and shared example UI; see [cross-language integration](persistence-integrations.md). A production durable worker must persist its work request, claim work safely, handle abandoned leases, and make business side effects retry-safe. Closing a page can be supported by a server-owned worker plus this status store; surviving server/process loss additionally requires that worker recovery design.
 
 ## Verification
 

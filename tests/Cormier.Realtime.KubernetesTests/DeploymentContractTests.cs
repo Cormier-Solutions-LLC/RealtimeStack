@@ -147,7 +147,7 @@ public sealed class DeploymentContractTests
         var certificate = Read("cluster/edge/development/certificate.yaml");
 
         Assert.Contains("type: ClusterIP", service, StringComparison.Ordinal);
-        Assert.Contains("Host(`{{ .Values.ingressRoute.host }}`) && (Path(`{{ .Values.ingressRoute.path }}`) || PathPrefix(`{{ .Values.ingressRoute.fallbackPath }}/`))", route, StringComparison.Ordinal);
+        Assert.Contains("Host(`{{ .Values.ingressRoute.host }}`) && (Path(`{{ .Values.ingressRoute.path }}`) || PathPrefix(`{{ .Values.ingressRoute.fallbackPath }}/`)", route, StringComparison.Ordinal);
         Assert.Contains("sticky:", route, StringComparison.Ordinal);
         Assert.Contains("name: {{ .Values.ingressRoute.affinityCookieName | quote }}", route, StringComparison.Ordinal);
         Assert.Contains("sameSite: {{ .Values.ingressRoute.affinityCookieSameSite | quote }}", route, StringComparison.Ordinal);

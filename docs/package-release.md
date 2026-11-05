@@ -1,6 +1,6 @@
 # Package release policy
 
-Cormier.Realtime produces seventeen NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
+Cormier.Realtime produces eighteen NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
 
 | Artifact | Version property | Purpose |
 | --- | --- | --- |
@@ -12,6 +12,7 @@ Cormier.Realtime produces seventeen NuGet packages and one npm tarball from one 
 | `Realtime.Browser` | `BrowserPackageVersion` | Razor static web assets generated from the browser SDK |
 | `Realtime.Plugins.Persistence` | `ContractsVersion` | Shared durable stream and task status contracts |
 | `Realtime.Plugins.{PostgreSql,MySql,MariaDb,SqlServer,AzureSql,Oracle,Sqlite,Db2,CockroachDb,Snowflake}` | `ContractsVersion` | Ten database adapters; see [persistence](persistence.md) |
+| `Realtime.Config` | `ContractsVersion` | Registration, first-run setup, and durable HTTP integration |
 | `@cormier/realtime` | `sdk/typescript/package.json` | Optional npm form of the same browser SDK; publication requires registry-owner approval |
 
 The NuGet IDs are the supported public identities. The npm name is a candidate identity and the release workflow does not publish it unless an approved registry and npm token are supplied explicitly. The gateway application/container and Helm chart have separate release workflows and are not included in this package candidate. Package IDs, versions, and registry endpoints are release configuration; no customer or deployment name is part of an artifact identity.
@@ -46,7 +47,7 @@ The updater changes active coordinated-version surfaces and creates new changelo
   -PackageReleaseNotesUrl $env:PACKAGE_RELEASE_NOTES_URL
 ```
 
-When version parameters are omitted, the build reads `ContractsVersion`, `DotNetClientVersion`, `RedisAdapterVersion`, `AspNetCoreIntegrationVersion`, `HttpFallbackVersion`, and `BrowserPackageVersion` from `Directory.Build.props`. An explicit `BrowserPackageVersion` must match the normalized version in `sdk/typescript/package.json`. The automatic release gate is intentionally stricter: application, container, Helm chart, all seventeen NuGet packages, and npm must contain the same semantic version and must change together, because an official release promotes the complete coordinated set.
+When version parameters are omitted, the build reads `ContractsVersion`, `DotNetClientVersion`, `RedisAdapterVersion`, `AspNetCoreIntegrationVersion`, `HttpFallbackVersion`, and `BrowserPackageVersion` from `Directory.Build.props`. An explicit `BrowserPackageVersion` must match the normalized version in `sdk/typescript/package.json`. The automatic release gate is intentionally stricter: application, container, Helm chart, all eighteen NuGet packages, and npm must contain the same semantic version and must change together, because an official release promotes the complete coordinated set.
 
 Pull requests build package candidates without publication credentials. Package workflow jobs run on the repository's `cormier-runners` pool by default. After `Realtime gateway CI` succeeds for a push to `main`, the package workflow checks out that exact CI commit and compares its coordinated version with its first parent. An unchanged version skips package work; a complete coordinated change builds and publishes automatically. The workflow restores locked dependencies, builds, tests, creates browser outputs, packs all artifacts into isolated staging, inspects intended assets and dependency bounds, installs packages into clean consumers, checks reproducibility, and writes SHA-256 and manifest evidence. The protected main-branch publication job attests the exact selected candidate before promotion; branch-selectable build jobs have no OIDC or attestation permission. `-WhatIf` prints the plan without running tools or changing output. A repeated build is `UNCHANGED` only when every artifact hash matches; a different artifact with the same version fails as a version conflict.
 

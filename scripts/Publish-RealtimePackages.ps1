@@ -5,7 +5,7 @@
     Never rebuilds package bytes. NuGet is the default promotion surface; npm publication is opt-in and requires
     explicit registry approval. WhatIf validates and prints the promotion plan without requiring credentials.
 .NOTES
-    Version: 1.0.6-beta
+    Version: 1.1.0-beta
     Project: Cormier.Realtime
     Requires: PowerShell 7, .NET SDK 10, Node.js/npm only when PublishNpm is selected.
     Inputs: CandidatePath, configured registry endpoints, and credential-bearing environment variables. CI supplies
@@ -216,6 +216,7 @@ try {
         'Realtime.Plugins.Db2'
         'Realtime.Plugins.CockroachDb'
         'Realtime.Plugins.Snowflake'
+        'Realtime.Config'
     )
     $nugetPackages = @(
         foreach ($packageId in $nugetPackageIdsInDependencyOrder) {
@@ -229,11 +230,11 @@ try {
         }
     )
     if ($discoveredNuGetPackages.Count -ne $nugetPackages.Count) {
-        throw "INVALID candidate: expected seventeen known NuGet packages, found $($discoveredNuGetPackages.Count)."
+        throw "INVALID candidate: expected eighteen known NuGet packages, found $($discoveredNuGetPackages.Count)."
     }
     $symbolPackages = @(Get-ChildItem -LiteralPath $candidateRoot -Filter '*.snupkg' -File)
     if ($symbolPackages.Count -ne $nugetPackages.Count) {
-        throw "INVALID candidate: expected seventeen NuGet symbol packages, found $($symbolPackages.Count)."
+        throw "INVALID candidate: expected eighteen NuGet symbol packages, found $($symbolPackages.Count)."
     }
     $symbolPackagesByNuGetPackage = [Collections.Generic.Dictionary[string, IO.FileInfo]]::new([StringComparer]::Ordinal)
     foreach ($package in $nugetPackages) {

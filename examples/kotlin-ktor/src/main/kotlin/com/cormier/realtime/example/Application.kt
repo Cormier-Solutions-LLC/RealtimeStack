@@ -213,6 +213,9 @@ fun Application.referenceModule(config: ReferenceConfig, store: SessionStore, cl
             val responseBody = readLimitedBody(response.bodyAsChannel()) { DependencyFault() }
             call.respondBytes(responseBody, ContentType.Application.Json, response.status)
         }
+        post("/realtime/persistence/records/read") { proxyHttpFallback(call, client, config, HttpMethod.Post) }
+        post("/realtime/persistence/records/ack") { proxyHttpFallback(call, client, config, HttpMethod.Post) }
+        post("/realtime/persistence/tasks/read") { proxyHttpFallback(call, client, config, HttpMethod.Post) }
         route("/realtime/http/{path...}") {
             get { proxyHttpFallback(call, client, config, HttpMethod.Get) }
             post { proxyHttpFallback(call, client, config, HttpMethod.Post) }

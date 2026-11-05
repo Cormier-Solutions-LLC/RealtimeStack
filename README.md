@@ -86,7 +86,7 @@ dotnet publish ./src/Cormier.Realtime.Gateway -c Release -r $runtimeIdentifier -
 
 CI restores locked dependencies, builds and tests the solution, validates clean package consumers and both bootstrap topologies, checks Helm and Kubernetes output, runs cross-browser and reference-stack scenarios, publishes and smoke-tests a Linux x64 Native AOT executable and rootless read-only OCI image, scans artifacts, and emits an SBOM and immutable build evidence.
 
-Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `1.0.6-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
+Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `1.1.0-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
 
 ## Clients and protocol
 
@@ -108,3 +108,5 @@ Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/ty
 ## Durable database plugins
 
 NuGet packages use `Realtime.*` IDs. Install `Realtime.Plugins.Persistence` with the database plugin for durable replay, notifications, and background task status. All ten database plugins depend on the shared persistence package. See [persistence integration](docs/persistence.md) and [package migration](docs/package-release.md#nuget-id-migration).
+
+Use [`Realtime.Config`](docs/configuration.md) for registration and first-run setup. [Cross-language persistence integration](docs/persistence-integrations.md) covers the browser/.NET clients, language adapters, and Helm controls.

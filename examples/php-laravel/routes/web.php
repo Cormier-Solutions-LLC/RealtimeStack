@@ -31,3 +31,7 @@ Route::post('/api/login', [ReferenceController::class, 'login']);
 Route::get('/api/session', [ReferenceController::class, 'session']);
 Route::post('/api/logout', [ReferenceController::class, 'logout']);
 Route::post('/realtime/tickets', [ReferenceController::class, 'ticket']);
+
+Route::post('/realtime/persistence/records/read', [ReferenceController::class, 'ticket']);
+Route::post('/realtime/persistence/records/ack', [ReferenceController::class, 'ticket']);
+Route::post('/realtime/persistence/tasks/read', [ReferenceController::class, 'ticket']);

@@ -143,7 +143,7 @@ final class ReferenceController
                     'X-Forwarded-Proto' => $this->config->publicScheme(),
                 ]))
                 ->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))
-                ->post($this->config->gatewayUrl.'/realtime/tickets');
+                ->post($this->config->gatewayUrl.(in_array('/'.$request->path(), ['/realtime/persistence/records/read', '/realtime/persistence/records/ack', '/realtime/persistence/tasks/read'], true) ? '/'.$request->path() : '/realtime/tickets'));
             $stream = $upstream->toPsrResponse()->getBody();
             $body = '';
             while (! $stream->eof()) {

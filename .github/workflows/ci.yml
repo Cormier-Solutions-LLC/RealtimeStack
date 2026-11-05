@@ -152,6 +152,7 @@ jobs:
           grep --quiet 'port: 26379' /tmp/ha.yaml
       - name: Helm lint, schema, and render validation
         run: |
+          node scripts/test-persistence-chart.mjs --docker-image="$CI_HELM_IMAGE"
           jq --exit-status '.templating.list | map(.name) == ["environment","cluster","namespace","instance","pod"]' helm/realtime-gateway/dashboards/realtime-gateway.json
           docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" lint helm/realtime-gateway --strict
           if docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template invalid-ip helm/realtime-gateway --set observability.prometheusRule.ingressEnabled=true --set-string observability.platformMetrics.metalLbAddress=':::' >/tmp/invalid-ip.yaml 2>/tmp/invalid-ip.err; then
