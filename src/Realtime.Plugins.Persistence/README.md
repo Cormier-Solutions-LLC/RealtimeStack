@@ -1,4 +1,4 @@
-# Realtime.Plugins.Persistence
+# RealtimeStack.Plugins.Persistence
 
 Shared .NET 10 persistence contracts and relational implementation for durable message replay, notifications, and background task status. The PostgreSql, MySql, MariaDb, SqlServer, AzureSql, Oracle, Sqlite, Db2, CockroachDb, and Snowflake packages depend on this package.
 

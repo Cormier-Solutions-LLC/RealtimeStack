@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Contracts</PackageId>
+    <PackageId>RealtimeStack.Contracts</PackageId>
     <Authors>Realtime</Authors>
     <Description>Runtime-neutral protocol contracts for Realtime clients and gateways.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

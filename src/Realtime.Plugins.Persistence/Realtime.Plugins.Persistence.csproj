@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Realtime.Plugins.Persistence</RootNamespace>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Plugins.Persistence</PackageId>
+    <PackageId>RealtimeStack.Plugins.Persistence</PackageId>
     <Description>Durable streams for realtime replay, notifications, and background task status.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

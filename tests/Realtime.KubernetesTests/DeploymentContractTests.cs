@@ -688,19 +688,19 @@ public sealed class DeploymentContractTests
         Assert.Contains("manifestSha256", publish, StringComparison.Ordinal);
         Assert.Contains("Existing npm promotion state belongs to a different registry", publish, StringComparison.Ordinal);
         Assert.Contains("nugetPackageIdsInDependencyOrder", publish, StringComparison.Ordinal);
-        var contractsOrder = publish.IndexOf("'Realtime.Contracts'", StringComparison.Ordinal);
-        var clientOrder = publish.IndexOf("'Realtime.Client'", StringComparison.Ordinal);
-        var redisOrder = publish.IndexOf("'Realtime.Redis'", StringComparison.Ordinal);
-        var aspNetCoreOrder = publish.IndexOf("'Realtime.AspNetCore'", StringComparison.Ordinal);
+        var contractsOrder = publish.IndexOf("'RealtimeStack.Contracts'", StringComparison.Ordinal);
+        var clientOrder = publish.IndexOf("'RealtimeStack.Client'", StringComparison.Ordinal);
+        var redisOrder = publish.IndexOf("'RealtimeStack.Redis'", StringComparison.Ordinal);
+        var aspNetCoreOrder = publish.IndexOf("'RealtimeStack.AspNetCore'", StringComparison.Ordinal);
         Assert.True(contractsOrder >= 0 && contractsOrder < clientOrder && contractsOrder < redisOrder);
         Assert.True(clientOrder < aspNetCoreOrder && redisOrder < aspNetCoreOrder);
-        var persistenceOrder = publish.IndexOf("'Realtime.Plugins.Persistence'", StringComparison.Ordinal);
+        var persistenceOrder = publish.IndexOf("'RealtimeStack.Plugins.Persistence'", StringComparison.Ordinal);
         Assert.True(persistenceOrder >= 0);
         foreach (var provider in new[] { "PostgreSql", "MySql", "MariaDb", "SqlServer", "AzureSql", "Oracle", "Sqlite", "Db2", "CockroachDb", "Snowflake" })
         {
-            Assert.True(publish.IndexOf($"'Realtime.Plugins.{provider}'", StringComparison.Ordinal) > persistenceOrder);
+            Assert.True(publish.IndexOf($"'RealtimeStack.Plugins.{provider}'", StringComparison.Ordinal) > persistenceOrder);
             var project = XDocument.Parse(Read($"src/Realtime.Plugins.{provider}/Realtime.Plugins.{provider}.csproj"));
-            Assert.Equal($"Realtime.Plugins.{provider}", project.Descendants("PackageId").Single().Value);
+            Assert.Equal($"RealtimeStack.Plugins.{provider}", project.Descendants("PackageId").Single().Value);
             Assert.Contains(project.Descendants("ProjectReference"), reference =>
                 reference.Attribute("Include")?.Value == "../Realtime.Plugins.Persistence/Realtime.Plugins.Persistence.csproj");
         }

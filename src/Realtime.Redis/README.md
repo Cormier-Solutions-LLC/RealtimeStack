@@ -1,12 +1,12 @@
-# Realtime.Redis
+# RealtimeStack.Redis
 
 Redis-backed Pub/Sub, durable Streams, session validation, and connection-ticket infrastructure for Realtime hosts.
 
-Install this package directly only when composing the lower-level Redis services. Most ASP.NET Core applications should install `Realtime.AspNetCore`, which carries the compatible Redis and Contracts dependencies.
+Install this package directly only when composing the lower-level Redis services. Most ASP.NET Core applications should install `RealtimeStack.AspNetCore`, which carries the compatible Redis and Contracts dependencies.
 
 Redis endpoints, credentials, key prefixes, and deployment identities are configuration and are never embedded in this package.
 
-The package targets `net10.0`, depends on StackExchange.Redis `3.1.31`, and carries a compatible Contracts dependency (default range `[1.0.0,1.1.0)`). Install from your configured NuGet source with `dotnet add package Realtime.Redis --version 1.1.0-beta`. It does not provision Redis, configure ACLs, register gateway endpoints or supply a login flow.
+The package targets `net10.0`, depends on StackExchange.Redis `3.1.31`, and carries a compatible Contracts dependency (default range `[1.0.0,1.1.0)`). Install from your configured NuGet source with `dotnet add package RealtimeStack.Redis --version 1.1.0-beta`. It does not provision Redis, configure ACLs, register gateway endpoints or supply a login flow.
 
 ## Composition and configuration
 

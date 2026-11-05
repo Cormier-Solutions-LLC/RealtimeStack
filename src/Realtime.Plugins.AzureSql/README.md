@@ -1,6 +1,6 @@
-# Realtime.Plugins.AzureSql
+# RealtimeStack.Plugins.AzureSql
 
-Durable replay, notifications, and task status using AzureSql. Depends on `Realtime.Plugins.Persistence`.
+Durable replay, notifications, and task status using AzureSql. Depends on `RealtimeStack.Plugins.Persistence`.
 
 Construct `AzureSqlPersistenceStore` with a factory returning a **new, unopened** ADO.NET connection for this database. Install and configure your driver's package in the host; this plugin does not bundle a driver or discover one by reflection. Manage connection strings and authentication through host configuration. Driver platform and Native AOT support remain driver-specific.
 

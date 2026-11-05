@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Realtime.Plugins.MySql</RootNamespace>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Plugins.MySql</PackageId>
+    <PackageId>RealtimeStack.Plugins.MySql</PackageId>
     <Description>MySql durable realtime messages, notifications, and task status storage.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

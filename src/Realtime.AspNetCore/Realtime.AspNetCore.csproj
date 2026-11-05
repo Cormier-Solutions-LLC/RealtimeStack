@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.AspNetCore</PackageId>
+    <PackageId>RealtimeStack.AspNetCore</PackageId>
     <Authors>Realtime</Authors>
     <Description>Plug-and-play ASP.NET Core hosting integration for Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -18,7 +18,7 @@ The ESM/TypeScript export has the same class name. Browser operations use same-o
 
 ## Portable .NET client
 
-`Realtime.Client` includes `RealtimePersistenceClient`, `RealtimeInboxKind`, `RealtimeSavedRecord`, and `RealtimeTaskStatus`, independently of ASP.NET or the database plugins. Supply a host-owned `HttpClient` with the correct BaseAddress, cookies, Origin and TLS policy; disable automatic redirects for credential-bearing traffic.
+`RealtimeStack.Client` includes `RealtimePersistenceClient`, `RealtimeInboxKind`, `RealtimeSavedRecord`, and `RealtimeTaskStatus`, independently of ASP.NET or the database plugins. Supply a host-owned `HttpClient` with the correct BaseAddress, cookies, Origin and TLS policy; disable automatic redirects for credential-bearing traffic.
 
 ```csharp
 var saved = new Realtime.Client.RealtimePersistenceClient(http);

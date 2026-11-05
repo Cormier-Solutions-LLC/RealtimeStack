@@ -44,7 +44,7 @@ Ticket mode POSTs to `/realtime/tickets` resolved against the WebSocket origin b
 
 ## Optional HTTP fallback
 
-Install and map `Realtime.HttpFallback` on the gateway, then choose an ordered transport list. HTTP can be primary:
+Install and map `RealtimeStack.HttpFallback` on the gateway, then choose an ordered transport list. HTTP can be primary:
 
 ```js
 new RealtimeClient({

@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Realtime.Plugins.PostgreSql</RootNamespace>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Plugins.PostgreSql</PackageId>
+    <PackageId>RealtimeStack.Plugins.PostgreSql</PackageId>
     <Description>PostgreSql durable realtime messages, notifications, and task status storage.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

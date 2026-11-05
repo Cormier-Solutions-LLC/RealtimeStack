@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-    <PackageReference Include="Realtime.AspNetCore" Version="$(AspNetCoreIntegrationVersion)" />
-    <PackageReference Include="Realtime.HttpFallback" Version="$(HttpFallbackVersion)" />
-    <PackageReference Include="Realtime.Browser" Version="$(BrowserPackageVersion)" />
+    <PackageReference Include="RealtimeStack.AspNetCore" Version="$(AspNetCoreIntegrationVersion)" />
+    <PackageReference Include="RealtimeStack.HttpFallback" Version="$(HttpFallbackVersion)" />
+    <PackageReference Include="RealtimeStack.Browser" Version="$(BrowserPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +38,6 @@
     <ProjectReference Condition="'$(UseProjectReferences)' == 'true'" Include="../../src/Realtime.Config/Realtime.Config.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-    <PackageReference Include="Realtime.Config" Version="$(ContractsVersion)" />
+    <PackageReference Include="RealtimeStack.Config" Version="$(ContractsVersion)" />
   </ItemGroup>
 </Project>

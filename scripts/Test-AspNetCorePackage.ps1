@@ -69,11 +69,11 @@ try {
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Realtime.Config" Version="$ContractsVersion" />
+    <PackageReference Include="RealtimeStack.Config" Version="$ContractsVersion" />
     <PackageReference Include="Npgsql" Version="10.0.3" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
-    <PackageReference Include="Realtime.AspNetCore" Version="$AspNetCoreIntegrationVersion" />
-    <PackageReference Include="Realtime.HttpFallback" Version="$HttpFallbackVersion" />
+    <PackageReference Include="RealtimeStack.AspNetCore" Version="$AspNetCoreIntegrationVersion" />
+    <PackageReference Include="RealtimeStack.HttpFallback" Version="$HttpFallbackVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM

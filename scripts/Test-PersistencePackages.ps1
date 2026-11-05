@@ -11,7 +11,7 @@ $scratch = Join-Path ([IO.Path]::GetTempPath()) ("realtime-persistence-consumer-
 $names = @('Persistence', 'PostgreSql', 'MySql', 'MariaDb', 'SqlServer', 'AzureSql', 'Oracle', 'Sqlite', 'Db2', 'CockroachDb', 'Snowflake')
 try {
     New-Item -ItemType Directory -Path $scratch | Out-Null
-    $references = "<PackageReference Include=`"Realtime.Config`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" + ($names | ForEach-Object { "<PackageReference Include=`"Realtime.Plugins.$_`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" }) -join "`n"
+    $references = "<PackageReference Include=`"RealtimeStack.Config`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" + ($names | ForEach-Object { "<PackageReference Include=`"RealtimeStack.Plugins.$_`" Version=`"$([Security.SecurityElement]::Escape($Version))`" />" }) -join "`n"
     @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
@@ -42,7 +42,7 @@ Console.WriteLine("Config and all ten packaged database adapters loaded.");
 <configuration>
   <config><add key="globalPackagesFolder" value="$escapedPackages" /></config>
   <packageSources><clear /><add key="local" value="$escapedFeed" /><add key="upstream" value="$escapedUpstream" /></packageSources>
-  <packageSourceMapping><packageSource key="local"><package pattern="Realtime.*" /></packageSource><packageSource key="upstream"><package pattern="*" /></packageSource></packageSourceMapping>
+  <packageSourceMapping><packageSource key="local"><package pattern="RealtimeStack.*" /></packageSource><packageSource key="upstream"><package pattern="*" /></packageSource></packageSourceMapping>
 </configuration>
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'NuGet.Config')
     dotnet restore (Join-Path $scratch 'Consumer.csproj') --configfile (Join-Path $scratch 'NuGet.Config')

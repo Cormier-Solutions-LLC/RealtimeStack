@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-    <IsPackable>true</IsPackable><PackageId>Realtime.Config</PackageId>
+    <IsPackable>true</IsPackable><PackageId>RealtimeStack.Config</PackageId>
     <Description>Registration, setup inspection, and first-run configuration for Realtime systems and database plugins.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile><NoWarn>$(NoWarn);CS1591</NoWarn>

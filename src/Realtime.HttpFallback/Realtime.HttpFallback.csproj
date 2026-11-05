@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.HttpFallback</PackageId>
+    <PackageId>RealtimeStack.HttpFallback</PackageId>
     <Authors>Realtime</Authors>
     <Description>Optional HTTP streaming fallback transport for Realtime ASP.NET Core gateways.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

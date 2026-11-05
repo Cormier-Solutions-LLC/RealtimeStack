@@ -54,11 +54,11 @@ try {
     }
     else {
         $resolvedPackageSource = (Resolve-Path -LiteralPath $PackageSource -ErrorAction Stop).Path
-        Copy-Item -LiteralPath (Join-Path $resolvedPackageSource "Realtime.Browser.$normalizedVersion.nupkg") `
+        Copy-Item -LiteralPath (Join-Path $resolvedPackageSource "RealtimeStack.Browser.$normalizedVersion.nupkg") `
             -Destination $feedPath -ErrorAction Stop
     }
 
-    $packagePath = Join-Path $feedPath "Realtime.Browser.$normalizedVersion.nupkg"
+    $packagePath = Join-Path $feedPath "RealtimeStack.Browser.$normalizedVersion.nupkg"
     if (-not (Test-Path -LiteralPath $packagePath -PathType Leaf)) {
         throw "Expected browser package was not produced: $packagePath"
     }
@@ -73,7 +73,7 @@ try {
             'staticwebassets/realtime.iife.min.js',
             'staticwebassets/types/index.d.ts',
             'staticwebassets/version.json',
-            'buildTransitive/Realtime.Browser.props'
+            'buildTransitive/RealtimeStack.Browser.props'
         )) {
             if ($required -notin $entries) {
                 throw "Browser package is missing intended asset $required."
@@ -91,7 +91,7 @@ try {
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Realtime.Browser" Version="$BrowserPackageVersion" />
+    <PackageReference Include="RealtimeStack.Browser" Version="$BrowserPackageVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM

@@ -107,6 +107,6 @@ Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/ty
 
 ## Durable database plugins
 
-NuGet packages use `Realtime.*` IDs. Install `Realtime.Plugins.Persistence` with the database plugin for durable replay, notifications, and background task status. All ten database plugins depend on the shared persistence package. See [persistence integration](docs/persistence.md) and [package migration](docs/package-release.md#nuget-id-migration).
+NuGet packages use `RealtimeStack.*` IDs. Install `RealtimeStack.Plugins.Persistence` with the database plugin for durable replay, notifications, and background task status. All ten database plugins depend on the shared persistence package. See [persistence integration](docs/persistence.md) and [package migration](docs/package-release.md#nuget-id-migration).
 
-Use [`Realtime.Config`](docs/configuration.md) for registration and first-run setup. [Cross-language persistence integration](docs/persistence-integrations.md) covers the browser/.NET clients, language adapters, and Helm controls.
+Use [`RealtimeStack.Config`](docs/configuration.md) for registration and first-run setup. [Cross-language persistence integration](docs/persistence-integrations.md) covers the browser/.NET clients, language adapters, and Helm controls.

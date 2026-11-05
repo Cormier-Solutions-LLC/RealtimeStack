@@ -110,122 +110,122 @@
         "resolved": "10.0.5",
         "contentHash": "8IBJWcCT9+e4Bmevm4T7+fQEiAh133KGiz4oiVTgJckd3Q76OFdR1falgn9lpz7+C4HJvogCDJeAa2QmvbeVtg=="
       },
-      "realtime.aspnetcore": {
+      "RealtimeStack.AspNetCore": {
         "type": "Project",
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
           "OpenTelemetry.Extensions.Hosting": "[1.18.0, )",
-          "Realtime.Contracts": "[1.1.0-beta, )",
-          "Realtime.Redis": "[1.1.0-beta, )"
+          "RealtimeStack.Contracts": "[1.1.0-beta, )",
+          "RealtimeStack.Redis": "[1.1.0-beta, )"
         }
       },
-      "realtime.browser": {
+      "RealtimeStack.Browser": {
         "type": "Project"
       },
-      "realtime.client": {
+      "RealtimeStack.Client": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.1.0-beta, )"
+          "RealtimeStack.Contracts": "[1.1.0-beta, )"
         }
       },
-      "realtime.config": {
+      "RealtimeStack.Config": {
         "type": "Project",
         "dependencies": {
-          "Realtime.AspNetCore": "[1.1.0-beta, )",
-          "Realtime.Browser": "[1.1.0-beta, )",
-          "Realtime.Client": "[1.1.0-beta, )",
-          "Realtime.Contracts": "[1.1.0-beta, )",
-          "Realtime.HttpFallback": "[1.1.0-beta, )",
-          "Realtime.Plugins.AzureSql": "[1.1.0-beta, )",
-          "Realtime.Plugins.CockroachDb": "[1.1.0-beta, )",
-          "Realtime.Plugins.Db2": "[1.1.0-beta, )",
-          "Realtime.Plugins.MariaDb": "[1.1.0-beta, )",
-          "Realtime.Plugins.MySql": "[1.1.0-beta, )",
-          "Realtime.Plugins.Oracle": "[1.1.0-beta, )",
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )",
-          "Realtime.Plugins.PostgreSql": "[1.1.0-beta, )",
-          "Realtime.Plugins.Snowflake": "[1.1.0-beta, )",
-          "Realtime.Plugins.SqlServer": "[1.1.0-beta, )",
-          "Realtime.Plugins.Sqlite": "[1.1.0-beta, )",
-          "Realtime.Redis": "[1.1.0-beta, )"
+          "RealtimeStack.AspNetCore": "[1.1.0-beta, )",
+          "RealtimeStack.Browser": "[1.1.0-beta, )",
+          "RealtimeStack.Client": "[1.1.0-beta, )",
+          "RealtimeStack.Contracts": "[1.1.0-beta, )",
+          "RealtimeStack.HttpFallback": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.AzureSql": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.CockroachDb": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.Db2": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.MariaDb": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.MySql": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.Oracle": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.PostgreSql": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.Snowflake": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.SqlServer": "[1.1.0-beta, )",
+          "RealtimeStack.Plugins.Sqlite": "[1.1.0-beta, )",
+          "RealtimeStack.Redis": "[1.1.0-beta, )"
         }
       },
-      "realtime.contracts": {
+      "RealtimeStack.Contracts": {
         "type": "Project"
       },
-      "realtime.httpfallback": {
+      "RealtimeStack.HttpFallback": {
         "type": "Project",
         "dependencies": {
-          "Realtime.AspNetCore": "[1.1.0-beta, )"
+          "RealtimeStack.AspNetCore": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.azuresql": {
+      "RealtimeStack.Plugins.AzureSql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.cockroachdb": {
+      "RealtimeStack.Plugins.CockroachDb": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.db2": {
+      "RealtimeStack.Plugins.Db2": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.mariadb": {
+      "RealtimeStack.Plugins.MariaDb": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.mysql": {
+      "RealtimeStack.Plugins.MySql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.oracle": {
+      "RealtimeStack.Plugins.Oracle": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.persistence": {
+      "RealtimeStack.Plugins.Persistence": {
         "type": "Project"
       },
-      "realtime.plugins.postgresql": {
+      "RealtimeStack.Plugins.PostgreSql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.snowflake": {
+      "RealtimeStack.Plugins.Snowflake": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.sqlite": {
+      "RealtimeStack.Plugins.Sqlite": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.plugins.sqlserver": {
+      "RealtimeStack.Plugins.SqlServer": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
+          "RealtimeStack.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "realtime.redis": {
+      "RealtimeStack.Redis": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.1.0-beta, )",
+          "RealtimeStack.Contracts": "[1.1.0-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

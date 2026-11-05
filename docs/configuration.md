@@ -1,6 +1,6 @@
 # Registration and first-time configuration
 
-Install `Realtime.Config` for an integrated .NET 10 host. It references all seventeen other NuGet packages, with bounded dependencies. Existing `Realtime.AspNetCore` and `Realtime.Client` remain available for smaller consumers. The portable client still targets .NET Standard 2.0; the configuration package requires ASP.NET Core 10.
+Install `RealtimeStack.Config` for an integrated .NET 10 host. It references all seventeen other NuGet packages, with bounded dependencies. Existing `RealtimeStack.AspNetCore` and `RealtimeStack.Client` remain available for smaller consumers. The portable client still targets .NET Standard 2.0; the configuration package requires ASP.NET Core 10.
 
 ## First run
 

@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Client</PackageId>
+    <PackageId>RealtimeStack.Client</PackageId>
     <Authors>Realtime</Authors>
     <Description>Runtime-neutral .NET Standard WebSocket client for Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

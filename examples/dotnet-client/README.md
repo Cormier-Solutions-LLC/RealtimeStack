@@ -1,6 +1,6 @@
 # .NET client example
 
-This .NET 10 example uses the runtime-neutral `Realtime.Client` package to connect, authenticate, subscribe to `topics/orders`, publish one JSON event, receive messages, and stop cooperatively with Ctrl+C. The authenticated identity must be authorized for the `orders` topic.
+This .NET 10 example uses the runtime-neutral `RealtimeStack.Client` package to connect, authenticate, subscribe to `topics/orders`, publish one JSON event, receive messages, and stop cooperatively with Ctrl+C. The authenticated identity must be authorized for the `orders` topic.
 
 Supply the gateway endpoint and either a short-lived connection ticket or same-origin-compatible Cookie header through process configuration:
 

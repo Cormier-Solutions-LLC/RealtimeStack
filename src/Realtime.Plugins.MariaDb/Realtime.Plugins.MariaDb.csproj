@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Realtime.Plugins.MariaDb</RootNamespace>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Plugins.MariaDb</PackageId>
+    <PackageId>RealtimeStack.Plugins.MariaDb</PackageId>
     <Description>MariaDb durable realtime messages, notifications, and task status storage.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

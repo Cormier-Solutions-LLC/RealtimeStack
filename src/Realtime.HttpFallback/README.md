@@ -1,6 +1,6 @@
-# Realtime.HttpFallback
+# RealtimeStack.HttpFallback
 
-Optional HTTP fallback transport for hosts that already use `Realtime.AspNetCore`. It preserves the same protocol envelopes, authentication, route authorization, Redis delivery, queue limits, and reconnect behavior while using bounded long-poll requests for server-to-client messages and HTTP POST for client commands. A streaming endpoint is also available to custom clients.
+Optional HTTP fallback transport for hosts that already use `RealtimeStack.AspNetCore`. It preserves the same protocol envelopes, authentication, route authorization, Redis delivery, queue limits, and reconnect behavior while using bounded long-poll requests for server-to-client messages and HTTP POST for client commands. A streaming endpoint is also available to custom clients.
 
 ```csharp
 builder.Services.AddRealtimeGateway(builder.Configuration);

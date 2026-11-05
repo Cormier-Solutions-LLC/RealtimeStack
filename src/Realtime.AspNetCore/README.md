@@ -1,8 +1,8 @@
 # Realtime ASP.NET Core integration
 
-`Realtime.AspNetCore` adds the existing realtime gateway to an ASP.NET Core application without copying gateway infrastructure.
+`RealtimeStack.AspNetCore` adds the existing realtime gateway to an ASP.NET Core application without copying gateway infrastructure.
 
-The package targets `net10.0` and requires the ASP.NET Core shared framework. Add it to a .NET 10 web host from your approved NuGet source (`dotnet add package Realtime.AspNetCore --version 1.1.0-beta`). It carries compatible Contracts and Redis dependencies; it does not launch a separate gateway process or provide a login/identity provider.
+The package targets `net10.0` and requires the ASP.NET Core shared framework. Add it to a .NET 10 web host from your approved NuGet source (`dotnet add package RealtimeStack.AspNetCore --version 1.1.0-beta`). It carries compatible Contracts and Redis dependencies; it does not launch a separate gateway process or provide a login/identity provider.
 
 The following host setup assumes the required external configuration is already supplied. Memory-backed ASP.NET Core sessions are suitable only for a single-process example; choose a shared session store for multiple replicas.
 
@@ -44,7 +44,7 @@ At minimum supply a reachable `Redis:Endpoint`, a nonempty `Redis:InstancePrefix
 
 `MapRealtimeDiagnostics` maps the configured Prometheus/OpenMetrics endpoint and, only when explicitly enabled, the operator diagnostics routes. Diagnostics require a registered authorization policy plus configured Origin and network restrictions; Production requires the additional `Diagnostics:ProductionEnabled` acknowledgement. `AddRealtimeDiagnosticsBearer` is the built-in option for a strong runtime-provided operator token, while `AddRealtimeMetricsBearer` registers a distinct scrape credential and scheme. Applications using an identity provider can instead register their own policies. Never reuse the diagnostics and metrics policies or tokens, or place credentials in source, appsettings, Helm values, or browser storage. The live log/event streams and temporary log-level controls are bounded, redacted, audited, time-limited, and replica-coordinated through Redis. See the repository diagnostics runbook for the full policy and rollback matrix.
 
-For standard ASP.NET Core session middleware, call `AddSession` during service registration and place `UseSession` before the mapped endpoints execute. Set `Realtime:SessionSource` to `AspNetCoreSession`. The resolver reads `Realtime.SessionId` from `HttpContext.Session`, falling back to `ISession.Id`, and validates that identifier through the existing `IRealtimeSessionStore`; expiration, revocation, tenant scope, and reconnect therefore retain the shared Redis contract.
+For standard ASP.NET Core session middleware, call `AddSession` during service registration and place `UseSession` before the mapped endpoints execute. Set `Realtime:SessionSource` to `AspNetCoreSession`. The resolver reads `RealtimeStack.SessionId` from `HttpContext.Session`, falling back to `ISession.Id`, and validates that identifier through the existing `IRealtimeSessionStore`; expiration, revocation, tenant scope, and reconnect therefore retain the shared Redis contract.
 
 `AddSession` alone does not create an authorized realtime identity. The host's login flow must create the matching gateway session record (or provide an `IRealtimeSessionStore` implementation) and place its identifier in the configured session key. Cookie mode likewise requires an existing valid store record. Diagnostics bearer credentials are operator credentials, not application login credentials.
 

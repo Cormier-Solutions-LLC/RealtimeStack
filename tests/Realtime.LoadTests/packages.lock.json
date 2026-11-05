@@ -99,7 +99,7 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "realtime.contracts": {
+      "RealtimeStack.Contracts": {
         "type": "Project"
       }
     },

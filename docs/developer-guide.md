@@ -2,7 +2,7 @@
 
 ## ASP.NET Core hosting package
 
-`Realtime.AspNetCore` exposes `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway` for applications that need the realtime gateway inside an existing ASP.NET Core host. The package binds and validates the same `Gateway`, `Redis`, `Proxy`, `Realtime`, `Metrics`, and `Diagnostics` configuration sections used by the standalone gateway. The host decides whether to use the supplied bearer helpers or its own authorization policies.
+`RealtimeStack.AspNetCore` exposes `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway` for applications that need the realtime gateway inside an existing ASP.NET Core host. The package binds and validates the same `Gateway`, `Redis`, `Proxy`, `Realtime`, `Metrics`, and `Diagnostics` configuration sections used by the standalone gateway. The host decides whether to use the supplied bearer helpers or its own authorization policies.
 
 For standard ASP.NET Core session integration, configure `Realtime:SessionSource` as `AspNetCoreSession`, register session services, and place `UseSession` before the mapped endpoints execute. The configured session identifier is revalidated through `IRealtimeSessionStore` on initial connection and during the connection lifetime, so expiration, logout/revocation, tenant scope, and multi-instance reconnect retain the Redis contract.
 
@@ -10,7 +10,7 @@ The runnable example is under `examples/aspnet-core`. `scripts/Test-AspNetCorePa
 
 ## .NET Standard client
 
-`Realtime.Client` targets .NET Standard 2.0 and depends on the multi-targeted `Realtime.Contracts` package. It provides a bounded `ClientWebSocket` lifecycle plus replaceable authentication, transport, retry, clock, and logging abstractions without referencing ASP.NET Core hosting assemblies.
+`RealtimeStack.Client` targets .NET Standard 2.0 and depends on the multi-targeted `RealtimeStack.Contracts` package. It provides a bounded `ClientWebSocket` lifecycle plus replaceable authentication, transport, retry, clock, and logging abstractions without referencing ASP.NET Core hosting assemblies.
 
 The compatibility baseline is .NET Standard 2.0. CI restores, executes, and smoke-tests clean package consumers on .NET 8 and .NET 10; other .NET Standard 2.0 implementations must also support the package dependency versions listed in the NuGet artifact. See `src/Realtime.Client/README.md` for authentication, subscription, publish, reconnect, cancellation, and extension examples.
 

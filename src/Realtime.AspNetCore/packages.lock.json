@@ -84,13 +84,13 @@
         "resolved": "10.0.11",
         "contentHash": "OzKDcIRkeNJeC8qAsbn8yJXnfTLP1dtkWILe+T56Gf/z+IkAASi7sMqLqJQat08j5z/mRN5xVtoAwbkMNMoBUQ=="
       },
-      "realtime.contracts": {
+      "RealtimeStack.Contracts": {
         "type": "Project"
       },
-      "realtime.redis": {
+      "RealtimeStack.Redis": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.1.0-beta, )",
+          "RealtimeStack.Contracts": "[1.1.0-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

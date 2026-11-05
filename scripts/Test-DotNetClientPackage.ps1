@@ -52,18 +52,18 @@ try {
     else {
         $resolvedPackageSource = (Resolve-Path -LiteralPath $PackageSource -ErrorAction Stop).Path
         foreach ($package in @(
-            "Realtime.Contracts.$contractsPackageVersion.nupkg",
-            "Realtime.Client.$clientPackageVersion.nupkg",
-            "Realtime.Client.$clientPackageVersion.snupkg"
+            "RealtimeStack.Contracts.$contractsPackageVersion.nupkg",
+            "RealtimeStack.Client.$clientPackageVersion.nupkg",
+            "RealtimeStack.Client.$clientPackageVersion.snupkg"
         )) {
             Copy-Item -LiteralPath (Join-Path $resolvedPackageSource $package) -Destination $feedPath -ErrorAction Stop
         }
     }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $contractsPackage = Join-Path $feedPath "Realtime.Contracts.$contractsPackageVersion.nupkg"
-    $clientPackage = Join-Path $feedPath "Realtime.Client.$clientPackageVersion.nupkg"
-    $symbolsPackage = Join-Path $feedPath "Realtime.Client.$clientPackageVersion.snupkg"
+    $contractsPackage = Join-Path $feedPath "RealtimeStack.Contracts.$contractsPackageVersion.nupkg"
+    $clientPackage = Join-Path $feedPath "RealtimeStack.Client.$clientPackageVersion.nupkg"
+    $symbolsPackage = Join-Path $feedPath "RealtimeStack.Client.$clientPackageVersion.snupkg"
     foreach ($requiredPackage in @($contractsPackage, $clientPackage, $symbolsPackage)) {
         if (-not (Test-Path -LiteralPath $requiredPackage)) {
             throw "Expected package artifact was not produced: $requiredPackage"
@@ -102,7 +102,7 @@ try {
     $clientArchive = [System.IO.Compression.ZipFile]::OpenRead($clientPackage)
     try {
         $nuspecEntry = $clientArchive.Entries |
-            Where-Object FullName -EQ 'Realtime.Client.nuspec' |
+            Where-Object FullName -EQ 'RealtimeStack.Client.nuspec' |
             Select-Object -First 1
         $reader = [System.IO.StreamReader]::new($nuspecEntry.Open())
         try {
@@ -112,7 +112,7 @@ try {
             $reader.Dispose()
         }
         $expectedDependency = [regex]::Escape(
-            "Realtime.Contracts`" version=`"[$contractsPackageVersion, $contractsUpperBound)`"")
+            "RealtimeStack.Contracts`" version=`"[$contractsPackageVersion, $contractsUpperBound)`"")
         if ($nuspec -notmatch $expectedDependency) {
             throw 'The client package does not constrain its contracts dependency to the compatible minor line.'
         }
@@ -136,7 +136,7 @@ try {
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Realtime.Client" Version="$DotNetClientVersion" />
+    <PackageReference Include="RealtimeStack.Client" Version="$DotNetClientVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM

@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Redis</PackageId>
+    <PackageId>RealtimeStack.Redis</PackageId>
     <Description>Redis messaging and session infrastructure for Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>websocket;realtime;redis;messaging</PackageTags>

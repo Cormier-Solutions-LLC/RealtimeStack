@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <VersionPrefix>$(BrowserPackageVersion)</VersionPrefix>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Browser</PackageId>
+    <PackageId>RealtimeStack.Browser</PackageId>
     <StaticWebAssetBasePath>_content/Realtime.Browser</StaticWebAssetBasePath>
     <Description>Static web assets for the Realtime browser and TypeScript client.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

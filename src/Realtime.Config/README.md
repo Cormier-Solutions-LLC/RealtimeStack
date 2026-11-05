@@ -1,4 +1,4 @@
-# Realtime.Config
+# RealtimeStack.Config
 
 .NET 10 registration and first-run setup for the Realtime package family. Includes the gateway/Redis integration, HTTP fallback, portable .NET client, browser assets, persistence contracts, and all ten database adapters.
 

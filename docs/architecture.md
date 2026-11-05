@@ -2,21 +2,21 @@
 
 ## Deployment and hosting boundary
 
-`Realtime.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `Realtime.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
+`Realtime.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `RealtimeStack.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
 
-Applications that need the same realtime capability in an existing ASP.NET Core process can reference `Realtime.AspNetCore` and call `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
+Applications that need the same realtime capability in an existing ASP.NET Core process can reference `RealtimeStack.AspNetCore` and call `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
 
 Both hosting modes use the same protocol, Redis, diagnostics, metrics, and configuration contracts. Deployment names, network identities, trust boundaries, and Secret names are supplied at runtime rather than encoded in the application.
 
 ## Component responsibilities
 
-- **`Realtime.Contracts`** owns the wire envelopes, health and ticket DTOs, Redis records, durable messages, protocol validation, and source-generated `System.Text.Json` context. It targets .NET Standard 2.0 and .NET 10.
-- **`Realtime.Redis`** owns the reconnecting Redis connection, session lookup, atomic single-use ticket issue/consume flow, namespaced Pub/Sub, and optional durable Streams store.
-- **`Realtime.AspNetCore`** owns service registration, option validation, middleware and endpoint mapping, authentication resolution, connection lifecycle, dispatch and authorization, local connection state, Redis subscription, metrics, OpenTelemetry, diagnostics, and graceful drain behavior.
+- **`RealtimeStack.Contracts`** owns the wire envelopes, health and ticket DTOs, Redis records, durable messages, protocol validation, and source-generated `System.Text.Json` context. It targets .NET Standard 2.0 and .NET 10.
+- **`RealtimeStack.Redis`** owns the reconnecting Redis connection, session lookup, atomic single-use ticket issue/consume flow, namespaced Pub/Sub, and optional durable Streams store.
+- **`RealtimeStack.AspNetCore`** owns service registration, option validation, middleware and endpoint mapping, authentication resolution, connection lifecycle, dispatch and authorization, local connection state, Redis subscription, metrics, OpenTelemetry, diagnostics, and graceful drain behavior.
 - **`Realtime.Gateway`** is the standalone composition root and lifecycle host.
-- **`Realtime.Client`** is the .NET Standard 2.0 client, including transport abstraction, authentication refresh, bounded queues, request correlation, heartbeats, reconnect, and subscription restoration.
-- **`sdk/typescript`** is the canonical TypeScript/browser client and deterministic ESM/IIFE asset pipeline. **`Realtime.Browser`** packages those browser artifacts for ASP.NET Core consumers.
-- **`Realtime.HttpFallback`** is an optional ASP.NET Core transport package. It maps authenticated HTTP command and long-poll/stream endpoints while reusing the gateway's dispatcher, connection registry, authorization, and Redis delivery path.
+- **`RealtimeStack.Client`** is the .NET Standard 2.0 client, including transport abstraction, authentication refresh, bounded queues, request correlation, heartbeats, reconnect, and subscription restoration.
+- **`sdk/typescript`** is the canonical TypeScript/browser client and deterministic ESM/IIFE asset pipeline. **`RealtimeStack.Browser`** packages those browser artifacts for ASP.NET Core consumers.
+- **`RealtimeStack.HttpFallback`** is an optional ASP.NET Core transport package. It maps authenticated HTTP command and long-poll/stream endpoints while reusing the gateway's dispatcher, connection registry, authorization, and Redis delivery path.
 - **Helm, bootstrap, cluster, observability, and load assets** turn the runtime contracts into validated deployment plans, Kubernetes resources, telemetry, runbooks, and repeatable test workloads.
 - **Tests and examples** verify unit behavior, the hosted HTTP/WebSocket system, .NET clients, Kubernetes/rendered contracts, load-harness behavior, clean package consumers, browsers, and alternative server stacks.
 

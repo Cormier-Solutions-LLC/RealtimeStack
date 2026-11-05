@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Realtime.Plugins.CockroachDb</RootNamespace>
     <IsPackable>true</IsPackable>
-    <PackageId>Realtime.Plugins.CockroachDb</PackageId>
+    <PackageId>RealtimeStack.Plugins.CockroachDb</PackageId>
     <Description>CockroachDb durable realtime messages, notifications, and task status storage.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

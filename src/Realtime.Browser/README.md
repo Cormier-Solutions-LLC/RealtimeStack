@@ -1,11 +1,11 @@
-# Realtime.Browser
+# RealtimeStack.Browser
 
 This package exposes the generated Realtime browser SDK as ASP.NET Core static web assets.
 
 It targets `net10.0` and references the ASP.NET Core shared framework. Install it in a .NET 10 web host from your configured NuGet source:
 
 ```text
-dotnet add package Realtime.Browser --version 1.1.0-beta
+dotnet add package RealtimeStack.Browser --version 1.1.0-beta
 ```
 
 Enable static file serving in the consuming host, as in the repository's clean-consumer check:
@@ -27,7 +27,7 @@ After adding the package to an ASP.NET Core application, use the readable or pro
 
 ES modules, IIFE bundles, declarations, source maps, and `version.json` are produced deterministically from `sdk/typescript`. The browser package version follows the same compatibility policy as `@realtime/client`; protocol compatibility is recorded in `version.json`.
 
-The IIFE exposes `Realtime.RealtimeClient` and `Realtime.DiagnosticsClient`. ESM consumers can import named exports from `/_content/Realtime.Browser/realtime.min.js`. Readable counterparts omit `.min`; declarations live under `types/`. Use a matching set of JavaScript, maps and metadata from one build. The SDK currently implements envelope version `1.0` and subprotocol `realtime.v1`; browser compatibility follows the locked Playwright matrix, with an ES2022 output target.
+The IIFE exposes `RealtimeStack.RealtimeClient` and `RealtimeStack.DiagnosticsClient`. ESM consumers can import named exports from `/_content/Realtime.Browser/realtime.min.js`. Readable counterparts omit `.min`; declarations live under `types/`. Use a matching set of JavaScript, maps and metadata from one build. The SDK currently implements envelope version `1.0` and subprotocol `realtime.v1`; browser compatibility follows the locked Playwright matrix, with an ES2022 output target.
 
 For repository builds, run `npm --prefix sdk/typescript ci` and `npm --prefix sdk/typescript run build` with Node.js 22+ before packing this project. The Razor project copies existing `sdk/typescript/dist` files; it does not run npm or regenerate them. Generated `wwwroot` content is not an independent source to edit. `scripts/Test-BrowserPackage.ps1` inspects package entries and builds an isolated .NET 10 consumer/static-asset manifest; SDK browser tests verify runtime behavior separately.
 

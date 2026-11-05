@@ -429,39 +429,39 @@ try {
     }
     Assert-Reproducible $firstPack $secondPack
     $metadata = @('<license type="expression">MIT</license>', '<readme>README.md</readme>', '<repository type="git"')
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg") `
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg") `
         @('README.md', 'lib/netstandard2.0/Realtime.Contracts.dll', 'lib/net10.0/Realtime.Contracts.dll') $metadata
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Client.$(($DotNetClientVersion -split '\+', 2)[0]).nupkg") `
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Client.$(($DotNetClientVersion -split '\+', 2)[0]).nupkg") `
         @('README.md', 'lib/netstandard2.0/Realtime.Client.dll') `
-        ($metadata + ('<dependency id="Realtime.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg") `
+        ($metadata + ('<dependency id="RealtimeStack.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg") `
         @('README.md', 'lib/net10.0/Realtime.Redis.dll') `
-        ($metadata + ('<dependency id="Realtime.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg") `
+        ($metadata + ('<dependency id="RealtimeStack.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg") `
         @('README.md', 'lib/net10.0/Realtime.AspNetCore.dll') `
-        ($metadata + ('<dependency id="Realtime.Redis" version="[{0}, {1})"' -f $normalizedRedisVersion, $RedisAdapterCompatibilityUpperBound))
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg") `
+        ($metadata + ('<dependency id="RealtimeStack.Redis" version="[{0}, {1})"' -f $normalizedRedisVersion, $RedisAdapterCompatibilityUpperBound))
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg") `
         @('README.md', 'lib/net10.0/Realtime.HttpFallback.dll') `
-        ($metadata + ('<dependency id="Realtime.AspNetCore" version="[{0}, {1})"' -f $normalizedAspNetCoreVersion, $AspNetCoreCompatibilityUpperBound))
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Browser.$(($BrowserPackageVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'staticwebassets/realtime.js', 'staticwebassets/realtime.min.js', 'staticwebassets/realtime.iife.js', 'staticwebassets/realtime.iife.min.js', 'staticwebassets/types/index.d.ts', 'staticwebassets/version.json', 'buildTransitive/Realtime.Browser.props') $metadata
+        ($metadata + ('<dependency id="RealtimeStack.AspNetCore" version="[{0}, {1})"' -f $normalizedAspNetCoreVersion, $AspNetCoreCompatibilityUpperBound))
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Browser.$(($BrowserPackageVersion -split '\+', 2)[0]).nupkg") `
+        @('README.md', 'staticwebassets/realtime.js', 'staticwebassets/realtime.min.js', 'staticwebassets/realtime.iife.js', 'staticwebassets/realtime.iife.min.js', 'staticwebassets/types/index.d.ts', 'staticwebassets/version.json', 'buildTransitive/RealtimeStack.Browser.props') $metadata
     foreach ($packageId in @('Contracts', 'Client', 'Redis', 'AspNetCore', 'HttpFallback', 'Browser')) {
-        if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "Realtime.$packageId.*.snupkg" -File)) {
+        if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "RealtimeStack.$packageId.*.snupkg" -File)) {
             throw "The symbol package for Realtime.$packageId was not produced."
         }
     }
     foreach ($plugin in $pluginNames) {
         $requirements = $metadata
         if ($plugin -ne 'Persistence') {
-            $requirements += ('<dependency id="Realtime.Plugins.Persistence" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound)
+            $requirements += ('<dependency id="RealtimeStack.Plugins.Persistence" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound)
         }
-        Assert-NuGetPackage (Join-Path $firstPack "Realtime.Plugins.$plugin.$normalizedContractsVersion.nupkg") `
+        Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Plugins.$plugin.$normalizedContractsVersion.nupkg") `
             @('README.md', "lib/net10.0/Realtime.Plugins.$plugin.dll") $requirements
-        if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "Realtime.Plugins.$plugin.*.snupkg" -File)) {
+        if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "RealtimeStack.Plugins.$plugin.*.snupkg" -File)) {
             throw "Missing symbols for Realtime.Plugins.$plugin."
         }
     }
-    Assert-NuGetPackage (Join-Path $firstPack "Realtime.Config.$normalizedContractsVersion.nupkg") `
+    Assert-NuGetPackage (Join-Path $firstPack "RealtimeStack.Config.$normalizedContractsVersion.nupkg") `
         @('README.md', 'lib/net10.0/Realtime.Config.dll') $metadata
     $npmTarball = Get-ChildItem -LiteralPath $firstPack -Filter '*.tgz' -File | Select-Object -First 1
     $npmConsumer = Join-Path $stageRoot 'npm-consumer'

@@ -1,19 +1,19 @@
 # Durable realtime persistence
 
-`Realtime.Plugins.Persistence` is the shared package. All ten database plugins depend on it with the same bounded compatibility range as the rest of the package family. Plugin versions follow `ContractsVersion` in coordinated releases.
+`RealtimeStack.Plugins.Persistence` is the shared package. All ten database plugins depend on it with the same bounded compatibility range as the rest of the package family. Plugin versions follow `ContractsVersion` in coordinated releases.
 
 | Package | Host-supplied ADO.NET connection |
 | --- | --- |
-| `Realtime.Plugins.PostgreSql` | Npgsql connection |
-| `Realtime.Plugins.MySql` | MySqlConnector connection |
-| `Realtime.Plugins.MariaDb` | MySqlConnector connection |
-| `Realtime.Plugins.SqlServer` | Microsoft.Data.SqlClient connection |
-| `Realtime.Plugins.AzureSql` | Microsoft.Data.SqlClient connection with host-managed Azure authentication |
-| `Realtime.Plugins.Oracle` | Oracle managed provider connection, Oracle 12c or newer SQL syntax |
-| `Realtime.Plugins.Sqlite` | Microsoft.Data.Sqlite connection |
-| `Realtime.Plugins.Db2` | IBM Db2 LUW provider connection; not qualified for Db2 for i or z/OS |
-| `Realtime.Plugins.CockroachDb` | Npgsql connection using the PostgreSQL protocol |
-| `Realtime.Plugins.Snowflake` | Snowflake.Data connection and hybrid table support |
+| `RealtimeStack.Plugins.PostgreSql` | Npgsql connection |
+| `RealtimeStack.Plugins.MySql` | MySqlConnector connection |
+| `RealtimeStack.Plugins.MariaDb` | MySqlConnector connection |
+| `RealtimeStack.Plugins.SqlServer` | Microsoft.Data.SqlClient connection |
+| `RealtimeStack.Plugins.AzureSql` | Microsoft.Data.SqlClient connection with host-managed Azure authentication |
+| `RealtimeStack.Plugins.Oracle` | Oracle managed provider connection, Oracle 12c or newer SQL syntax |
+| `RealtimeStack.Plugins.Sqlite` | Microsoft.Data.Sqlite connection |
+| `RealtimeStack.Plugins.Db2` | IBM Db2 LUW provider connection; not qualified for Db2 for i or z/OS |
+| `RealtimeStack.Plugins.CockroachDb` | Npgsql connection using the PostgreSQL protocol |
+| `RealtimeStack.Plugins.Snowflake` | Snowflake.Data connection and hybrid table support |
 
 Drivers are installed by the host, separately from these plugins. This avoids forcing driver versions, native binaries, authentication packages, or driver-specific trimming requirements onto every consumer. Pass a factory returning a **fresh unopened connection** on every invocation; each operation opens and disposes its own connection. Configure database/schema, authentication, command timeouts, pooling, and TLS using the selected driver's supported configuration. The optional `configureCommand` callback runs after parameters and SQL are populated, before execution. Use it to set command timeouts and provider-specific parameter metadata (for example Oracle CLOB binding for large payloads and Unicode settings for Db2). Cancellation is passed through to database operations; actual cancellation behavior is driver-dependent.
 
@@ -61,7 +61,7 @@ var status = await tasks.GetAsync(authenticatedTenant, authenticatedOwner, taskI
 
 Run imports outside the HTTP request and WebSocket lifetime. Persist the task ID where the host can rediscover it, such as an application job table or a notification inbox. Store `Failed` with a safe error description and `FinishedAt` when execution fails. Terminal snapshots require a completion time; active snapshots cannot have one. `GetAsync` returns the snapshot with the highest sequence. Hosts enforce legal state transitions and serialize worker updates.
 
-The persistence packages store replay and task history. They do not automatically capture gateway traffic, discover task IDs, queue execution, lease workers, or recover a worker after a server restart. Optional `Realtime.Config` integration now supplies an HTTP task/inbox API and shared example UI; see [cross-language integration](persistence-integrations.md). A production durable worker must persist its work request, claim work safely, handle abandoned leases, and make business side effects retry-safe. Closing a page can be supported by a server-owned worker plus this status store; surviving server/process loss additionally requires that worker recovery design.
+The persistence packages store replay and task history. They do not automatically capture gateway traffic, discover task IDs, queue execution, lease workers, or recover a worker after a server restart. Optional `RealtimeStack.Config` integration now supplies an HTTP task/inbox API and shared example UI; see [cross-language integration](persistence-integrations.md). A production durable worker must persist its work request, claim work safely, handle abandoned leases, and make business side effects retry-safe. Closing a page can be supported by a server-owned worker plus this status store; surviving server/process loss additionally requires that worker recovery design.
 
 ## Verification
 
