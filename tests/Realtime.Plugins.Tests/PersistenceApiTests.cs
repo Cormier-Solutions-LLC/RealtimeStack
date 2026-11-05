@@ -24,7 +24,7 @@ public sealed class PersistenceApiTests
     [Fact]
     public async Task WorkerWritesAreSeparateFromSessionScopedReadsAndAcknowledgments()
     {
-        var file = Path.Combine(Path.GetTempPath(), $"realtime-api-{Guid.NewGuid():N}.db");
+        var file = Path.Join(Path.GetTempPath(), $"realtime-api-{Guid.NewGuid():N}.db");
         try
         {
             var store = new SqlitePersistenceStore(() => new SqliteConnection($"Data Source={file};Pooling=False"));

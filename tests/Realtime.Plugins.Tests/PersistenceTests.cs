@@ -6,7 +6,7 @@ namespace Cormier.Realtime.Plugins.Tests;
 
 public sealed class PersistenceTests : IDisposable
 {
-    private readonly string path = Path.Combine(Path.GetTempPath(), $"realtime-{Guid.NewGuid():N}.db");
+    private readonly string path = Path.Join(Path.GetTempPath(), $"realtime-{Guid.NewGuid():N}.db");
     private readonly FixedClock clock = new();
     private SqlitePersistenceStore Store() => new(() => new SqliteConnection($"Data Source={path};Pooling=False"), timeProvider: clock);
     private static DurableStreamKey Stream(string tenant = "tenant", string owner = "owner", DurableRecordKind kind = DurableRecordKind.Message) =>

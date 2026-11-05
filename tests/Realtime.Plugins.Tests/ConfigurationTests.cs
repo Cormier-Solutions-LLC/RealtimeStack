@@ -8,7 +8,7 @@ namespace Cormier.Realtime.Plugins.Tests;
 
 public sealed class ConfigurationTests : IDisposable
 {
-    private readonly string path = Path.Combine(Path.GetTempPath(), $"realtime-config-{Guid.NewGuid():N}.db");
+    private readonly string path = Path.Join(Path.GetTempPath(), $"realtime-config-{Guid.NewGuid():N}.db");
 
     private IConfiguration Config(string provider = "Sqlite") => new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
     {
