@@ -447,7 +447,7 @@ try {
         @('README.md', 'staticwebassets/realtime.js', 'staticwebassets/realtime.min.js', 'staticwebassets/realtime.iife.js', 'staticwebassets/realtime.iife.min.js', 'staticwebassets/types/index.d.ts', 'staticwebassets/version.json', 'buildTransitive/RealtimeStack.Browser.props') $metadata
     foreach ($packageId in @('Contracts', 'Client', 'Redis', 'AspNetCore', 'HttpFallback', 'Browser')) {
         if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "RealtimeStack.$packageId.*.snupkg" -File)) {
-            throw "The symbol package for Realtime.$packageId was not produced."
+            throw "The symbol package for RealtimeStack.$packageId was not produced."
         }
     }
     foreach ($plugin in $pluginNames) {
