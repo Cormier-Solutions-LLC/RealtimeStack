@@ -5,6 +5,7 @@
     <VersionPrefix>$(BrowserPackageVersion)</VersionPrefix>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Browser</PackageId>
+    <StaticWebAssetBasePath>_content/Realtime.Browser</StaticWebAssetBasePath>
     <Description>Static web assets for the Cormier.Realtime browser and TypeScript client.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>websocket;realtime;browser;typescript;static-web-assets</PackageTags>

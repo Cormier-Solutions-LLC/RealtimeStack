@@ -87,8 +87,8 @@
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
           "OpenTelemetry.Extensions.Hosting": "[1.18.0, )",
-          "Realtime.Contracts": "[1.0.6-beta, )",
-          "Realtime.Redis": "[1.0.6-beta, )"
+          "Realtime.Contracts": "[1.1.0-beta, )",
+          "Realtime.Redis": "[1.1.0-beta, )"
         }
       },
       "Realtime.Browser": {
@@ -97,7 +97,7 @@
       "Realtime.Client": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.0.6-beta, )"
+          "Realtime.Contracts": "[1.1.0-beta, )"
         }
       },
       "Realtime.Contracts": {
@@ -106,43 +106,43 @@
       "Realtime.HttpFallback": {
         "type": "Project",
         "dependencies": {
-          "Realtime.AspNetCore": "[1.0.6-beta, )"
+          "Realtime.AspNetCore": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.azuresql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.cockroachdb": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.db2": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.mariadb": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.mysql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.oracle": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.persistence": {
@@ -151,31 +151,31 @@
       "realtime.plugins.postgresql": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.snowflake": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.sqlite": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "realtime.plugins.sqlserver": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Plugins.Persistence": "[1.0.6-beta, )"
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
       "Realtime.Redis": {
         "type": "Project",
         "dependencies": {
-          "Realtime.Contracts": "[1.0.6-beta, )",
+          "Realtime.Contracts": "[1.1.0-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }
