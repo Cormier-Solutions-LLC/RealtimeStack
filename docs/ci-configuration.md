@@ -6,4 +6,4 @@ Container tools and language fixtures use the `CI_*_IMAGE` repository variables 
 
 Changing a variable does not update an already-started job. Start a fresh validation run after changing runner or image configuration. Preserve the successful CI commit and its immutable package candidate for publication.
 
-The CI workflow also supports manual dispatch on a selected ref. For a temporary shared-runner outage, `CI_RUNNER_LABEL` can select `ubuntu-latest`; the same Linux prerequisite setup and complete validation matrix apply. Restore the normal runner label after the release. Publication still requires successful push CI on the exact main commit.
+The CI workflow also supports manual dispatch on a selected ref. For a temporary shared-runner outage, `CI_RUNNER_LABEL` can select `ubuntu-24.04`; the same Linux prerequisite setup and complete validation matrix apply. Restore the normal runner label after the release. Publication still requires successful push CI on the exact main commit.

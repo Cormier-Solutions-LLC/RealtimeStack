@@ -173,7 +173,7 @@ class ReferenceController < ApplicationController
 
   def forward_ticket(body)
     uri = settings.gateway_uri.dup
-    uri.path = ["/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read"].include?(request.path) ? request.path : "/realtime/tickets"
+    uri.path = [ "/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read" ].include?(request.path) ? request.path : "/realtime/tickets"
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == "https"
     http.open_timeout = 5

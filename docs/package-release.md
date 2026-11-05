@@ -71,6 +71,6 @@ If restore fails, confirm the configured feed contains every dependency version 
 
 ## NuGet ID migration
 
-New candidates use `Realtime.*` package IDs. Replace each legacy prefixed PackageReference with its `Realtime.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names now use `Realtime.*`; browser filenames use `realtime-*` and static asset URLs use `/_content/Realtime.Browser/`. Update consumer imports and URLs together. Do not install both identity families together: they contain the same assemblies. Historical published packages remain immutable.
+New candidates use `Realtime.*` package IDs. Replace each legacy prefixed PackageReference with its `Realtime.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names now use `Realtime.*`; browser filenames use `realtime-*` and static asset URLs use `/_content/Realtime.Browser/`. Update consumer imports and URLs together. Avoid mixing the legacy and current package graphs; their public types now have different assembly identities. Historical published packages remain immutable.
 
 Before promoting the first renamed candidate, configure NuGet ownership and Trusted Publishing for the `Realtime.*` scope. Deprecate the old package IDs with their corresponding replacement IDs after successful promotion; do not delete historical versions.

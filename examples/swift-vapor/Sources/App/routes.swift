@@ -1,11 +1,7 @@
 import AsyncHTTPClient
-
 import Foundation
-
 import NIOCore
-
 @preconcurrency import Redis
-
 import Vapor
 
 private let sessionCookie = "realtime_session"
@@ -172,40 +168,44 @@ func routes(_ application: Application, settings: ReferenceSettings) {
     }
   }
 
-  for endpoint in [["realtime", "tickets"], ["realtime", "persistence", "records", "read"], ["realtime", "persistence", "records", "ack"], ["realtime", "persistence", "tasks", "read"]] {
-  application.on(.POST, endpoint.map { PathComponent.constant($0) }) { request async -> Response in
-    guard validOrigin(request, settings: settings) else {
-      return try! await errorResponse(
-        .forbidden, "origin_rejected", "The request Origin is not allowed.", request)
-    }
-    do {
-      guard try await readSession(request, settings: settings) != nil else {
-        return try await errorResponse(
-          .unauthorized, "authentication_required", "Authentication is required.", request)
+  for endpoint in [
+    ["realtime", "tickets"], ["realtime", "persistence", "records", "read"],
+    ["realtime", "persistence", "records", "ack"], ["realtime", "persistence", "tasks", "read"],
+  ] {
+    application.on(.POST, endpoint.map { PathComponent.constant($0) }) {
+      request async -> Response in
+      guard validOrigin(request, settings: settings) else {
+        return try! await errorResponse(
+          .forbidden, "origin_rejected", "The request Origin is not allowed.", request)
       }
-      guard request.body.data?.readableBytes ?? 0 <= maximumBodyBytes else {
-        return try await errorResponse(
-          .payloadTooLarge, "invalid_request", "The request is invalid.", request)
-      }
-      var headers = HTTPHeaders()
-      for name in [HTTPHeaders.Name.origin, .cookie, .contentType] {
-        if let value = request.headers.first(name: name) {
-          headers.replaceOrAdd(name: name, value: value)
+      do {
+        guard try await readSession(request, settings: settings) != nil else {
+          return try await errorResponse(
+            .unauthorized, "authentication_required", "Authentication is required.", request)
         }
+        guard request.body.data?.readableBytes ?? 0 <= maximumBodyBytes else {
+          return try await errorResponse(
+            .payloadTooLarge, "invalid_request", "The request is invalid.", request)
+        }
+        var headers = HTTPHeaders()
+        for name in [HTTPHeaders.Name.origin, .cookie, .contentType] {
+          if let value = request.headers.first(name: name) {
+            headers.replaceOrAdd(name: name, value: value)
+          }
+        }
+        if let authority = request.headers.first(name: .host) {
+          headers.replaceOrAdd(name: .host, value: authority)
+        }
+        headers.replaceOrAdd(name: "X-Forwarded-Proto", value: settings.publicScheme)
+        let upstream = try await boundedTicketRequest(request, settings: settings, headers: headers)
+        var responseHeaders = HTTPHeaders()
+        responseHeaders.contentType = upstream.headers.contentType ?? .json
+        let body = upstream.body.map { Response.Body(buffer: $0) } ?? .empty
+        return Response(status: upstream.status, headers: responseHeaders, body: body)
+      } catch {
+        return await dependencyUnavailable(request, caught: error)
       }
-      if let authority = request.headers.first(name: .host) {
-        headers.replaceOrAdd(name: .host, value: authority)
-      }
-      headers.replaceOrAdd(name: "X-Forwarded-Proto", value: settings.publicScheme)
-      let upstream = try await boundedTicketRequest(request, settings: settings, headers: headers)
-      var responseHeaders = HTTPHeaders()
-      responseHeaders.contentType = upstream.headers.contentType ?? .json
-      let body = upstream.body.map { Response.Body(buffer: $0) } ?? .empty
-      return Response(status: upstream.status, headers: responseHeaders, body: body)
-    } catch {
-      return await dependencyUnavailable(request, caught: error)
     }
-  }
   }
 }
 private func boundedTicketRequest(

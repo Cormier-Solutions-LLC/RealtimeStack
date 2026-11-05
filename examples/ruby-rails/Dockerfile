@@ -1,5 +1,5 @@
 ARG RUBY_IMAGE=ruby:4.0.6-alpine3.24@sha256:6ec7aeb4f3f0b67a21fb73a83fc20a4055696e64b933229f68ec805a3de38fcc
-ARG GO_IMAGE=golang:1.26.9-alpine3.24@sha256:3082400e369fa24d5fc60bca20edab3f6d604e0c5a690ec66b295eff4dd87ade
+ARG GO_IMAGE=golang:1.26.10-alpine3.24@sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b1dd80b4e6ee4338db547050308
 FROM ${RUBY_IMAGE} AS dependencies
 RUN apk add --no-cache build-base yaml-dev
 RUN gem install bundler -v 4.0.20 --no-document

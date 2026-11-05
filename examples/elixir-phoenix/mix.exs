@@ -18,7 +18,7 @@ defmodule RealtimeExample.MixProject do
   defp deps do
     [
       {:phoenix, "1.8.13"},
-      {:bandit, "1.12.5"},
+      {:bandit, "1.14.1"},
       {:redix, "1.9.1"},
       {:req, "0.7.4"},
       {:mint_web_socket, "1.0.6"},

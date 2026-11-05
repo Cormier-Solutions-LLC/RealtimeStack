@@ -322,10 +322,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.api_route("/realtime/persistence/{path:path}", methods=["POST"])
     @app.api_route("/realtime/http/{path:path}", methods=["GET", "POST", "DELETE"])
     async def http_fallback(path: str, request: Request) -> StreamingResponse:
-        if (
-            request.url.path.startswith("/realtime/persistence/")
-            and path not in {"records/read", "records/ack", "tasks/read"}
-        ):
+        if request.url.path.startswith("/realtime/persistence/") and path not in {
+            "records/read",
+            "records/ack",
+            "tasks/read",
+        }:
             raise HTTPException(404, detail="Not found.")
         body = bytearray()
         async for chunk in request.stream():

@@ -24,6 +24,8 @@ test("packaged browser assets expose both direct-script and ESM consumers", asyn
   await expect(page.locator("#state")).toHaveText("idle");
   await expect(page.locator("#login")).toBeVisible();
   expect(await page.evaluate(() => typeof window.RealtimeClient)).toBe("function");
+  expect(await page.evaluate(() => typeof window.Realtime?.RealtimePersistenceClient)).toBe("function");
+  await expect(page.locator("#durable-stream")).toHaveCount(1);
 });
 
 test("operator view exposes diagnostics controls separately from ordinary roles", async ({ page }) => {
