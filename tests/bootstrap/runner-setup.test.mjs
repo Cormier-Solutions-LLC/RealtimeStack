@@ -34,10 +34,11 @@ test('GitHub YAML files retain LF checkout with Windows line-ending settings', t
   }
 });
 
-test('CI registry logins consistently use the configured Harbor credentials', () => {
+test('optional CI registry logins use configured credentials', () => {
   const workflow = readFileSync(new URL('.github/workflows/ci.yml', root), 'utf8');
   const logins = [...workflow.matchAll(/uses: docker\/login-action@[^\r\n]+\r?\n        with:\r?\n((?:          .*\r?\n)+)/g)];
   assert.ok(logins.length > 0);
+  assert.equal(logins.length, [...workflow.matchAll(/if: vars\.CI_IMAGE_REGISTRY != ''/g)].length);
   for (const [, inputs] of logins) {
     assert.match(inputs, /username: \$\{\{ secrets\.HARBOR_USERNAME \}\}/);
     assert.match(inputs, /password: \$\{\{ secrets\.HARBOR_PASSWORD \}\}/);

@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="10.0.14" />
     <ProjectReference Include="..\Realtime.AspNetCore\Realtime.AspNetCore.csproj" />
     <ProjectReference Include="..\Realtime.HttpFallback\Realtime.HttpFallback.csproj" />
   </ItemGroup>
