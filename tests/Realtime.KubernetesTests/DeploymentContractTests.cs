@@ -482,12 +482,12 @@ public sealed class DeploymentContractTests
         var promote = Read(".github/workflows/promote.yml");
         var deploymentTools = Read("scripts/setup-ci-deployment-tools.sh");
         var powershellSetup = Read("scripts/setup-ci-powershell.sh");
-        Assert.Contains("runs-on: realtime-runners", publish, StringComparison.Ordinal);
+        Assert.Contains("runs-on: ${{ vars.CI_RUNNER_LABEL }}", publish, StringComparison.Ordinal);
         Assert.Contains("actions/setup-node@v7", publish, StringComparison.Ordinal);
         Assert.Contains("node-version: 26.10.0", publish, StringComparison.Ordinal);
         Assert.Contains("mirror: ${{ env.CI_NODE_DOWNLOAD_MIRROR }}", publish, StringComparison.Ordinal);
         Assert.Contains("run: bash scripts/setup-ci-deployment-tools.sh", publish, StringComparison.Ordinal);
-        Assert.Contains("runs-on: realtime-runners", promote, StringComparison.Ordinal);
+        Assert.Contains("runs-on: ${{ vars.CI_RUNNER_LABEL }}", promote, StringComparison.Ordinal);
         Assert.Contains("name: Check out trusted deployment tooling", promote, StringComparison.Ordinal);
         Assert.Contains("ref: refs/heads/main", promote, StringComparison.Ordinal);
         Assert.Contains("run: bash scripts/setup-ci-powershell.sh", promote, StringComparison.Ordinal);
@@ -632,7 +632,7 @@ public sealed class DeploymentContractTests
         Assert.DoesNotContain("github.com", props, StringComparison.OrdinalIgnoreCase);
 
         Assert.Contains("environment: package-production", workflow, StringComparison.Ordinal);
-        Assert.Equal(3, workflow.Split("runs-on: realtime-runners", StringSplitOptions.None).Length - 1);
+        Assert.Equal(3, workflow.Split("runs-on: ${{ vars.CI_RUNNER_LABEL }}", StringSplitOptions.None).Length - 1);
         Assert.DoesNotContain("runs-on: ubuntu-latest", workflow, StringComparison.Ordinal);
         Assert.Contains("DOTNET_INSTALL_DIR: ${{ vars.CI_DOTNET_INSTALL_DIR || '/home/runner/.dotnet' }}", workflow, StringComparison.Ordinal);
         Assert.Equal(3, workflow.Split("run: bash scripts/setup-ci-powershell.sh", StringSplitOptions.None).Length - 1);
@@ -822,7 +822,7 @@ public sealed class DeploymentContractTests
         Assert.Contains("run: node scripts/setup-ci-npm.mjs", ci, StringComparison.Ordinal);
         Assert.DoesNotContain("node-version: 24", ci, StringComparison.Ordinal);
         Assert.Contains($"node-version: {nodeVersion}", ci, StringComparison.Ordinal);
-        Assert.Contains($"node:{nodeVersion}-alpine@sha256:", ci, StringComparison.Ordinal);
+        Assert.Contains("CI_NODE_IMAGE: ${{ vars.CI_NODE_IMAGE }}", ci, StringComparison.Ordinal);
         Assert.Contains($"node:{nodeVersion}-alpine@sha256:", dockerfile, StringComparison.Ordinal);
 
         Assert.Contains($"NPM_VERSION: {npmVersion}", packages, StringComparison.Ordinal);
