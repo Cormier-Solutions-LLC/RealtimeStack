@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.AspNetCore</PackageId>
+    <PackageId>Realtime.AspNetCore</PackageId>
     <Authors>Cormier</Authors>
     <Description>Plug-and-play ASP.NET Core hosting integration for Cormier.Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

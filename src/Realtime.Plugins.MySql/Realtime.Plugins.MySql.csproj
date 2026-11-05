@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <VersionPrefix>$(ContractsVersion)</VersionPrefix>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Cormier.Realtime.Plugins.MySql</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Realtime.Plugins.MySql</PackageId>
+    <Description>MySql durable realtime messages, notifications, and task status storage.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Realtime.Plugins.Persistence/Realtime.Plugins.Persistence.csproj" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

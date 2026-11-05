@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.Client</PackageId>
+    <PackageId>Realtime.Client</PackageId>
     <Authors>Cormier</Authors>
     <Description>Runtime-neutral .NET Standard WebSocket client for Cormier.Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

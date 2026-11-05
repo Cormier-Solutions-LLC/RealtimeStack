@@ -59,10 +59,10 @@ try {
     else {
         $resolvedPackageSource = (Resolve-Path -LiteralPath $PackageSource -ErrorAction Stop).Path
         foreach ($package in @(
-            "Cormier.Realtime.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg",
-            "Cormier.Realtime.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg",
-            "Cormier.Realtime.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg",
-            "Cormier.Realtime.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg"
+            "Realtime.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg",
+            "Realtime.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg",
+            "Realtime.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg",
+            "Realtime.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg"
         )) {
             Copy-Item -LiteralPath (Join-Path $resolvedPackageSource $package) -Destination $feedPath -ErrorAction Stop
         }
@@ -76,8 +76,8 @@ try {
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Cormier.Realtime.AspNetCore" Version="$AspNetCoreIntegrationVersion" />
-    <PackageReference Include="Cormier.Realtime.HttpFallback" Version="$HttpFallbackVersion" />
+    <PackageReference Include="Realtime.AspNetCore" Version="$AspNetCoreIntegrationVersion" />
+    <PackageReference Include="Realtime.HttpFallback" Version="$HttpFallbackVersion" />
   </ItemGroup>
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM

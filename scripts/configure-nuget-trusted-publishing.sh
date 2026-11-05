@@ -106,7 +106,7 @@ Create this policy at https://www.nuget.org/account/trustedpublishing:
   Workflow file:    packages.yml
   Environment:      ${environment}
   Scope:            Push new packages and package versions
-  Package glob:     Cormier.Realtime.*
+  Package glob:     Realtime.*
 
 NuGet login user stored in the GitHub environment secret NUGET_USER.
 No permanent NUGET_API_KEY secret is required.

@@ -276,7 +276,7 @@ public sealed class DiagnosticsContractTests
         Assert.True(dependencies.TryGetProperty("net10.0/linux-x64", out _));
         Assert.True(portable.TryGetProperty("OpenTelemetry.Exporter.OpenTelemetryProtocol", out _));
         Assert.True(portable.TryGetProperty("OpenTelemetry.Extensions.Hosting", out _));
-        Assert.True(portable.GetProperty("Cormier.Realtime.AspNetCore")
+        Assert.True(portable.GetProperty("Realtime.AspNetCore")
             .GetProperty("dependencies")
             .TryGetProperty("OpenTelemetry.Exporter.OpenTelemetryProtocol", out _));
     }

@@ -2,13 +2,13 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "cormier.realtime.client": {
+      "Realtime.Client": {
         "type": "Project",
         "dependencies": {
-          "Cormier.Realtime.Contracts": "[1.0.6-beta, )"
+          "Realtime.Contracts": "[1.0.6-beta, )"
         }
       },
-      "cormier.realtime.contracts": {
+      "Realtime.Contracts": {
         "type": "Project"
       }
     },

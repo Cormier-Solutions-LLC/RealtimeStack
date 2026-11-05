@@ -58,28 +58,28 @@
         "resolved": "10.0.5",
         "contentHash": "8IBJWcCT9+e4Bmevm4T7+fQEiAh133KGiz4oiVTgJckd3Q76OFdR1falgn9lpz7+C4HJvogCDJeAa2QmvbeVtg=="
       },
-      "cormier.realtime.aspnetcore": {
+      "Realtime.AspNetCore": {
         "type": "Project",
         "dependencies": {
-          "Cormier.Realtime.Contracts": "[1.0.6-beta, )",
-          "Cormier.Realtime.Redis": "[1.0.6-beta, )",
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
-          "OpenTelemetry.Extensions.Hosting": "[1.18.0, )"
+          "OpenTelemetry.Extensions.Hosting": "[1.18.0, )",
+          "Realtime.Contracts": "[1.0.6-beta, )",
+          "Realtime.Redis": "[1.0.6-beta, )"
         }
       },
-      "cormier.realtime.contracts": {
+      "Realtime.Contracts": {
         "type": "Project"
       },
-      "cormier.realtime.httpfallback": {
+      "Realtime.HttpFallback": {
         "type": "Project",
         "dependencies": {
-          "Cormier.Realtime.AspNetCore": "[1.0.6-beta, )"
+          "Realtime.AspNetCore": "[1.0.6-beta, )"
         }
       },
-      "cormier.realtime.redis": {
+      "Realtime.Redis": {
         "type": "Project",
         "dependencies": {
-          "Cormier.Realtime.Contracts": "[1.0.6-beta, )",
+          "Realtime.Contracts": "[1.0.6-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

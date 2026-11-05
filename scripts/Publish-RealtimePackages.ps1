@@ -199,12 +199,23 @@ try {
     $discoveredNuGetPackages = @(Get-ChildItem -LiteralPath $candidateRoot -Filter '*.nupkg' -File |
         Where-Object { $_.Extension -eq '.nupkg' })
     $nugetPackageIdsInDependencyOrder = @(
-        'Cormier.Realtime.Contracts'
-        'Cormier.Realtime.Client'
-        'Cormier.Realtime.Redis'
-        'Cormier.Realtime.AspNetCore'
-        'Cormier.Realtime.HttpFallback'
-        'Cormier.Realtime.Browser'
+        'Realtime.Contracts'
+        'Realtime.Client'
+        'Realtime.Redis'
+        'Realtime.AspNetCore'
+        'Realtime.HttpFallback'
+        'Realtime.Browser'
+        'Realtime.Plugins.Persistence'
+        'Realtime.Plugins.PostgreSql'
+        'Realtime.Plugins.MySql'
+        'Realtime.Plugins.MariaDb'
+        'Realtime.Plugins.SqlServer'
+        'Realtime.Plugins.AzureSql'
+        'Realtime.Plugins.Oracle'
+        'Realtime.Plugins.Sqlite'
+        'Realtime.Plugins.Db2'
+        'Realtime.Plugins.CockroachDb'
+        'Realtime.Plugins.Snowflake'
     )
     $nugetPackages = @(
         foreach ($packageId in $nugetPackageIdsInDependencyOrder) {
@@ -218,11 +229,11 @@ try {
         }
     )
     if ($discoveredNuGetPackages.Count -ne $nugetPackages.Count) {
-        throw "INVALID candidate: expected six known NuGet packages, found $($discoveredNuGetPackages.Count)."
+        throw "INVALID candidate: expected seventeen known NuGet packages, found $($discoveredNuGetPackages.Count)."
     }
     $symbolPackages = @(Get-ChildItem -LiteralPath $candidateRoot -Filter '*.snupkg' -File)
     if ($symbolPackages.Count -ne $nugetPackages.Count) {
-        throw "INVALID candidate: expected six NuGet symbol packages, found $($symbolPackages.Count)."
+        throw "INVALID candidate: expected seventeen NuGet symbol packages, found $($symbolPackages.Count)."
     }
     $symbolPackagesByNuGetPackage = [Collections.Generic.Dictionary[string, IO.FileInfo]]::new([StringComparer]::Ordinal)
     foreach ($package in $nugetPackages) {

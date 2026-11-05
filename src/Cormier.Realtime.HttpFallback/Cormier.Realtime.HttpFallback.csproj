@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.HttpFallback</PackageId>
+    <PackageId>Realtime.HttpFallback</PackageId>
     <Authors>Cormier</Authors>
     <Description>Optional HTTP streaming fallback transport for Cormier.Realtime ASP.NET Core gateways.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
