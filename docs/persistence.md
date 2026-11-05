@@ -29,8 +29,8 @@ Every operation scopes records by tenant, owner, stream ID, and kind. Resolve te
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Cormier.Realtime.Plugins.Persistence;
-using Cormier.Realtime.Plugins.Sqlite;
+using Realtime.Plugins.Persistence;
+using Realtime.Plugins.Sqlite;
 
 var store = new SqlitePersistenceStore(() => new SqliteConnection(configuredConnectionString));
 var inbox = new DurableStreamKey(authenticatedTenant, authenticatedOwner, "inbox", DurableRecordKind.Message);

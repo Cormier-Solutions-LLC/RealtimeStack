@@ -158,13 +158,13 @@ async function buildPackageConsumer() {
   await rm(consumerOutputRoot, { recursive: true, force: true });
   await mkdir(feed, { recursive: true });
   for (const project of [
-    "src/Cormier.Realtime.Contracts/Cormier.Realtime.Contracts.csproj",
-    "src/Cormier.Realtime.Redis/Cormier.Realtime.Redis.csproj",
-    "src/Cormier.Realtime.AspNetCore/Cormier.Realtime.AspNetCore.csproj",
-    "src/Cormier.Realtime.HttpFallback/Cormier.Realtime.HttpFallback.csproj",
-    "src/Cormier.Realtime.Browser/Cormier.Realtime.Browser.csproj",
-    "src/Cormier.Realtime.Client/Cormier.Realtime.Client.csproj",
-    "src/Cormier.Realtime.Config/Cormier.Realtime.Config.csproj",
+    "src/Realtime.Contracts/Realtime.Contracts.csproj",
+    "src/Realtime.Redis/Realtime.Redis.csproj",
+    "src/Realtime.AspNetCore/Realtime.AspNetCore.csproj",
+    "src/Realtime.HttpFallback/Realtime.HttpFallback.csproj",
+    "src/Realtime.Browser/Realtime.Browser.csproj",
+    "src/Realtime.Client/Realtime.Client.csproj",
+    "src/Realtime.Config/Realtime.Config.csproj",
     "src/Realtime.Plugins.Persistence/Realtime.Plugins.Persistence.csproj",
     "src/Realtime.Plugins.PostgreSql/Realtime.Plugins.PostgreSql.csproj",
     "src/Realtime.Plugins.MySql/Realtime.Plugins.MySql.csproj",
@@ -208,7 +208,7 @@ async function buildPackageConsumer() {
   }
   await writeFile(consumerLock, `${JSON.stringify(consumerLockGraph, null, 2)}\n`);
   await writeFile(config, `<configuration><config><add key="globalPackagesFolder" value="${xml(packages)}" /></config><packageSources><clear /><add key="local" value="${xml(feed)}" /><add key="upstream" value="%NUGET_UPSTREAM_SOURCE%" /></packageSources><packageSourceMapping><packageSource key="local"><package pattern="Realtime.*" /></packageSource><packageSource key="upstream"><package pattern="Microsoft.*" /><package pattern="OpenTelemetry" /><package pattern="OpenTelemetry.*" /><package pattern="StackExchange.Redis" /><package pattern="RESPite" /><package pattern="System.*" /><package pattern="Npgsql" /><package pattern="SQLitePCLRaw.*" /></packageSource></packageSourceMapping></configuration>\n`);
-  const project = "examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj";
+  const project = "examples/full-circle/Realtime.Example.FullCircle.csproj";
   const properties = [
     "-p:UseProjectReferences=false",
     `-p:NuGetLockFilePath=${consumerLock}`,
@@ -216,9 +216,9 @@ async function buildPackageConsumer() {
   ];
   await command("dotnet", ["restore", project, "--locked-mode", "--configfile", config, ...properties], { env: upstreamPackageEnvironment });
   await command("dotnet", ["build", project, "--configuration", "Release", "--no-restore", ...properties]);
-  const endpointsPath = resolve(consumerOutput, "Release/net10.0/Cormier.Realtime.Example.FullCircle.staticwebassets.endpoints.json");
+  const endpointsPath = resolve(consumerOutput, "Release/net10.0/Realtime.Example.FullCircle.staticwebassets.endpoints.json");
   const endpoints = await readFile(endpointsPath, "utf8");
-  if (!endpoints.includes("_content/Cormier.Realtime.Browser/cormier-realtime.iife.js")) {
+  if (!endpoints.includes("_content/Realtime.Browser/realtime.iife.js")) {
     throw new Error("The package consumer did not expose the generated browser static asset route.");
   }
   const projectConfig = await writeProjectReferenceConfig();
@@ -235,11 +235,11 @@ try {
     await ensureDependencies();
     await command(executable("npm"), ["run", "build", "--silent"], { cwd: resolve(repositoryRoot, "sdk/typescript") });
     const projectConfig = await writeProjectReferenceConfig();
-    await command("dotnet", ["restore", "examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
+    await command("dotnet", ["restore", "examples/full-circle/Realtime.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
     // The application selects net10.0 from the multi-targeted contracts project. Build that package
     // explicitly so its netstandard2.0 asset also exists before the clean local-feed pack.
-    await command("dotnet", ["build", "src/Cormier.Realtime.Contracts/Cormier.Realtime.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
-    await command("dotnet", ["build", "examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    await command("dotnet", ["build", "src/Realtime.Contracts/Realtime.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    await command("dotnet", ["build", "examples/full-circle/Realtime.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
     await buildPackageConsumer();
   } else if (action === "validate") {
     await ensureDependencies();
@@ -255,7 +255,7 @@ try {
   } else if (action === "run") {
     await ensureDependencies();
     const instance = profile.instances[0];
-    const application = resolve(repositoryRoot, "examples/full-circle/bin/Release/net10.0/Cormier.Realtime.Example.FullCircle.dll");
+    const application = resolve(repositoryRoot, "examples/full-circle/bin/Release/net10.0/Realtime.Example.FullCircle.dll");
     await command("dotnet", [application], {
       cwd: resolve(repositoryRoot, "examples/full-circle"),
       env: {

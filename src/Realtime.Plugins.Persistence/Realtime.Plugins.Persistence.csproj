@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.Persistence</RootNamespace>
+    <RootNamespace>Realtime.Plugins.Persistence</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.Persistence</PackageId>
     <Description>Durable streams for realtime replay, notifications, and background task status.</Description>

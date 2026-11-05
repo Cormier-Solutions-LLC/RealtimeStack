@@ -2,12 +2,12 @@
 
 ## Artifacts and API
 
-The independent `@cormier/realtime` project lives in `sdk/typescript`. Its build emits the following deterministic files under `dist`:
+The independent `@realtime/client` project lives in `sdk/typescript`. Its build emits the following deterministic files under `dist`:
 
 | Consumption | Readable | Minified | Export |
 |---|---|---|---|
-| ECMAScript module | `cormier-realtime.js` | `cormier-realtime.min.js` | named exports |
-| Direct browser script | `cormier-realtime.iife.js` | `cormier-realtime.iife.min.js` | `window.CormierRealtime` |
+| ECMAScript module | `realtime.js` | `realtime.min.js` | named exports |
+| Direct browser script | `realtime.iife.js` | `realtime.iife.min.js` | `window.Realtime` |
 
 Each JavaScript file has a source map. The package also includes TypeScript declarations, declaration maps, and `version.json`. Minified output is limited to 32 KiB before compression and 12 KiB with deterministic gzip. Artifact verification rejects absolute source-machine paths and known credential-bearing strings.
 
@@ -45,7 +45,7 @@ The matrix tests authorized ticket connections, publish/subscription exchange, r
 
 ## Compatibility and upgrades
 
-SDK `0.1.x` implements wire protocol `1.0` and subprotocol `cormier.realtime.v1`. Additive optional server fields are compatible and ignored unless recognized. Removing or changing a required field, message semantic, stable error code, or subprotocol is breaking and requires a new protocol plus an SDK major release. Shared golden fixtures are verified by TypeScript and .NET tests.
+SDK `0.1.x` implements wire protocol `1.0` and subprotocol `realtime.v1`. Additive optional server fields are compatible and ignored unless recognized. Removing or changing a required field, message semantic, stable error code, or subprotocol is breaking and requires a new protocol plus an SDK major release. Shared golden fixtures are verified by TypeScript and .NET tests.
 
 During a rolling upgrade, retain protocol `1.0` on every gateway until all browser assets and caches have moved to a compatible version. Deploy readable or minified artifacts from the same build; do not mix source maps or declarations across versions. Roll back by restoring the previous immutable asset set and gateway version together. Browser cache invalidation should use the package version or content hash.
 
@@ -54,7 +54,7 @@ During a rolling upgrade, retain protocol `1.0` on every gateway until all brows
 Node.js 26.10.0, npm 12.1.0, the repository's pinned .NET SDK, Redis 7.4, and current Playwright browser engines are required for the full local suite:
 
 ```powershell
-dotnet build .\Cormier.Realtime.sln --configuration Release
+dotnet build .\Realtime.sln --configuration Release
 Push-Location .\sdk\typescript
 npm ci
 npm run check

@@ -58,7 +58,7 @@ for (const [profile, result] of Object.entries(manifest.profiles)) {
     assert(html.includes(`id="${id}"`), `${profile} HTML lost safelisted id ${id}.`);
     assert(javascript.includes(`#${id}`), `${profile} JavaScript lost safelisted selector #${id}.`);
   }
-  for (const requiredText of ["Cormier.Realtime full circle", "Events and diagnostics", "Log in", "Log out"]) {
+  for (const requiredText of ["Realtime full circle", "Events and diagnostics", "Log in", "Log out"]) {
     assert(html.includes(requiredText), `${profile} HTML lost accessible text: ${requiredText}.`);
   }
   assert(html.includes('aria-live="polite"'), `${profile} HTML lost its live-region semantics.`);
@@ -93,6 +93,6 @@ for (const profile of Object.keys(manifest.profiles).filter((name) => name !== "
 
 const generatedText = Object.keys(manifest.profiles).flatMap((profile) => ["index.html", "app.css", "app.js"]
   .map((name) => readFileSync(resolve(outputRoot, profile, name), "utf8"))).join("\n");
-for (const forbidden of ["Authorization:", "BEGIN PRIVATE KEY", "cormier_session=", repositoryRoot]) {
+for (const forbidden of ["Authorization:", "BEGIN PRIVATE KEY", "realtime_session=", repositoryRoot]) {
   assert(!generatedText.includes(forbidden), `Generated reference assets contain forbidden material: ${forbidden}`);
 }

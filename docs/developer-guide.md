@@ -2,7 +2,7 @@
 
 ## ASP.NET Core hosting package
 
-`Cormier.Realtime.AspNetCore` exposes `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway` for applications that need the realtime gateway inside an existing ASP.NET Core host. The package binds and validates the same `Gateway`, `Redis`, `Proxy`, `Realtime`, `Metrics`, and `Diagnostics` configuration sections used by the standalone gateway. The host decides whether to use the supplied bearer helpers or its own authorization policies.
+`Realtime.AspNetCore` exposes `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway` for applications that need the realtime gateway inside an existing ASP.NET Core host. The package binds and validates the same `Gateway`, `Redis`, `Proxy`, `Realtime`, `Metrics`, and `Diagnostics` configuration sections used by the standalone gateway. The host decides whether to use the supplied bearer helpers or its own authorization policies.
 
 For standard ASP.NET Core session integration, configure `Realtime:SessionSource` as `AspNetCoreSession`, register session services, and place `UseSession` before the mapped endpoints execute. The configured session identifier is revalidated through `IRealtimeSessionStore` on initial connection and during the connection lifetime, so expiration, logout/revocation, tenant scope, and multi-instance reconnect retain the Redis contract.
 
@@ -10,9 +10,9 @@ The runnable example is under `examples/aspnet-core`. `scripts/Test-AspNetCorePa
 
 ## .NET Standard client
 
-`Cormier.Realtime.Client` targets .NET Standard 2.0 and depends on the multi-targeted `Cormier.Realtime.Contracts` package. It provides a bounded `ClientWebSocket` lifecycle plus replaceable authentication, transport, retry, clock, and logging abstractions without referencing ASP.NET Core hosting assemblies.
+`Realtime.Client` targets .NET Standard 2.0 and depends on the multi-targeted `Realtime.Contracts` package. It provides a bounded `ClientWebSocket` lifecycle plus replaceable authentication, transport, retry, clock, and logging abstractions without referencing ASP.NET Core hosting assemblies.
 
-The compatibility baseline is .NET Standard 2.0. CI restores, executes, and smoke-tests clean package consumers on .NET 8 and .NET 10; other .NET Standard 2.0 implementations must also support the package dependency versions listed in the NuGet artifact. See `src/Cormier.Realtime.Client/README.md` for authentication, subscription, publish, reconnect, cancellation, and extension examples.
+The compatibility baseline is .NET Standard 2.0. CI restores, executes, and smoke-tests clean package consumers on .NET 8 and .NET 10; other .NET Standard 2.0 implementations must also support the package dependency versions listed in the NuGet artifact. See `src/Realtime.Client/README.md` for authentication, subscription, publish, reconnect, cancellation, and extension examples.
 
 ## Supported development platforms
 
@@ -39,16 +39,16 @@ Both wrappers call the same implementation, validate the same versioned configur
 ## Local workflow
 
 ```powershell
-dotnet restore ./Cormier.Realtime.sln --locked-mode
-dotnet build ./Cormier.Realtime.sln -c Release --no-restore
-dotnet test ./Cormier.Realtime.sln -c Release --no-build
-dotnet run --project ./src/Cormier.Realtime.Gateway
+dotnet restore ./Realtime.sln --locked-mode
+dotnet build ./Realtime.sln -c Release --no-restore
+dotnet test ./Realtime.sln -c Release --no-build
+dotnet run --project ./src/Realtime.Gateway
 ```
 
 The TypeScript and browser validation is independently locked with `package-lock.json`:
 
 ```powershell
-dotnet build ./Cormier.Realtime.sln -c Release
+dotnet build ./Realtime.sln -c Release
 Push-Location ./sdk/typescript
 npm ci
 npm run check
@@ -71,9 +71,9 @@ Redis Streams are disabled by default. Enable `Redis__StreamsEnabled=true` and p
 The Redis integration suite expects `REDIS_TEST_ENDPOINT`. A local Docker example is:
 
 ```powershell
-docker run --rm --name cormier-realtime-test-redis -p 127.0.0.1:16379:6379 redis:7.4-alpine
+docker run --rm --name realtime-test-redis -p 127.0.0.1:16379:6379 redis:7.4-alpine
 $env:REDIS_TEST_ENDPOINT = 'localhost:16379'
-dotnet test ./tests/Cormier.Realtime.IntegrationTests -c Release
+dotnet test ./tests/Realtime.IntegrationTests -c Release
 ```
 
 ## Native AOT publish
@@ -81,7 +81,7 @@ dotnet test ./tests/Cormier.Realtime.IntegrationTests -c Release
 Choose a runtime identifier that matches the host:
 
 ```powershell
-dotnet publish ./src/Cormier.Realtime.Gateway -c Release -r win-x64 --self-contained
+dotnet publish ./src/Realtime.Gateway -c Release -r win-x64 --self-contained
 ```
 
 CI publishes and tests `linux-x64`. Any compiler, analyzer, trimming, or AOT warning is blocking. New JSON DTOs must be added to the source-generation context before use.
@@ -91,7 +91,7 @@ CI publishes and tests `linux-x64`. Any compiler, analyzer, trimming, or AOT war
 The gateway project uses the .NET SDK container publisher, a chiseled `runtime-deps` base, port 8080, and non-root UID 1654. CI produces an OCI archive without requiring a Dockerfile. On a Linux x64 host with the Native AOT toolchain, publish to the local container daemon with:
 
 ```powershell
-dotnet publish ./src/Cormier.Realtime.Gateway -c Release -r linux-x64 --self-contained /t:PublishContainer
+dotnet publish ./src/Realtime.Gateway -c Release -r linux-x64 --self-contained /t:PublishContainer
 ```
 
 ## Failure behavior

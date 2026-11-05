@@ -5,13 +5,13 @@
       "name": "Example: ASP.NET Core",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/examples/aspnet-core/Cormier.Realtime.Example.AspNetCore.csproj"
+      "projectPath": "${workspaceFolder}/examples/aspnet-core/Realtime.Example.AspNetCore.csproj"
     },
     {
       "name": "Example: Full Circle",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj",
+      "projectPath": "${workspaceFolder}/examples/full-circle/Realtime.Example.FullCircle.csproj",
       "preLaunchTask": "dependencies: full-circle",
       "env": {
         "Redis__Endpoint": "127.0.0.1:16379"
@@ -21,7 +21,7 @@
       "name": "Example: .NET Client",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/examples/dotnet-client/Cormier.Realtime.Example.Client.csproj",
+      "projectPath": "${workspaceFolder}/examples/dotnet-client/Realtime.Example.Client.csproj",
       "env": {
         "REALTIME_ENDPOINT": "${input:realtimeEndpoint}",
         "REALTIME_TICKET": "${input:realtimeTicket}"
@@ -68,7 +68,7 @@
       "name": "Example: Java / Spring Boot",
       "type": "java",
       "request": "launch",
-      "mainClass": "com.cormier.realtime.example.ReferenceApplication",
+      "mainClass": "com.realtime.example.ReferenceApplication",
       "projectName": "java-spring-boot",
       "cwd": "${workspaceFolder}/examples/java-spring-boot",
       "envFile": "${workspaceFolder}/examples/java-spring-boot/.env.example",
@@ -78,7 +78,7 @@
       "name": "Example: Kotlin / Ktor",
       "type": "java",
       "request": "launch",
-      "mainClass": "com.cormier.realtime.example.ApplicationKt",
+      "mainClass": "com.realtime.example.ApplicationKt",
       "projectName": "kotlin-ktor",
       "cwd": "${workspaceFolder}/examples/kotlin-ktor",
       "envFile": "${workspaceFolder}/examples/kotlin-ktor/.env.example",
@@ -100,7 +100,7 @@
         "SESSION_LIFETIME_SECONDS": "1200",
         "INSTANCE_NAME": "elixir-phoenix-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "cormier:reference-elixir",
+        "REDIS_INSTANCE_PREFIX": "realtime:reference-elixir",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a,tenant-b",
         "ALLOWED_USERS": "user-a,user-b"
@@ -112,7 +112,7 @@
       "request": "launch",
       "cargo": {
         "args": ["build", "--locked", "--manifest-path", "${workspaceFolder}/examples/rust-axum/Cargo.toml"],
-        "filter": { "name": "cormier-realtime-example-rust-axum", "kind": "bin" }
+        "filter": { "name": "realtime-example-rust-axum", "kind": "bin" }
       },
       "cwd": "${workspaceFolder}/examples/rust-axum",
       "env": {
@@ -124,7 +124,7 @@
         "SESSION_LIFETIME_SECONDS": "1200",
         "INSTANCE_NAME": "rust-axum-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "cormier:reference-rust",
+        "REDIS_INSTANCE_PREFIX": "realtime:reference-rust",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a,tenant-b",
         "ALLOWED_USERS": "user-a,user-b"
@@ -147,7 +147,7 @@
         "SESSION_LIFETIME_SECONDS": "1200",
         "INSTANCE_NAME": "ruby-rails-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "cormier:reference-ruby",
+        "REDIS_INSTANCE_PREFIX": "realtime:reference-ruby",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a,tenant-b",
         "ALLOWED_USERS": "user-a,user-b",
@@ -172,7 +172,7 @@
       "name": "Example: Swift / Vapor",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/examples/swift-vapor/.build/debug/CormierRealtimeVaporExample",
+      "program": "${workspaceFolder}/examples/swift-vapor/.build/debug/RealtimeVaporExample",
       "cwd": "${workspaceFolder}/examples/swift-vapor",
       "preLaunchTask": "build: Swift Vapor",
       "env": {
@@ -188,30 +188,30 @@
         "SESSION_LIFETIME_SECONDS": "1200",
         "INSTANCE_NAME": "swift-vapor-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "cormier:reference-swift",
+        "REDIS_INSTANCE_PREFIX": "realtime:reference-swift",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a,tenant-b",
         "ALLOWED_USERS": "user-a,user-b"
       }
     },
     {
-      "name": "Cormier.Realtime Gateway",
+      "name": "Realtime Gateway",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/Cormier.Realtime.Gateway/Cormier.Realtime.Gateway.csproj"
+      "projectPath": "${workspaceFolder}/src/Realtime.Gateway/Realtime.Gateway.csproj"
     },
     {
-      "name": "Cormier.Realtime Load Runner",
+      "name": "Realtime Load Runner",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/tools/Cormier.Realtime.LoadRunner/bin/Debug/net10.0/Cormier.Realtime.LoadRunner.dll",
+      "program": "${workspaceFolder}/tools/Realtime.LoadRunner/bin/Debug/net10.0/Realtime.LoadRunner.dll",
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "build: load runner",
       "args": [
         "--endpoint", "${input:loadEndpoint}",
         "--origin", "${input:loadOrigin}",
-        "--session-cookie-name", "cormier_session",
-        "--subprotocol", "cormier.realtime.v1",
+        "--session-cookie-name", "realtime_session",
+        "--subprotocol", "realtime.v1",
         "--topic", "orders",
         "--connections", "1",
         "--messages-per-connection", "0",
@@ -220,7 +220,7 @@
         "--duration-seconds", "10",
         "--output", "artifacts/load/local-debug.json"
       ],
-      "env": { "CORMIER_LOAD_SESSION_ID": "${input:loadSessionId}" }
+      "env": { "REALTIME_LOAD_SESSION_ID": "${input:loadSessionId}" }
     }
   ],
   "compounds": [

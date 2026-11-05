@@ -29,13 +29,13 @@ env:
 jobs:
   publish:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'
-    runs-on: cormier-runners
+    runs-on: ${{ vars.CI_RUNNER_LABEL }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 2
           ref: ${{ github.event.workflow_run.head_sha }}
-      - uses: ./.github/actions/setup-cormier-runner
+      - uses: ./.github/actions/setup-realtime-runner
         with:
           docker: 'true'
       - name: Install Node runtime prerequisites
@@ -48,7 +48,7 @@ jobs:
         run: bash scripts/setup-ci-deployment-tools.sh
       - uses: actions/download-artifact@v7
         with:
-          name: cormier-realtime-${{ github.event.workflow_run.head_sha }}
+          name: realtime-${{ github.event.workflow_run.head_sha }}
           path: artifacts
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -77,7 +77,7 @@ jobs:
         env:
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          load_output=$(docker load --input artifacts/cormier-realtime-gateway.tar.gz)
+          load_output=$(docker load --input artifacts/realtime-gateway.tar.gz)
           source_ref=$(printf '%s\n' "$load_output" | sed -n 's/^Loaded image: //p' | tail -n 1)
           test -n "$source_ref"
           normalized_repository=$(printf '%s' "$IMAGE_REPOSITORY" | tr '[:upper:]' '[:lower:]')
@@ -107,7 +107,7 @@ jobs:
           fi
           digest=$(docker buildx imagetools inspect "$target_ref" --format '{{json .Manifest.Digest}}' | tr -d '"')
           test -n "$digest"
-          archive_sha=$(sha256sum artifacts/cormier-realtime-gateway.tar.gz | cut -d' ' -f1)
+          archive_sha=$(sha256sum artifacts/realtime-gateway.tar.gz | cut -d' ' -f1)
           printf '{"schemaVersion":3,"releaseVersion":"%s","versionRelease":%s,"sourceCommit":"%s","image":"%s","credentialProvider":"%s","digest":"%s","archiveSha256":"%s","ciRunId":%s}\n' "$release_version" "$is_release" "$SOURCE_SHA" "${CONTAINER_REGISTRY}/${normalized_repository}" "$REGISTRY_CREDENTIAL_PROVIDER" "$digest" "$archive_sha" "${{ github.event.workflow_run.id }}" > artifacts/release-manifest.json
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "is_release=$is_release" >> "$GITHUB_OUTPUT"
@@ -151,7 +151,7 @@ jobs:
             fi
             gh release create "$tag" "$chart" artifacts/release-manifest.json \
               --target "$SOURCE_SHA" \
-              --title "Cormier Realtime ${RELEASE_VERSION}" \
+              --title "Realtime ${RELEASE_VERSION}" \
               --notes-file "$notes" \
               "${release_flags[@]}"
           fi

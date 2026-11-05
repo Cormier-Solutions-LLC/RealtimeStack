@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Cormier.Realtime.Client;
-using Cormier.Realtime.Contracts;
+using Realtime.Client;
+using Realtime.Contracts;
 
 var configuredEndpoint = Environment.GetEnvironmentVariable("REALTIME_ENDPOINT");
 if (!Uri.TryCreate(configuredEndpoint, UriKind.Absolute, out var endpoint)

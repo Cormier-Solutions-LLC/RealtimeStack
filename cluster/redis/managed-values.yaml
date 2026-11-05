@@ -13,18 +13,18 @@ image:
 auth:
   enabled: true
   sentinel: true
-  existingSecret: cormier-redis-auth
+  existingSecret: realtime-redis-auth
   existingSecretPasswordKey: redis-password
   acl:
     enabled: true
     sentinel: false
-    userSecret: cormier-redis-auth
+    userSecret: realtime-redis-auth
     users:
       - username: realtime
         enabled: "on"
         commands: "+@read +@write +@connection +@pubsub +@scripting +@stream"
-        keys: "~cormier:realtime:*"
-        channels: "&cormier:realtime:*"
+        keys: "~realtime:*"
+        channels: "&realtime:*"
 tls: { enabled: false }
 master:
   persistence: { enabled: true, size: 8Gi }

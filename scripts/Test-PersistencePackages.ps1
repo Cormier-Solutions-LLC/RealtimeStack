@@ -20,11 +20,11 @@ try {
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'Consumer.csproj')
     $constructors = ($names | Where-Object { $_ -ne 'Persistence' } | ForEach-Object {
-        "new Cormier.Realtime.Plugins.$_.${_}PersistenceStore(() => throw new InvalidOperationException()),"
+        "new Realtime.Plugins.$_.${_}PersistenceStore(() => throw new InvalidOperationException()),"
     }) -join "`n"
     @"
-using Cormier.Realtime.Plugins.Persistence;
-using Cormier.Realtime.Config;
+using Realtime.Plugins.Persistence;
+using Realtime.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 RelationalPersistenceStore[] stores = [$constructors];

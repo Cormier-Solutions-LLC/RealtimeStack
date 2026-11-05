@@ -1,6 +1,6 @@
-import { RealtimeClient } from "/_content/Cormier.Realtime.Browser/cormier-realtime.js";
+import { RealtimeClient } from "/_content/Realtime.Browser/realtime.js";
 
 globalThis.RealtimeClient = RealtimeClient;
-globalThis.CormierRealtime = { RealtimeClient };
+globalThis.Realtime = { RealtimeClient };
 await import("/app.js");
 document.querySelector("#esm-state").textContent = "ready";

@@ -36,7 +36,7 @@
 - Added a failing HIGH/CRITICAL image scan, upgraded runtime OS packages during image construction, and removed build-only npm tooling from the runtime image.
 - Added the Node.js 24/Express 5 reference adapter with validated environment-only network configuration.
 - Added same-origin login/logout, gateway-compatible Redis sessions, ticket and WebSocket forwarding, readiness, graceful shutdown, and redacted structural failures.
-- Reused the canonical shared browser UI and generated Cormier.Realtime 0.1.0 SDK; no stack-specific asset copy is maintained.
+- Reused the canonical shared browser UI and generated Realtime 0.1.0 SDK; no stack-specific asset copy is maintained.
 - Added locked dependencies, tests, a digest-pinned container path, feature/support matrices, and update/rollback/deprecation guidance.
 - Security/operator action: replace the fixture secret and all fixture network settings, configure the gateway's trusted Origin and matching Redis prefixes, and supply the production controls explicitly listed as omitted.
 

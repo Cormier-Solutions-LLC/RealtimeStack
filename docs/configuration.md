@@ -30,7 +30,7 @@ Provide `ConnectionStrings__RealtimePersistence` and, for HTTP worker writes, `R
 The gateway also needs its existing Redis, origin, proxy, and authorization settings. `RealtimeSetup:ClientEnabled` registers a disconnected `RealtimeClient` using `RealtimeClient:Endpoint`; configure authentication and other client options through `ConfigureRealtimeClient` and the existing DI interfaces. Connecting remains explicit.
 
 ```csharp
-using Cormier.Realtime.Config;
+using Realtime.Config;
 using Npgsql;
 
 builder.Services.AddRealtimeConfiguration(builder.Configuration, plugins => plugins

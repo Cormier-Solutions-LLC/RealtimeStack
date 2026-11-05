@@ -6,14 +6,14 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 const root = new URL('../../', import.meta.url);
-const action = readFileSync(new URL('.github/actions/setup-cormier-runner/action.yml', root), 'utf8');
-const setup = './.github/actions/setup-cormier-runner';
+const action = readFileSync(new URL('.github/actions/setup-realtime-runner/action.yml', root), 'utf8');
+const setup = './.github/actions/setup-realtime-runner';
 const linuxOnly = { skip: process.platform !== 'linux' };
 const scripts = [...action.matchAll(/^      run: \|\n((?:        .*\n|\n)+)/gm)]
   .map(match => match[1].replace(/^        /gm, ''));
 
 test('GitHub YAML files retain LF checkout with Windows line-ending settings', t => {
-  const directory = mkdtempSync(join(tmpdir(), 'cormier-yaml-checkout-'));
+  const directory = mkdtempSync(join(tmpdir(), 'realtime-yaml-checkout-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const git = (...args) => {
     const result = spawnSync('git', ['-c', 'core.autocrlf=true', '-c', 'core.eol=crlf', ...args], { cwd: directory, encoding: 'utf8' });
@@ -21,7 +21,7 @@ test('GitHub YAML files retain LF checkout with Windows line-ending settings', t
   };
   git('init');
   writeFileSync(join(directory, '.gitattributes'), readFileSync(new URL('.gitattributes', root)));
-  const paths = ['.github/workflows/ci.yml', '.github/workflows/ci-failure-autofix.yml', '.github/actions/setup-cormier-runner/action.yml'];
+  const paths = ['.github/workflows/ci.yml', '.github/workflows/ci-failure-autofix.yml', '.github/actions/setup-realtime-runner/action.yml'];
   for (const path of paths) {
     mkdirSync(join(directory, path, '..'), { recursive: true });
     writeFileSync(join(directory, path), readFileSync(new URL(path, root)));
@@ -56,14 +56,14 @@ test('all Linux jobs use shared setup after checkout and before dependent steps'
         assert.ok(!job.includes(setup));
         continue;
       }
-      assert.match(job, /runs-on: cormier-runners/, `${file}: ${name}`);
+      assert.match(job, /runs-on: \$\{\{ vars\.CI_RUNNER_LABEL \}\}/, `${file}: ${name}`);
       const setupIndex = job.indexOf(`uses: ${setup}`);
       assert.ok(setupIndex > job.indexOf('uses: actions/checkout@'), `${file}: ${name} setup follows checkout`);
       assert.ok(setupIndex >= 0, `${file}: ${name} includes setup`);
       const stepsBeforeSetup = job.slice(job.indexOf('    steps:'), setupIndex);
       assert.ok(!/\n        (?:run|shell):/.test(stepsBeforeSetup), `${file}: ${name} runs setup before scripts`);
       if (/docker\/login-action|docker (?:run|build|load)|start-ci-redis|    services:/.test(job)) {
-        assert.match(job.slice(setupIndex), /^uses: .*setup-cormier-runner\n        with:\n          docker: 'true'/);
+        assert.match(job.slice(setupIndex), /^uses: .*setup-realtime-runner\n        with:\n          docker: 'true'/);
       }
     }
   }
@@ -84,7 +84,7 @@ test('setup validation is triggered by workflow and local action changes', () =>
 });
 
 function fixture(t, overrides = {}) {
-  const directory = mkdtempSync(join(tmpdir(), 'cormier-runner-setup-'));
+  const directory = mkdtempSync(join(tmpdir(), 'realtime-runner-setup-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const log = join(directory, 'packages.log');
   const commands = {

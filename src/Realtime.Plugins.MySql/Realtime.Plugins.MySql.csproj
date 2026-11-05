@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.MySql</RootNamespace>
+    <RootNamespace>Realtime.Plugins.MySql</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.MySql</PackageId>
     <Description>MySql durable realtime messages, notifications, and task status storage.</Description>

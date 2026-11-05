@@ -28,8 +28,8 @@ import (
 	redislogging "github.com/redis/go-redis/v9/logging"
 )
 
-const sessionCookie = "cormier_session"
-const realtimeProtocol = "cormier.realtime.v1"
+const sessionCookie = "realtime_session"
+const realtimeProtocol = "realtime.v1"
 const maximumBodyBytes = 64 << 10
 
 var sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{16,256}$`)
@@ -183,7 +183,7 @@ func (a *App) router() http.Handler {
 	router.GET("/failover.html", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "failover.html")) })
 	router.GET("/app.css", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "app.css")) })
 	router.GET("/app.js", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "app.js")) })
-	router.GET("/_content/Cormier.Realtime.Browser/:asset", func(c *gin.Context) {
+	router.GET("/_content/Realtime.Browser/:asset", func(c *gin.Context) {
 		asset := c.Param("asset")
 		if !sdkAssetPattern.MatchString(asset) {
 			c.AbortWithStatus(http.StatusNotFound)

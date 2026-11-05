@@ -10,15 +10,15 @@
   <Target Name="BoundInternalPackageDependencies" AfterTargets="_GetProjectReferenceVersions">
     <ItemGroup>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Contracts'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Contracts'">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.AspNetCore'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.AspNetCore'">
         <ProjectVersion>[$(AspNetCoreIntegrationVersion),$(AspNetCoreIntegrationCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Redis'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Redis'">
         <ProjectVersion>[$(RedisAdapterVersion),$(RedisAdapterCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
@@ -30,16 +30,16 @@
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Config'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Config'">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Client'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Client'">
         <ProjectVersion>[$(DotNetClientVersion),$(DotNetClientCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Browser'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Browser'">
         <ProjectVersion>[$(BrowserPackageVersion),$(BrowserPackageCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.HttpFallback'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.HttpFallback'">
         <ProjectVersion>[$(HttpFallbackVersion),$(HttpFallbackCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
     </ItemGroup>

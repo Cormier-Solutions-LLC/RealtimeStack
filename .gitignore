@@ -39,7 +39,7 @@ node_modules/
 playwright-report/
 test-results/
 .browser-cache/
-/src/Cormier.Realtime.Browser/wwwroot/
+/src/Realtime.Browser/wwwroot/
 
 # Java build outputs
 target/

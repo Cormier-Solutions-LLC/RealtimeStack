@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.Snowflake</RootNamespace>
+    <RootNamespace>Realtime.Plugins.Snowflake</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.Snowflake</PackageId>
     <Description>Snowflake durable realtime messages, notifications, and task status storage.</Description>

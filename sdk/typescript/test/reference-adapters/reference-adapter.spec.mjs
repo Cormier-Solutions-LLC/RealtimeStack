@@ -19,9 +19,9 @@ test("optimized shared UI keeps integrity, CSP, and accessible controls", async 
   expect(diagnostics.ok()).toBe(true);
   expect((await diagnostics.json()).heartbeatIntervalMilliseconds).toBe(5_000);
   await expect(page.locator('link[rel="stylesheet"]')).toHaveAttribute("integrity", /^sha384-/u);
-  await expect(page.locator('script[src$="cormier-realtime.iife.min.js"]')).toHaveAttribute("integrity", /^sha384-/u);
+  await expect(page.locator('script[src$="realtime.iife.min.js"]')).toHaveAttribute("integrity", /^sha384-/u);
   await expect(page.locator('script[src="/app.js"]')).toHaveAttribute("integrity", /^sha384-/u);
-  await expect(page.getByRole("heading", { name: "Cormier.Realtime full circle", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Realtime full circle", level: 1 })).toBeVisible();
   await expect(page.getByLabel("Tenant")).toBeVisible();
   await expect(page.getByLabel("User")).toBeVisible();
   await expect(page.getByLabel("Route")).toBeVisible();
@@ -40,7 +40,7 @@ test("shared UI completes login, ticket connect, subscribe, publish, receive, re
   await expect.poll(async () => {
     const metrics = await request.get(`${process.env.REFERENCE_GATEWAY_URL}/metrics`);
     return metrics.ok() ? await metrics.text() : "";
-  }).toMatch(/cormier_realtime_authentication_total\{method="ticket",outcome="success"} [1-9][0-9]*/);
+  }).toMatch(/realtime_authentication_total\{method="ticket",outcome="success"} [1-9][0-9]*/);
   await page.click("#subscribe");
   await expect(page.locator("#events")).toContainText("subscribed");
 

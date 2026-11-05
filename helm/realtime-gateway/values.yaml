@@ -5,7 +5,7 @@ fullnameOverride: ""
 topology: ha
 
 image:
-  repository: ghcr.io/cormier-solutions-llc/cormier-realtime-gateway
+  repository: ghcr.io/realtime-solutions-llc/realtime-gateway
   tag: "1.1.0-beta"
   digest: ""
   pullPolicy: IfNotPresent
@@ -34,7 +34,7 @@ ingressRoute:
   host: ""
   path: /realtime/ws
   fallbackPath: /realtime/http
-  affinityCookieName: cormier_realtime_affinity
+  affinityCookieName: realtime_affinity
   affinityCookieSameSite: lax
   tlsSecretName: ""
 
@@ -102,7 +102,7 @@ gateway:
   shutdownDrainSeconds: 25
   detailedHealthChecks: false
   allowedOrigins:
-    - https://cormier.local
+    - https://example.test
   trustedNetworks:
     - 10.0.0.0/8
     - 172.16.0.0/12
@@ -112,7 +112,7 @@ diagnostics:
   enabled: false
   productionEnabled: false
   basePath: /diagnostics/v1
-  authorizationPolicy: Cormier.Diagnostics.Operator
+  authorizationPolicy: Realtime.Diagnostics.Operator
   operatorTokenSecret:
     # Required when diagnostics are enabled. The chart references but never creates this Secret.
     name: ""
@@ -120,7 +120,7 @@ diagnostics:
   allowedOrigins: []
   allowedNetworks: []
   logCategoryAllowlist:
-    - Cormier.Realtime
+    - Realtime
   maximumDetailItems: 100
   maximumConcurrentRequests: 8
   maximumTailSessions: 4
@@ -147,17 +147,17 @@ redis:
   # external: use an existing endpoint; managed: endpoint is derived from managedReleaseName.
   mode: external
   externalEndpoint: redis.example.internal:6379
-  managedReleaseName: cormier-redis
+  managedReleaseName: realtime-redis
   port: 6379
   sentinelPort: 26379
   sentinelServiceName: mymaster
   tls: false
   requiredForReadiness: true
   credentialsSecret:
-    name: cormier-realtime-redis
+    name: realtime-redis
     passwordKey: realtime
   username: realtime
-  instancePrefix: cormier:realtime
+  instancePrefix: realtime
   sessionKeyPrefix: sessions
   ticketKeyPrefix: tickets
   pubSubChannel: events

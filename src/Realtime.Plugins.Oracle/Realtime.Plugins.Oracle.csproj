@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.Oracle</RootNamespace>
+    <RootNamespace>Realtime.Plugins.Oracle</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.Oracle</PackageId>
     <Description>Oracle durable realtime messages, notifications, and task status storage.</Description>

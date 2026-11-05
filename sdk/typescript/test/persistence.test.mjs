@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { RealtimePersistenceClient, RealtimePersistenceError } from "../dist/cormier-realtime.js";
+import { RealtimePersistenceClient, RealtimePersistenceError } from "../dist/realtime.js";
 
 test("durable reads use session credentials and never send tenant or worker credentials", async () => {
   const calls = [];

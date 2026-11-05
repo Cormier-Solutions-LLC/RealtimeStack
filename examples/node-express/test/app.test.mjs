@@ -40,7 +40,7 @@ function fixture(overrides = {}) {
     heartbeatIntervalMilliseconds: 5000,
     instanceName: "node-express-a",
     topology: "non-ha",
-    redisInstancePrefix: "cormier:reference-node",
+    redisInstancePrefix: "realtime:reference-node",
     redisSessionKeyPrefix: "sessions",
     allowedTenants: ["tenant-a", "tenant-b"],
     allowedUsers: ["user-a", "user-b"],
@@ -119,7 +119,7 @@ test("establishes, validates, forwards, expires, and removes a session", async (
   assert.equal(loginResponse.body.tenantId, "tenant-a");
   assert.equal(context.values.size, 1);
   const [redisKey] = context.values.keys();
-  assert.match(redisKey, /^cormier:reference-node:sessions:[a-f0-9]{48}$/);
+  assert.match(redisKey, /^realtime:reference-node:sessions:[a-f0-9]{48}$/);
   assert.equal(loginResponse.text.includes(redisKey), false);
 
   const current = await agent.get("/api/session").expect(200);
@@ -180,28 +180,28 @@ test("honors configured trusted proxy hops for secure session cookies", async ()
     .send({ tenantId: "tenant-a", userId: "user-a" })
     .expect(200);
   const cookies = response.headers["set-cookie"].join(";");
-  assert.match(cookies, /cormier_example_session=/);
+  assert.match(cookies, /realtime_example_session=/);
   assert.match(cookies, /Secure/);
 });
 
 test("serves only the canonical shared UI and generated SDK", async () => {
   const context = fixture();
   const page = await request(context.app).get("/").expect(200);
-  assert.match(page.text, /Cormier\.Realtime full circle/);
+  assert.match(page.text, /Realtime full circle/);
   assert.match((await request(context.app).get("/fallback.html").expect(200)).text, /HTTP streaming/);
   assert.match((await request(context.app).get("/failover.html").expect(200)).text, /transport failover/);
-  assert.match((await request(context.app).get("/app.js").expect(200)).text, /CormierRealtime\.RealtimeClient/);
+  assert.match((await request(context.app).get("/app.js").expect(200)).text, /Realtime\.RealtimeClient/);
   const sdk = await request(context.app)
-    .get("/_content/Cormier.Realtime.Browser/cormier-realtime.iife.js")
+    .get("/_content/Realtime.Browser/realtime.iife.js")
     .expect(200);
-  assert.match(sdk.text, /CormierRealtime/);
+  assert.match(sdk.text, /Realtime/);
 });
 
 test("forwards HTTP fallback requests without stripping their mounted path", async () => {
   const context = fixture();
   await request(context.app)
     .post("/realtime/http/connections/connection-a/messages?mode=test")
-    .set("X-Cormier-Connection", "connection-token")
+    .set("X-Realtime-Connection", "connection-token")
     .set("Content-Type", "application/json")
     .send({ type: "ping" })
     .expect(202, { forwarded: true });
@@ -228,10 +228,10 @@ test("keeps fallback receiver exemptions bounded", async () => {
   const fallback = request(app);
   const path = "/realtime/http/connections/not-a-real-connection/poll";
 
-  await fallback.post(path).set("X-Cormier-Connection", "not-a-real-token").expect(202);
-  await fallback.post(path).set("X-Cormier-Connection", "not-a-real-token").expect(202);
+  await fallback.post(path).set("X-Realtime-Connection", "not-a-real-token").expect(202);
+  await fallback.post(path).set("X-Realtime-Connection", "not-a-real-token").expect(202);
   const limited = await fallback.post(path)
-    .set("X-Cormier-Connection", "not-a-real-token")
+    .set("X-Realtime-Connection", "not-a-real-token")
     .expect(429);
 
   assert.equal(limited.body.code, "rate_limited");

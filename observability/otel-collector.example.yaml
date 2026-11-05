@@ -6,7 +6,7 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-        - job_name: cormier-realtime
+        - job_name: realtime
           scrape_interval: 30s
           metrics_path: /metrics
           static_configs:

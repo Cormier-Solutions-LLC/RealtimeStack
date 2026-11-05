@@ -1,4 +1,4 @@
-# Cormier.Realtime full-circle application
+# Realtime full-circle application
 
 This application is an external-consumer proof for the supported ASP.NET Core integration and generated browser SDK. It creates an ASP.NET Core session, stores the authoritative tenant/user identity in Redis, issues a single-use connection ticket, maps the realtime endpoints, and exposes direct-script and ESM browser workflows.
 

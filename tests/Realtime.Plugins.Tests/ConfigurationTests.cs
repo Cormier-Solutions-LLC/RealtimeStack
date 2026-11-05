@@ -1,10 +1,10 @@
-using Cormier.Realtime.Config;
-using Cormier.Realtime.Plugins.Persistence;
+using Realtime.Config;
+using Realtime.Plugins.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cormier.Realtime.Plugins.Tests;
+namespace Realtime.Plugins.Tests;
 
 public sealed class ConfigurationTests : IDisposable
 {

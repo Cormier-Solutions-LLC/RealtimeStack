@@ -1,15 +1,15 @@
 <!doctype html>
-<!--! Cormier.Realtime reference assets | MIT -->
+<!--! Realtime reference assets | MIT -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cormier.Realtime failover example</title>
+  <title>Realtime failover example</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
   <main>
-    <h1>Cormier.Realtime transport failover</h1>
+    <h1>Realtime transport failover</h1>
     <nav><a href="/">WebSocket</a> · <a href="/fallback.html">HTTP streaming only</a> · <a href="/failover.html">WebSocket failover</a></nav>
     <p id="diagnostics">Loading application details…</p>
     <section id="transport-controls"><h2>Failover controls</h2><label><input id="disable-websocket" type="checkbox"> Disable WebSockets to force HTTP failover</label></section>
@@ -27,6 +27,6 @@
 <div id="stack-links"></div>
   </main>
   <dialog id="message-modal" aria-labelledby="message-title"><h2 id="message-title">Subscription message</h2><p>Route: <strong id="message-route"></strong></p><pre id="message-payload"></pre><form method="dialog"><button>Close</button></form></dialog>
-  <script src="/_content/Cormier.Realtime.Browser/cormier-realtime.iife.js"></script><script src="/app.js"></script>
+  <script src="/_content/Realtime.Browser/realtime.iife.js"></script><script src="/app.js"></script>
 </body>
 </html>

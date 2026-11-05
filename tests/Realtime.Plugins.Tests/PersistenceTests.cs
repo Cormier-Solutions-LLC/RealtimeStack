@@ -1,8 +1,8 @@
 using Microsoft.Data.Sqlite;
-using Cormier.Realtime.Plugins.Persistence;
-using Cormier.Realtime.Plugins.Sqlite;
+using Realtime.Plugins.Persistence;
+using Realtime.Plugins.Sqlite;
 
-namespace Cormier.Realtime.Plugins.Tests;
+namespace Realtime.Plugins.Tests;
 
 public sealed class PersistenceTests : IDisposable
 {

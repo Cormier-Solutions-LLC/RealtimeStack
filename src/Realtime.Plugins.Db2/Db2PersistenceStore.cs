@@ -1,7 +1,7 @@
 using System.Data.Common;
-using Cormier.Realtime.Plugins.Persistence;
+using Realtime.Plugins.Persistence;
 
-namespace Cormier.Realtime.Plugins.Db2;
+namespace Realtime.Plugins.Db2;
 
 /// <summary>Db2 storage using a fresh host-configured ADO.NET connection for each operation.</summary>
 public sealed class Db2PersistenceStore(Func<DbConnection> connectionFactory,

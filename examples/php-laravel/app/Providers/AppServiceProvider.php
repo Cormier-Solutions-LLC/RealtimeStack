@@ -9,6 +9,6 @@ final class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ReferenceConfig::class, fn (): ReferenceConfig => ReferenceConfig::fromArray(config('cormier')));
+        $this->app->singleton(ReferenceConfig::class, fn (): ReferenceConfig => ReferenceConfig::fromArray(config('realtime')));
     }
 }

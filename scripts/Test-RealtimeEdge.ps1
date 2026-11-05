@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Validates the deployed Cormier realtime Traefik and MetalLB edge.
+  Validates the deployed Realtime Traefik and MetalLB edge.
 .DESCRIPTION
   Performs non-mutating DNS, TLS, routing, readiness, and optional authenticated
   WSS long-connection validation. The ticket is read only from an environment
@@ -31,7 +31,7 @@ param(
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$TraefikNamespace = 'traefik',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$GatewayRelease = 'development-realtime',
     [Parameter()][string]$GatewayPodSelector = '',
-    [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$CertificateName = 'realtime-cormier-local',
+    [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$CertificateName = 'realtime-local',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$TraefikService = 'traefik',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$TraefikRelease = 'traefik',
     [Parameter()][string]$TraefikPodSelector = 'app.kubernetes.io/name=traefik',
@@ -39,7 +39,7 @@ param(
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$MetalLbAdvertisement = 'development-traefik',
     [Parameter()][ValidateSet('l2', 'bgp')][string]$MetalLbAdvertisementMode = 'l2',
     [Parameter()][string]$MetalLbSpeakerSelector = 'component=speaker',
-    [Parameter()][ValidatePattern('^[a-z0-9.-]+$')][string]$HostName = 'realtime.cormier.local',
+    [Parameter()][ValidatePattern('^[a-z0-9.-]+$')][string]$HostName = 'realtime.example.test',
     [Parameter()][ValidatePattern('^/[A-Za-z0-9._/-]*$')][string]$Path = '/realtime/ws',
     [Parameter()][ValidatePattern('^$|^https://[a-z0-9.-]+(:[0-9]{1,5})?$')][string]$Origin = '',
     [Parameter()][ValidateRange(1, 65535)][int]$ExternalPort = 443,
@@ -453,7 +453,7 @@ try {
     if (-not [string]::IsNullOrWhiteSpace($CertificateAuthorityPath)) { $curlCommon += @('--cacert', $CertificateAuthorityPath) }
 
     $servedMaterial = Get-CertificateRequestMaterial $CertificateName $GatewayNamespace
-    if ($null -eq ('Cormier.Realtime.EdgeValidation.ServedCertificate' -as [type])) {
+    if ($null -eq ('Realtime.EdgeValidation.ServedCertificate' -as [type])) {
         Add-Type -TypeDefinition @'
 using System;
 using System.Net.Security;
@@ -462,7 +462,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Cormier.Realtime.EdgeValidation;
+namespace Realtime.EdgeValidation;
 
 public static class ServedCertificate
 {
@@ -484,7 +484,7 @@ public static class ServedCertificate
         $expectedCertificates.ImportFromPem($servedMaterial.CertificatePem)
         if ($expectedCertificates.Count -lt 1) { throw 'Expected served certificate data contains no public certificates.' }
         $expectedFingerprint = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($expectedCertificates[0].RawData))
-        $servedFingerprint = [Cormier.Realtime.EdgeValidation.ServedCertificate]::Sha256Async($HostName, $connectionAddress, $ExternalPort, $TimeoutSeconds).GetAwaiter().GetResult()
+        $servedFingerprint = [Realtime.EdgeValidation.ServedCertificate]::Sha256Async($HostName, $connectionAddress, $ExternalPort, $TimeoutSeconds).GetAwaiter().GetResult()
         if ($servedFingerprint -ne $expectedFingerprint) { throw 'The externally served TLS leaf does not match the Ready CertificateRequest.' }
     }
     finally { foreach ($expectedCertificate in $expectedCertificates) { $expectedCertificate.Dispose() } }
@@ -498,10 +498,10 @@ public static class ServedCertificate
         '--header', 'Upgrade: websocket',
         '--header', 'Sec-WebSocket-Version: 13',
         '--header', "Sec-WebSocket-Key: $webSocketKey",
-        '--header', 'Sec-WebSocket-Protocol: cormier.realtime.v1',
+        '--header', 'Sec-WebSocket-Protocol: realtime.v1',
         '--header', "Origin: $effectiveOrigin",
         '--output', $nullDevice,
-        '--write-out', '%{http_code}|%header{x-cormier-origin-validated}',
+        '--write-out', '%{http_code}|%header{x-realtime-origin-validated}',
         "https://${externalAuthority}${Path}"
     )
     $routeStatus = Invoke-Checked curl $upgradeArguments 'Validate TLS route'
@@ -515,13 +515,13 @@ public static class ServedCertificate
     if ($wrongHostStatus.Trim() -ne '404') { throw "Invalid host returned unexpected status $($wrongHostStatus.Trim())." }
     Write-Result PASS 'Invalid host is rejected.'
 
-    $originFailuresBefore = Get-MetricValue 'cormier_realtime_authentication_total' 'method="origin",outcome="failure"'
+    $originFailuresBefore = Get-MetricValue 'realtime_authentication_total' 'method="origin",outcome="failure"'
     $invalidOriginArguments = $upgradeArguments.Clone()
     $originIndex = [Array]::IndexOf($invalidOriginArguments, "Origin: $effectiveOrigin")
     $invalidOriginArguments[$originIndex] = 'Origin: https://invalid.example'
     $invalidOriginStatus = Invoke-Checked curl $invalidOriginArguments 'Validate invalid Origin rejection'
     if ($invalidOriginStatus.Trim() -ne '401|false') { throw "Invalid Origin returned unexpected status $($invalidOriginStatus.Trim())." }
-    $originFailuresAfter = Get-MetricValue 'cormier_realtime_authentication_total' 'method="origin",outcome="failure"'
+    $originFailuresAfter = Get-MetricValue 'realtime_authentication_total' 'method="origin",outcome="failure"'
     if ($originFailuresAfter -le $originFailuresBefore) { throw 'Invalid Origin did not increment the gateway Origin-rejection metric.' }
     Write-Result PASS 'Invalid Origin is rejected by the gateway and recorded without credential data.'
 
@@ -552,7 +552,7 @@ public static class ServedCertificate
             $trustedRoots.ImportFromPemFile($CertificateAuthorityPath)
             if ($trustedRoots.Count -eq 0) { throw 'The configured CA bundle contains no certificates.' }
         }
-        if ($null -eq ('Cormier.Realtime.EdgeValidation.CustomRootValidator' -as [type])) {
+        if ($null -eq ('Realtime.EdgeValidation.CustomRootValidator' -as [type])) {
             Add-Type -TypeDefinition @'
 using System.Net.Security;
 using System.Net;
@@ -560,7 +560,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Cormier.Realtime.EdgeValidation;
+namespace Realtime.EdgeValidation;
 
 public static class CustomRootValidator
 {
@@ -620,11 +620,11 @@ public static class CustomRootValidator
                 $candidateInvoker = $null
                 $connectTimeout = [Threading.CancellationTokenSource]::new([TimeSpan]::FromSeconds($TimeoutSeconds))
                 try {
-                    $candidateSocket.Options.AddSubProtocol('cormier.realtime.v1')
+                    $candidateSocket.Options.AddSubProtocol('realtime.v1')
                     $candidateSocket.Options.SetRequestHeader('Origin', $effectiveOrigin)
                     $uri = [Uri]::new("wss://${externalAuthority}${Path}?ticket=$([Uri]::EscapeDataString($EphemeralTicket))")
-                    if ($null -eq ('Cormier.Realtime.EdgeValidation.CustomRootValidator' -as [type])) { throw 'The pinned WSS transport helper could not be loaded.' }
-                    $candidateInvoker = [Cormier.Realtime.EdgeValidation.CustomRootValidator]::CreateInvoker($connectionAddress, $ExternalPort, $trustedRoots)
+                    if ($null -eq ('Realtime.EdgeValidation.CustomRootValidator' -as [type])) { throw 'The pinned WSS transport helper could not be loaded.' }
+                    $candidateInvoker = [Realtime.EdgeValidation.CustomRootValidator]::CreateInvoker($connectionAddress, $ExternalPort, $trustedRoots)
                     $null = $candidateSocket.ConnectAsync($uri, $candidateInvoker, $connectTimeout.Token).GetAwaiter().GetResult()
                     return [pscustomobject]@{ Socket = $candidateSocket; Invoker = $candidateInvoker }
                 }

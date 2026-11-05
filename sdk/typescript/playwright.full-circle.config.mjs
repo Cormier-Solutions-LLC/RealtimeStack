@@ -16,7 +16,7 @@ const instances = selectedPlan.instances;
 const entryPort = selectedPlan.entryPort;
 const readinessTimeout = plan.timeouts.readinessSeconds * 1000;
 const packagedApplicationDirectory = resolve(repositoryRoot, "artifacts/full-circle/consumer-bin/Release/net10.0");
-const packagedApplication = "Cormier.Realtime.Example.FullCircle.dll";
+const packagedApplication = "Realtime.Example.FullCircle.dll";
 const forwardedRedisConfiguration = Object.fromEntries([
   "Redis__User",
   "Redis__Password",
@@ -41,7 +41,7 @@ const appServers = instances.map(instance => ({
     Realtime__AllowedOrigins__0: `http://127.0.0.1:${entryPort}`,
     Diagnostics__Enabled: "true",
     Diagnostics__ProductionEnabled: "true",
-    Diagnostics__AuthorizationPolicy: "Cormier.Diagnostics.Operator",
+    Diagnostics__AuthorizationPolicy: "Realtime.Diagnostics.Operator",
     Diagnostics__OperatorToken: diagnosticsToken,
     Diagnostics__AllowedOrigins__0: `http://127.0.0.1:${entryPort}`,
     Diagnostics__AllowedNetworks__0: "127.0.0.0/8",

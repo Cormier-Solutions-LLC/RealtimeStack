@@ -6,7 +6,7 @@ const gatewayPort = Number.parseInt(process.env.REALTIME_BROWSER_GATEWAY_PORT ??
 const proxyPort = Number.parseInt(process.env.REALTIME_BROWSER_PROXY_PORT ?? "18083", 10);
 const staticPort = Number.parseInt(process.env.REALTIME_BROWSER_STATIC_PORT ?? "14173", 10);
 const sessionCookie = {
-  name: "cormier_session",
+  name: "realtime_session",
   value: "browser-session-123456",
   url: `http://127.0.0.1:${proxyPort}`,
   httpOnly: true,
@@ -23,10 +23,10 @@ async function exposeArtifact(page, name) {
 }
 
 for (const artifact of [
-  { format: "esm", name: "cormier-realtime.js" },
-  { format: "esm", name: "cormier-realtime.min.js" },
-  { format: "iife", name: "cormier-realtime.iife.js" },
-  { format: "iife", name: "cormier-realtime.iife.min.js" },
+  { format: "esm", name: "realtime.js" },
+  { format: "esm", name: "realtime.min.js" },
+  { format: "iife", name: "realtime.iife.js" },
+  { format: "iife", name: "realtime.iife.min.js" },
 ]) {
   test(`${artifact.name} establishes an authorized connection and exchanges an event`, async ({ page, context }) => {
     await context.addCookies([sessionCookie]);
@@ -41,7 +41,7 @@ for (const artifact of [
     } else {
       await exposeArtifact(page, artifact.name);
       await page.addScriptTag({ url: `/sdk/${artifact.name}` });
-      await page.evaluate(() => { window.realtimeSdk = window.CormierRealtime; });
+      await page.evaluate(() => { window.realtimeSdk = window.Realtime; });
     }
 
     const result = await page.evaluate(async () => {
@@ -86,7 +86,7 @@ test("single-use and expired tickets are rejected without credential disclosure"
     const response = await fetch("/realtime/tickets", { method: "POST", credentials: "include" });
     const { ticket } = await response.json();
     const connect = (candidate) => new Promise((resolve) => {
-      const socket = new WebSocket(`/realtime/ws?ticket=${encodeURIComponent(candidate)}`, "cormier.realtime.v1");
+      const socket = new WebSocket(`/realtime/ws?ticket=${encodeURIComponent(candidate)}`, "realtime.v1");
       socket.onopen = () => {
         socket.close(1000, "test_complete");
         resolve("open");
@@ -106,7 +106,7 @@ test("session authentication rejects a different browser Origin", async ({ page,
   await context.addCookies([sessionCookie]);
   await page.goto(`http://127.0.0.1:${staticPort}/health`);
   const result = await page.evaluate((port) => new Promise((resolve) => {
-    const socket = new WebSocket(`ws://127.0.0.1:${port}/realtime/ws`, "cormier.realtime.v1");
+    const socket = new WebSocket(`ws://127.0.0.1:${port}/realtime/ws`, "realtime.v1");
     socket.onopen = () => resolve("open");
     socket.onerror = () => resolve("rejected");
   }), proxyPort);
@@ -117,8 +117,8 @@ test("network failure reconnects through a different gateway with a fresh ticket
   test.skip(browserName !== "chromium", "Cross-replica behavior is transport-independent and runs once.");
   await context.addCookies([sessionCookie]);
   await page.goto("/health/live");
-  await exposeArtifact(page, "cormier-realtime.js");
-  await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/cormier-realtime.js'; window.realtimeSdk = sdk;" });
+  await exposeArtifact(page, "realtime.js");
+  await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtime.js'; window.realtimeSdk = sdk;" });
   await expect.poll(() => page.evaluate(() => typeof window.realtimeSdk?.RealtimeClient)).toBe("function");
   await page.evaluate(async () => {
     const client = new window.realtimeSdk.RealtimeClient({
@@ -159,9 +159,9 @@ test("Redis fan-out preserves tenant isolation across gateway replicas", async (
     const first = await firstContext.newPage();
     const second = await secondContext.newPage();
     for (const page of [first, second]) {
-      await exposeArtifact(page, "cormier-realtime.js");
+      await exposeArtifact(page, "realtime.js");
       await page.goto(`http://127.0.0.1:${proxyPort}/health/live`);
-      await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/cormier-realtime.js'; window.realtimeSdk = sdk;" });
+      await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtime.js'; window.realtimeSdk = sdk;" });
       await expect.poll(() => page.evaluate(() => typeof window.realtimeSdk?.RealtimeClient)).toBe("function");
       await page.evaluate(async () => {
         window.isolationEvents = [];

@@ -23,8 +23,8 @@ logger = logging.getLogger("reference")
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("uvicorn").setLevel(logging.CRITICAL)
 logging.getLogger("websockets").setLevel(logging.CRITICAL)
-SESSION_COOKIE = "cormier_session"
-PROTOCOL = "cormier.realtime.v1"
+SESSION_COOKIE = "realtime_session"
+PROTOCOL = "realtime.v1"
 TICKET_DEADLINE_SECONDS = 15
 
 
@@ -111,8 +111,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 configured.SHARED_ASSET_ROOT / "failover.html",
                 configured.SHARED_ASSET_ROOT / "app.css",
                 configured.SHARED_ASSET_ROOT / "app.js",
-                configured.SDK_ASSET_ROOT / "cormier-realtime.iife.js",
-                configured.SDK_ASSET_ROOT / "cormier-realtime.iife.min.js",
+                configured.SDK_ASSET_ROOT / "realtime.iife.js",
+                configured.SDK_ASSET_ROOT / "realtime.iife.min.js",
             ):
                 if not path.is_file():
                     raise RuntimeError("required asset is unavailable")
@@ -177,7 +177,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def javascript() -> FileResponse:
         return asset(configured.SHARED_ASSET_ROOT, "app.js", "text/javascript")
 
-    @app.get("/_content/Cormier.Realtime.Browser/{name}")
+    @app.get("/_content/Realtime.Browser/{name}")
     async def sdk_asset(name: str) -> FileResponse:
         if not name or any(
             character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for character in name
@@ -334,7 +334,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             body.extend(chunk)
         headers = {
             name: request.headers[name]
-            for name in ("host", "origin", "cookie", "content-type", "x-cormier-connection")
+            for name in ("host", "origin", "cookie", "content-type", "x-realtime-connection")
             if name in request.headers
         }
         headers.update(public_forwarding_headers(configured))

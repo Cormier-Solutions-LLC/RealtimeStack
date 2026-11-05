@@ -2,7 +2,7 @@
 
 ## Connection and authentication
 
-Connect to `/realtime/ws` with the `cormier.realtime.v1` WebSocket subprotocol. Browser clients authenticate with the `cormier_session` HttpOnly cookie. Cookie authentication is accepted only when `Origin` exactly matches the request scheme, host, and effective port and is present in `Realtime:AllowedOrigins`. Tenant ID, user ID, topic grants, revocation, and expiry come only from the namespaced Redis session record; none are accepted from client payloads.
+Connect to `/realtime/ws` with the `realtime.v1` WebSocket subprotocol. Browser clients authenticate with the `realtime_session` HttpOnly cookie. Cookie authentication is accepted only when `Origin` exactly matches the request scheme, host, and effective port and is present in `Realtime:AllowedOrigins`. Tenant ID, user ID, topic grants, revocation, and expiry come only from the namespaced Redis session record; none are accepted from client payloads.
 
 Approved cross-origin and non-browser clients first POST `/realtime/tickets` using a valid same-origin session. The returned cryptographically random ticket is valid for 30 seconds by default, is bound to the request host, and is atomically consumed once via the `ticket` query parameter. A rejected audience also consumes the ticket to prevent probing or replay.
 
@@ -58,4 +58,4 @@ Version `1.0` is matched exactly. Additive optional payload fields may be introd
 
 Metrics use bounded operation, outcome, direction, reason, endpoint, message-type, and close-code dimensions plus aggregate counters and histograms; correlation IDs are not metric labels. Traces and structured logs may carry bounded operational context but must never include cookies, tickets, message payloads, tenant IDs, or user IDs.
 
-Language-neutral fixtures in `protocol/fixtures/v1/envelopes.json` are consumed by both the .NET contract suite and `@cormier/realtime`. A fixture or protocol constant change that is not understood by either implementation fails CI. Later .NET consumer SDKs must consume the same fixtures; full cross-SDK live conformance is exercised by the packaged-consumer application after those SDKs are available.
+Language-neutral fixtures in `protocol/fixtures/v1/envelopes.json` are consumed by both the .NET contract suite and `@realtime/client`. A fixture or protocol constant change that is not understood by either implementation fails CI. Later .NET consumer SDKs must consume the same fixtures; full cross-SDK live conformance is exercised by the packaged-consumer application after those SDKs are available.

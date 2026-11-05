@@ -1,7 +1,7 @@
 using System.Data.Common;
-using Cormier.Realtime.Plugins.Persistence;
+using Realtime.Plugins.Persistence;
 
-namespace Cormier.Realtime.Plugins.PostgreSql;
+namespace Realtime.Plugins.PostgreSql;
 
 /// <summary>PostgreSql storage using a fresh host-configured ADO.NET connection for each operation.</summary>
 public sealed class PostgreSqlPersistenceStore(Func<DbConnection> connectionFactory,

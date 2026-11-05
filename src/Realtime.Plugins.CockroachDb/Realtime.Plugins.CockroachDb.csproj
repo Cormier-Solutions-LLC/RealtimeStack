@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.CockroachDb</RootNamespace>
+    <RootNamespace>Realtime.Plugins.CockroachDb</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.CockroachDb</PackageId>
     <Description>CockroachDb durable realtime messages, notifications, and task status storage.</Description>

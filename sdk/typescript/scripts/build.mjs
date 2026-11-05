@@ -39,10 +39,10 @@ const shared = {
 };
 
 await Promise.all([
-  build({ ...shared, format: "esm", outfile: resolve(dist, "cormier-realtime.js") }),
-  build({ ...shared, format: "esm", minify: true, outfile: resolve(dist, "cormier-realtime.min.js") }),
-  build({ ...shared, format: "iife", globalName: "CormierRealtime", outfile: resolve(dist, "cormier-realtime.iife.js") }),
-  build({ ...shared, format: "iife", globalName: "CormierRealtime", minify: true, outfile: resolve(dist, "cormier-realtime.iife.min.js") }),
+  build({ ...shared, format: "esm", outfile: resolve(dist, "realtime.js") }),
+  build({ ...shared, format: "esm", minify: true, outfile: resolve(dist, "realtime.min.js") }),
+  build({ ...shared, format: "iife", globalName: "Realtime", outfile: resolve(dist, "realtime.iife.js") }),
+  build({ ...shared, format: "iife", globalName: "Realtime", minify: true, outfile: resolve(dist, "realtime.iife.min.js") }),
 ]);
 
 const unexpectedArguments = process.argv.slice(2).filter((argument) => argument !== "--obfuscate");
@@ -56,5 +56,5 @@ writeFileSync(resolve(dist, "version.json"), `${JSON.stringify({
   package: packageJson.name,
   version: packageJson.version,
   protocolVersion: "1.0",
-  subprotocol: "cormier.realtime.v1",
+  subprotocol: "realtime.v1",
 }, null, 2)}\n`, "utf8");

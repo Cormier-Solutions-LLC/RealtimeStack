@@ -110,7 +110,7 @@
         "resolved": "10.0.5",
         "contentHash": "8IBJWcCT9+e4Bmevm4T7+fQEiAh133KGiz4oiVTgJckd3Q76OFdR1falgn9lpz7+C4HJvogCDJeAa2QmvbeVtg=="
       },
-      "Realtime.AspNetCore": {
+      "realtime.aspnetcore": {
         "type": "Project",
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
@@ -119,16 +119,16 @@
           "Realtime.Redis": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Browser": {
+      "realtime.browser": {
         "type": "Project"
       },
-      "Realtime.Client": {
+      "realtime.client": {
         "type": "Project",
         "dependencies": {
           "Realtime.Contracts": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Config": {
+      "realtime.config": {
         "type": "Project",
         "dependencies": {
           "Realtime.AspNetCore": "[1.1.0-beta, )",
@@ -150,10 +150,10 @@
           "Realtime.Redis": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Contracts": {
+      "realtime.contracts": {
         "type": "Project"
       },
-      "Realtime.HttpFallback": {
+      "realtime.httpfallback": {
         "type": "Project",
         "dependencies": {
           "Realtime.AspNetCore": "[1.1.0-beta, )"
@@ -222,7 +222,7 @@
           "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Redis": {
+      "realtime.redis": {
         "type": "Project",
         "dependencies": {
           "Realtime.Contracts": "[1.1.0-beta, )",

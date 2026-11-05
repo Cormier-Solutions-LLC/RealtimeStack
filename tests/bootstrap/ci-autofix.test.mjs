@@ -8,12 +8,12 @@ const {
   analyzeCiFailure, analyzeJob, buildCopilotRequest, classifyLog, failedJobs, priorRequests, sanitize,
 } = createRequire(import.meta.url)('../../scripts/ci-failure-autofix.cjs');
 
-test('workflow triggers only on failed CI runs and runs on Cormier runners with trusted code', () => {
+test('workflow triggers only on failed CI runs and runs on Realtime runners with trusted code', () => {
   const workflow = readFileSync(new URL('.github/workflows/ci-failure-autofix.yml', root), 'utf8');
   assert.match(workflow, /workflow_run:\n    workflows: \[Realtime gateway CI\]\n    types: \[completed\]/);
   assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'failure'/);
   assert.match(workflow, /head_repository\.full_name == github\.repository/);
-  assert.match(workflow, /runs-on: cormier-runners/);
+  assert.match(workflow, /runs-on: \$\{\{ vars\.CI_RUNNER_LABEL \}\}/);
   assert.match(workflow, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /ref: \$\{\{ github\.event\.workflow_run\.head/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.CI_AUTOFIX_TOKEN \}\}/);
@@ -64,15 +64,15 @@ test('excerpts cannot close fences or mention accounts', () => {
   });
   assert.match(body, /^@copilot /);
   assert.match(body, /stop without guessing/);
-  assert.match(body, /<!-- cormier-ci-autofix:copilot sha=a{40} run=7 -->$/);
+  assert.match(body, /<!-- realtime-ci-autofix:copilot sha=a{40} run=7 -->$/);
   assert.equal(body.match(/```/g).length, 2);
 });
 
 test('prior markers dedupe commits and count repair attempts', () => {
   const bot = { user: { type: 'Bot' } };
   const comments = [
-    { author_association: 'COLLABORATOR', body: 'x <!-- cormier-ci-autofix:copilot sha=abc run=1 -->' },
-    { ...bot, body: '<!-- cormier-ci-autofix:input sha=def run=2 -->' },
+    { author_association: 'COLLABORATOR', body: 'x <!-- realtime-ci-autofix:copilot sha=abc run=1 -->' },
+    { ...bot, body: '<!-- realtime-ci-autofix:input sha=def run=2 -->' },
     { ...bot, body: 'unrelated' },
   ];
   assert.deepEqual(priorRequests(comments, 'def'), { copilotAttempts: 1, handledSha: true });
@@ -123,14 +123,14 @@ test('unresolvable failures, missing token, and attempt limits stop and prompt t
   for (const options of [
     { log: '##[error]Username and password required' },
     { log: 'error: x', token: 'false' },
-    { log: 'error: x', comments: ['1', '2'].map(n => ({ author_association: 'COLLABORATOR', body: `<!-- cormier-ci-autofix:copilot sha=${n.repeat(4)} run=${n} -->` })) },
+    { log: 'error: x', comments: ['1', '2'].map(n => ({ author_association: 'COLLABORATOR', body: `<!-- realtime-ci-autofix:copilot sha=${n.repeat(4)} run=${n} -->` })) },
   ]) {
     const h = harness(options);
     await h.run();
     assert.equal(h.outputs.dispatch, 'false');
     assert.equal(h.posted.length, 1);
     assert.match(h.posted[0].body, /^@author @dev Automatic CI repair was \*\*not\*\* started/);
-    assert.match(h.posted[0].body, /cormier-ci-autofix:input sha=b{40} run=9/);
+    assert.match(h.posted[0].body, /realtime-ci-autofix:input sha=b{40} run=9/);
     assert.ok(h.summaryEntries.some(entry => entry.method === 'addRaw' && /No automatic repair was requested/.test(entry.args[0])));
     assert.ok(h.summaryEntries.some(entry => entry.method === 'addLink' && entry.args[1] === 'https://example.invalid/run'));
     assert.ok(h.summaryEntries.some(entry => entry.method === 'addCodeBlock' && entry.args[0] === options.log));
@@ -139,7 +139,7 @@ test('unresolvable failures, missing token, and attempt limits stop and prompt t
 });
 
 test('already handled commits are not processed again', async () => {
-  const h = harness({ log: 'error: x', comments: [{ user: { type: 'Bot' }, body: `<!-- cormier-ci-autofix:input sha=${'b'.repeat(40)} run=8 -->` }] });
+  const h = harness({ log: 'error: x', comments: [{ user: { type: 'Bot' }, body: `<!-- realtime-ci-autofix:input sha=${'b'.repeat(40)} run=8 -->` }] });
   await h.run();
   assert.equal(h.outputs.dispatch, 'false');
   assert.equal(h.posted.length, 0);

@@ -3,9 +3,9 @@ import express from "express";
 import { rateLimit } from "express-rate-limit";
 import session from "express-session";
 
-const gatewayCookieName = "cormier_session";
+const gatewayCookieName = "realtime_session";
 const rfc3339Timestamp = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
-const exampleCookieName = "cormier_example_session";
+const exampleCookieName = "realtime_example_session";
 
 function parseRfc3339(value) {
   if (typeof value !== "string") return Number.NaN;
@@ -70,7 +70,7 @@ export function createApp({
     next();
   });
   const parseLoginJson = express.json({ limit: "8kb", strict: true });
-  const isFallbackReceiver = request => request.get("x-cormier-connection") !== undefined
+  const isFallbackReceiver = request => request.get("x-realtime-connection") !== undefined
     && /^\/realtime\/http\/connections\/[^/]+\/(?:poll|stream)$/u.test(request.path);
   const fallbackReceiverLimiter = rateLimit({
     windowMs: 60_000,
@@ -268,7 +268,7 @@ export function createApp({
     }
   });
 
-  app.use("/_content/Cormier.Realtime.Browser", express.static(config.sdkAssetRoot, { index: false, fallthrough: false }));
+  app.use("/_content/Realtime.Browser", express.static(config.sdkAssetRoot, { index: false, fallthrough: false }));
   app.use(express.static(config.sharedAssetRoot, { index: false, fallthrough: true }));
   app.get("/", (_request, response) => response.sendFile("index.html", { root: config.sharedAssetRoot }));
 

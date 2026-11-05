@@ -6,7 +6,7 @@ import {
   RealtimeError,
   RealtimeQueueError,
   WEBSOCKET_SUBPROTOCOL,
-} from "../dist/cormier-realtime.js";
+} from "../dist/realtime.js";
 
 class FakeSocket {
   readyState = 0;

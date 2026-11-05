@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Verifies and publishes one previously built immutable Cormier.Realtime package candidate.
+    Verifies and publishes one previously built immutable Realtime package candidate.
 .DESCRIPTION
     Never rebuilds package bytes. NuGet is the default promotion surface; npm publication is opt-in and requires
     explicit registry approval. WhatIf validates and prints the promotion plan without requiring credentials.
 .NOTES
     Version: 1.1.0-beta
-    Project: Cormier.Realtime
+    Project: Realtime
     Requires: PowerShell 7, .NET SDK 10, Node.js/npm only when PublishNpm is selected.
     Inputs: CandidatePath, configured registry endpoints, and credential-bearing environment variables. CI supplies
     the NuGet credential from Trusted Publishing; optional npm publication still uses a protected secret.
@@ -344,7 +344,7 @@ try {
     if ($PublishNpm -and -not $completed.Contains($npmPackages[0].Name)) {
         $phase = 'Publish npm'
         $registryUri = [Uri]$NpmRegistry
-        $temporaryNpmDirectory = Join-Path ([IO.Path]::GetTempPath()) ("cormier-npm-" + [guid]::NewGuid().ToString('N'))
+        $temporaryNpmDirectory = Join-Path ([IO.Path]::GetTempPath()) ("realtime-npm-" + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $temporaryNpmDirectory -ErrorAction Stop | Out-Null
         if (-not $IsWindows) {
             [IO.File]::SetUnixFileMode(

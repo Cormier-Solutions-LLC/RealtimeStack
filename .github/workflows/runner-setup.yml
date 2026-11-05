@@ -1,4 +1,4 @@
-name: Validate Cormier runner setup
+name: Validate Realtime runner setup
 
 on:
   pull_request:
@@ -25,11 +25,11 @@ permissions:
 
 jobs:
   setup:
-    runs-on: cormier-runners
+    runs-on: ${{ vars.CI_RUNNER_LABEL }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-cormier-runner
+      - uses: ./.github/actions/setup-realtime-runner
         with:
           docker: 'true'
           native-aot: 'true'

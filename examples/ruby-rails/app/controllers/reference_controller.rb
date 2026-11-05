@@ -10,7 +10,7 @@ class ReferenceController < ApplicationController
   MAXIMUM_BODY_BYTES = 64 * 1_024
   MAXIMUM_UPSTREAM_BYTES = 64 * 1_024
   TICKET_DEADLINE_SECONDS = 15
-  SESSION_COOKIE = "cormier_session"
+  SESSION_COOKIE = "realtime_session"
   RFC3339_TIMESTAMP = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})\z/
 
   def self.valid_future_expiration?(value, now = Time.now.utc)

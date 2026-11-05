@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cormier.example/schemas/reference-app.schema.json",
-  "title": "Cormier.Realtime reference application environment",
+  "$id": "https://realtime.example/schemas/reference-app.schema.json",
+  "title": "Realtime reference application environment",
   "type": "object",
   "additionalProperties": true,
   "required": [

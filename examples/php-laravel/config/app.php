@@ -3,7 +3,7 @@
 $secret = (string) env('SESSION_SECRET', '');
 
 return [
-    'name' => 'Cormier.Realtime Laravel Example',
+    'name' => 'Realtime Laravel Example',
     'env' => env('APP_ENV', 'production'),
     'debug' => false,
     'url' => env('PUBLIC_ORIGIN'),

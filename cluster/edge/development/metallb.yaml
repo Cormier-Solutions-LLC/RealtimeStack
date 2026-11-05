@@ -4,7 +4,7 @@ metadata:
   name: development-traefik
   namespace: metallb-system
   labels:
-    cormier.io/environment: development
+    realtime.example/environment: development
 spec:
   addresses:
     # Documentation-only example. Replace with a reserved range routable in the target environment.
@@ -23,7 +23,7 @@ metadata:
   name: development-traefik
   namespace: metallb-system
   labels:
-    cormier.io/environment: development
+    realtime.example/environment: development
 spec:
   ipAddressPools:
     - development-traefik

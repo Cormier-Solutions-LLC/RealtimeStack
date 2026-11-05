@@ -1,8 +1,8 @@
-# Cormier.Realtime TypeScript and browser SDK
+# Realtime TypeScript and browser SDK
 
-`@cormier/realtime` is the typed browser client for wire protocol `1.0`. It supports same-origin HttpOnly session cookies and short-lived, single-use connection tickets without exposing authentication material through callbacks, errors, or library logging.
+`@realtime/client` is the typed browser client for wire protocol `1.0`. It supports same-origin HttpOnly session cookies and short-lived, single-use connection tickets without exposing authentication material through callbacks, errors, or library logging.
 
-For an npm consumer, install `@cormier/realtime` from your configured approved registry and import `{ RealtimeClient }` from `@cormier/realtime`. The package is ESM (`type: module`), with declarations at `dist/types/index.d.ts`; it does not provide a CommonJS build. The `@cormier/realtime/browser` export selects the readable IIFE. Direct browser examples below assume the chosen generated file is served at the shown relative URL. An authenticated application session and a compatible gateway must already exist; the SDK does not log users in.
+For an npm consumer, install `@realtime/client` from your configured approved registry and import `{ RealtimeClient }` from `@realtime/client`. The package is ESM (`type: module`), with declarations at `dist/types/index.d.ts`; it does not provide a CommonJS build. The `@realtime/client/browser` export selects the readable IIFE. Direct browser examples below assume the chosen generated file is served at the shown relative URL. An authenticated application session and a compatible gateway must already exist; the SDK does not log users in.
 
 ## Operator diagnostics client
 
@@ -14,7 +14,7 @@ For an npm consumer, install `@cormier/realtime` from your configured approved r
 
 ```html
 <script type="module">
-  import { RealtimeClient } from "./cormier-realtime.min.js";
+  import { RealtimeClient } from "./realtime.min.js";
 
   const client = new RealtimeClient({
     url: "/realtime/ws",
@@ -30,9 +30,9 @@ For an npm consumer, install `@cormier/realtime` from your configured approved r
 ## Direct browser script
 
 ```html
-<script src="./cormier-realtime.iife.min.js"></script>
+<script src="./realtime.iife.min.js"></script>
 <script>
-  const client = new CormierRealtime.RealtimeClient({
+  const client = new Realtime.RealtimeClient({
     url: "/realtime/ws",
     authentication: { kind: "ticket" },
   });
@@ -44,7 +44,7 @@ Ticket mode POSTs to `/realtime/tickets` resolved against the WebSocket origin b
 
 ## Optional HTTP fallback
 
-Install and map `Cormier.Realtime.HttpFallback` on the gateway, then choose an ordered transport list. HTTP can be primary:
+Install and map `Realtime.HttpFallback` on the gateway, then choose an ordered transport list. HTTP can be primary:
 
 ```js
 new RealtimeClient({
@@ -68,7 +68,7 @@ The switch occurs only before a transport opens. An established transport that l
 
 ## Behavior
 
-- `connect`, `publish`, `subscribe`, `unsubscribe`, `ping`, and `disconnect` use the `cormier.realtime.v1` subprotocol.
+- `connect`, `publish`, `subscribe`, `unsubscribe`, `ping`, and `disconnect` use the `realtime.v1` subprotocol.
 - Command and pending-acknowledgement collections are bounded. Saturation rejects new work with `RealtimeQueueError` rather than growing memory without limit.
 - A browser heartbeat prevents the gateway's idle timeout from treating a healthy connection as stale.
 - Unexpected disconnects use bounded exponential backoff with jitter and a maximum attempt count. A reconnect obtains a fresh ticket when ticket mode is selected.

@@ -1,8 +1,8 @@
-defmodule CormierRealtimeExample.ConfigTest do
+defmodule RealtimeExample.ConfigTest do
   use ExUnit.Case, async: true
-  alias CormierRealtimeExample.Config
-  alias CormierRealtimeExample.Application, as: ReferenceApplication
-  alias CormierRealtimeExample.Web
+  alias RealtimeExample.Config
+  alias RealtimeExample.Application, as: ReferenceApplication
+  alias RealtimeExample.Web
 
   defp values,
     do: %{
@@ -15,7 +15,7 @@ defmodule CormierRealtimeExample.ConfigTest do
       "HEARTBEAT_INTERVAL_MILLISECONDS" => "5000",
       "INSTANCE_NAME" => "elixir-phoenix-a",
       "TOPOLOGY" => "non-ha",
-      "REDIS_INSTANCE_PREFIX" => "cormier:elixir-test",
+      "REDIS_INSTANCE_PREFIX" => "realtime:elixir-test",
       "REDIS_SESSION_KEY_PREFIX" => "sessions",
       "ALLOWED_TENANTS" => "tenant-a",
       "ALLOWED_USERS" => "user-a"
@@ -66,8 +66,8 @@ defmodule CormierRealtimeExample.ConfigTest do
 
   test "requires the exact websocket subprotocol" do
     refute Web.offers_protocol?([])
-    refute Web.offers_protocol?(["other, cormier.realtime.v10"])
-    assert Web.offers_protocol?(["other", " cormier.realtime.v1"])
+    refute Web.offers_protocol?(["other, realtime.v10"])
+    assert Web.offers_protocol?(["other", " realtime.v1"])
   end
 
   test "bounds streamed ticket responses" do
@@ -107,13 +107,13 @@ defmodule CormierRealtimeExample.ConfigTest do
   end
 
   test "caps upstream websocket frames" do
-    assert CormierRealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_536))
-    refute CormierRealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_537))
+    assert RealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_536))
+    refute RealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_537))
   end
 
   test "initiates a going-away handshake during shutdown" do
     {:ok, upstream} = __MODULE__.FakeUpstream.start_link(self())
-    assert :ok = CormierRealtimeExample.ProxySocket.terminate(:shutdown, %{upstream: upstream})
+    assert :ok = RealtimeExample.ProxySocket.terminate(:shutdown, %{upstream: upstream})
     assert_receive {:closed, 1001, ""}
     GenServer.stop(upstream)
   end

@@ -17,7 +17,7 @@ Emergency disablement is `Diagnostics__Enabled=false` followed by a normal rollo
 - `GET /diagnostics/v1/snapshot` returns a cheap, aggregate snapshot: build, uptime, instance, readiness/drain, connection/subscription/queue/message/Redis state, memory, CPU, and active logging overrides.
 - `GET /diagnostics/v1/connections?offset=0&limit=25` returns capped per-connection timing and counts. Connection references are one-way hashes; tenant, user, session, ticket, topic, and payload values are never returned.
 - `GET /diagnostics/v1/events?durationSeconds=300` streams versioned aggregate operational events as server-sent events.
-- `GET /diagnostics/v1/logs/tail?level=Warning&category=Cormier.Realtime&durationSeconds=300` tails new log records only. Optional `instance` and `correlation` filters are exact matches. There is no historical-download endpoint.
+- `GET /diagnostics/v1/logs/tail?level=Warning&category=Realtime&durationSeconds=300` tails new log records only. Optional `instance` and `correlation` filters are exact matches. There is no historical-download endpoint.
 - `POST /diagnostics/v1/logging/overrides` applies a temporary capture-level change. Supply `category`, `level`, `durationSeconds`, `reason`, and `scope` (`all` or `instance`).
 - `DELETE /diagnostics/v1/logging/overrides/{id}` rolls an active override back. `GET /diagnostics/v1/logging/overrides` and `GET /diagnostics/v1/logging/audit?offset=0&limit=25` show active overrides and paginated, bounded audit state.
 
@@ -25,7 +25,7 @@ Example request body:
 
 ```json
 {
-  "category": "Cormier.Realtime.Redis",
+  "category": "Realtime.Redis",
   "level": "Debug",
   "durationSeconds": 300,
   "reason": "investigate elevated publish latency",

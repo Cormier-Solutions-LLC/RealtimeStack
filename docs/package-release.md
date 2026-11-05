@@ -1,6 +1,6 @@
 # Package release policy
 
-Cormier.Realtime produces eighteen NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
+Realtime produces eighteen NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
 
 | Artifact | Version property | Purpose |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Cormier.Realtime produces eighteen NuGet packages and one npm tarball from one i
 | `Realtime.Plugins.Persistence` | `ContractsVersion` | Shared durable stream and task status contracts |
 | `Realtime.Plugins.{PostgreSql,MySql,MariaDb,SqlServer,AzureSql,Oracle,Sqlite,Db2,CockroachDb,Snowflake}` | `ContractsVersion` | Ten database adapters; see [persistence](persistence.md) |
 | `Realtime.Config` | `ContractsVersion` | Registration, first-run setup, and durable HTTP integration |
-| `@cormier/realtime` | `sdk/typescript/package.json` | Optional npm form of the same browser SDK; publication requires registry-owner approval |
+| `@realtime/client` | `sdk/typescript/package.json` | Optional npm form of the same browser SDK; publication requires registry-owner approval |
 
 The NuGet IDs are the supported public identities. The npm name is a candidate identity and the release workflow does not publish it unless an approved registry and npm token are supplied explicitly. The gateway application/container and Helm chart have separate release workflows and are not included in this package candidate. Package IDs, versions, and registry endpoints are release configuration; no customer or deployment name is part of an artifact identity.
 
@@ -49,7 +49,7 @@ The updater changes active coordinated-version surfaces and creates new changelo
 
 When version parameters are omitted, the build reads `ContractsVersion`, `DotNetClientVersion`, `RedisAdapterVersion`, `AspNetCoreIntegrationVersion`, `HttpFallbackVersion`, and `BrowserPackageVersion` from `Directory.Build.props`. An explicit `BrowserPackageVersion` must match the normalized version in `sdk/typescript/package.json`. The automatic release gate is intentionally stricter: application, container, Helm chart, all eighteen NuGet packages, and npm must contain the same semantic version and must change together, because an official release promotes the complete coordinated set.
 
-Pull requests build package candidates without publication credentials. Package workflow jobs run on the repository's `cormier-runners` pool by default. After `Realtime gateway CI` succeeds for a push to `main`, the package workflow checks out that exact CI commit and compares its coordinated version with its first parent. An unchanged version skips package work; a complete coordinated change builds and publishes automatically. The workflow restores locked dependencies, builds, tests, creates browser outputs, packs all artifacts into isolated staging, inspects intended assets and dependency bounds, installs packages into clean consumers, checks reproducibility, and writes SHA-256 and manifest evidence. The protected main-branch publication job attests the exact selected candidate before promotion; branch-selectable build jobs have no OIDC or attestation permission. `-WhatIf` prints the plan without running tools or changing output. A repeated build is `UNCHANGED` only when every artifact hash matches; a different artifact with the same version fails as a version conflict.
+Pull requests build package candidates without publication credentials. Package workflow jobs run on the runner pool configured by `CI_RUNNER_LABEL`. After `Realtime gateway CI` succeeds for a push to `main`, the package workflow checks out that exact CI commit and compares its coordinated version with its first parent. An unchanged version skips package work; a complete coordinated change builds and publishes automatically. The workflow restores locked dependencies, builds, tests, creates browser outputs, packs all artifacts into isolated staging, inspects intended assets and dependency bounds, installs packages into clean consumers, checks reproducibility, and writes SHA-256 and manifest evidence. The protected main-branch publication job attests the exact selected candidate before promotion; branch-selectable build jobs have no OIDC or attestation permission. `-WhatIf` prints the plan without running tools or changing output. A repeated build is `UNCHANGED` only when every artifact hash matches; a different artifact with the same version fails as a version conflict.
 
 ## Promotion and publication
 
@@ -64,13 +64,13 @@ Rollback never replaces package bytes. Deprecate the bad immutable version in th
 - ASP.NET Core: install `Realtime.AspNetCore`; configure Redis and realtime options at runtime.
 - HTTP fallback: additionally install `Realtime.HttpFallback`, register it with `AddRealtimeHttpFallback`, and map it with `MapRealtimeHttpFallback`.
 - .NET Standard: install `Realtime.Client`; it contains no ASP.NET Core dependency.
-- Browser through NuGet: install `Realtime.Browser` and load `/_content/Cormier.Realtime.Browser/cormier-realtime.iife.min.js` or the ESM equivalent.
+- Browser through NuGet: install `Realtime.Browser` and load `/_content/Realtime.Browser/realtime.iife.min.js` or the ESM equivalent.
 - Raw JavaScript: use the inspected npm tarball, or extract the same files from the candidate's `Realtime.Browser` NuGet package under `staticwebassets/`.
 
 If restore fails, confirm the configured feed contains every dependency version in the recorded ranges and that no package source mapping excludes the local/test feed. For static assets, confirm `UseStaticFiles` is enabled and inspect the generated `staticwebassets.*.json` manifest. For duplicate-version errors, compare the candidate checksum with retained promotion evidence; never use `--skip-duplicate` as proof that bytes match.
 
 ## NuGet ID migration
 
-New candidates use `Realtime.*` package IDs. Replace each `Cormier.Realtime.*` PackageReference with its `Realtime.*` equivalent and migrate the complete dependency graph together. CLR namespaces, assembly names, browser filenames, and static asset URLs remain unchanged. Do not install both identity families together: they contain the same assemblies. Historical published packages remain immutable.
+New candidates use `Realtime.*` package IDs. Replace each legacy prefixed PackageReference with its `Realtime.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names now use `Realtime.*`; browser filenames use `realtime-*` and static asset URLs use `/_content/Realtime.Browser/`. Update consumer imports and URLs together. Do not install both identity families together: they contain the same assemblies. Historical published packages remain immutable.
 
 Before promoting the first renamed candidate, configure NuGet ownership and Trusted Publishing for the `Realtime.*` scope. Deprecate the old package IDs with their corresponding replacement IDs after successful promotion; do not delete historical versions.

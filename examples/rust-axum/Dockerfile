@@ -9,7 +9,7 @@ RUN cargo build --locked --release
 FROM ${ALPINE_IMAGE}
 RUN apk upgrade --no-cache
 WORKDIR /app
-COPY --from=build /source/target/release/cormier-realtime-example-rust-axum ./application
+COPY --from=build /source/target/release/realtime-example-rust-axum ./application
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY examples/shared-web/dist ./shared-web
 COPY sdk/typescript/dist ./sdk

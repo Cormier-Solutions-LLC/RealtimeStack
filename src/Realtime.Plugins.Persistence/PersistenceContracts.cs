@@ -1,4 +1,4 @@
-namespace Cormier.Realtime.Plugins.Persistence;
+namespace Realtime.Plugins.Persistence;
 
 public enum DurableRecordKind { Message, Notification, TaskStatus }
 

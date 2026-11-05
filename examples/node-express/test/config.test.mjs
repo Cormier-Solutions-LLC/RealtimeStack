@@ -14,7 +14,7 @@ const validEnvironment = Object.freeze({
   HEARTBEAT_INTERVAL_MILLISECONDS: "5000",
   INSTANCE_NAME: "node-express-a",
   TOPOLOGY: "non-ha",
-  REDIS_INSTANCE_PREFIX: "cormier:reference-node",
+  REDIS_INSTANCE_PREFIX: "realtime:reference-node",
   REDIS_SESSION_KEY_PREFIX: "sessions",
   ALLOWED_TENANTS: "tenant-a,tenant-b",
   ALLOWED_USERS: "user-a,user-b",

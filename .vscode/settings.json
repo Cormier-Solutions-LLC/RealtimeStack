@@ -1,5 +1,5 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
-    "dotnet.defaultSolution": "Cormier.Realtime.sln"
+    "dotnet.defaultSolution": "Realtime.sln"
 }

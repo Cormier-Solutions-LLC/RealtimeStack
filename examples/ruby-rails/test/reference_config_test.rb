@@ -20,7 +20,7 @@ class ReferenceConfigTest < Minitest::Test
       "HEARTBEAT_INTERVAL_MILLISECONDS" => "5000",
       "INSTANCE_NAME" => "ruby-rails-a",
       "TOPOLOGY" => "non-ha",
-      "REDIS_INSTANCE_PREFIX" => "cormier:test",
+      "REDIS_INSTANCE_PREFIX" => "realtime:test",
       "REDIS_SESSION_KEY_PREFIX" => "sessions",
       "ALLOWED_TENANTS" => "tenant-a",
       "ALLOWED_USERS" => "user-a"
@@ -32,7 +32,7 @@ class ReferenceConfigTest < Minitest::Test
     assert_equal "127.0.0.1", config.listen_host
     assert_equal 15_500, config.port
     assert config.allows?("tenant-a", "user-a")
-    assert_equal "cormier:test:sessions:id", config.session_key("id")
+    assert_equal "realtime:test:sessions:id", config.session_key("id")
     assert_equal 5_000, config.heartbeat_interval_milliseconds
     root = File.expand_path("../../..", __dir__)
     assert_equal File.join(root, "examples/shared-web/wwwroot"), config.shared_asset_root
@@ -112,8 +112,8 @@ class ReferenceConfigTest < Minitest::Test
   def test_preflight_checks_the_sdk_bundle_loaded_by_the_shared_page
     startup = File.read(File.expand_path("../start.sh", __dir__))
     %w[index.html app.css app.js].each { |asset| assert_includes startup, asset }
-    assert_includes startup, "cormier-realtime.iife.js"
-    assert_includes startup, "cormier-realtime.iife.min.js"
+    assert_includes startup, "realtime.iife.js"
+    assert_includes startup, "realtime.iife.min.js"
     assert_includes startup, 'readiness_url="http://$readiness_host:$PORT/api/diagnostics"'
     assert_includes startup, '--header "Host: $public_authority"'
     assert_includes startup, 'payload["stack"] == "Ruby / Rails"'

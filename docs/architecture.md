@@ -2,21 +2,21 @@
 
 ## Deployment and hosting boundary
 
-`Cormier.Realtime.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `Cormier.Realtime.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
+`Realtime.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `Realtime.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
 
-Applications that need the same realtime capability in an existing ASP.NET Core process can reference `Cormier.Realtime.AspNetCore` and call `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
+Applications that need the same realtime capability in an existing ASP.NET Core process can reference `Realtime.AspNetCore` and call `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
 
 Both hosting modes use the same protocol, Redis, diagnostics, metrics, and configuration contracts. Deployment names, network identities, trust boundaries, and Secret names are supplied at runtime rather than encoded in the application.
 
 ## Component responsibilities
 
-- **`Cormier.Realtime.Contracts`** owns the wire envelopes, health and ticket DTOs, Redis records, durable messages, protocol validation, and source-generated `System.Text.Json` context. It targets .NET Standard 2.0 and .NET 10.
-- **`Cormier.Realtime.Redis`** owns the reconnecting Redis connection, session lookup, atomic single-use ticket issue/consume flow, namespaced Pub/Sub, and optional durable Streams store.
-- **`Cormier.Realtime.AspNetCore`** owns service registration, option validation, middleware and endpoint mapping, authentication resolution, connection lifecycle, dispatch and authorization, local connection state, Redis subscription, metrics, OpenTelemetry, diagnostics, and graceful drain behavior.
-- **`Cormier.Realtime.Gateway`** is the standalone composition root and lifecycle host.
-- **`Cormier.Realtime.Client`** is the .NET Standard 2.0 client, including transport abstraction, authentication refresh, bounded queues, request correlation, heartbeats, reconnect, and subscription restoration.
-- **`sdk/typescript`** is the canonical TypeScript/browser client and deterministic ESM/IIFE asset pipeline. **`Cormier.Realtime.Browser`** packages those browser artifacts for ASP.NET Core consumers.
-- **`Cormier.Realtime.HttpFallback`** is an optional ASP.NET Core transport package. It maps authenticated HTTP command and long-poll/stream endpoints while reusing the gateway's dispatcher, connection registry, authorization, and Redis delivery path.
+- **`Realtime.Contracts`** owns the wire envelopes, health and ticket DTOs, Redis records, durable messages, protocol validation, and source-generated `System.Text.Json` context. It targets .NET Standard 2.0 and .NET 10.
+- **`Realtime.Redis`** owns the reconnecting Redis connection, session lookup, atomic single-use ticket issue/consume flow, namespaced Pub/Sub, and optional durable Streams store.
+- **`Realtime.AspNetCore`** owns service registration, option validation, middleware and endpoint mapping, authentication resolution, connection lifecycle, dispatch and authorization, local connection state, Redis subscription, metrics, OpenTelemetry, diagnostics, and graceful drain behavior.
+- **`Realtime.Gateway`** is the standalone composition root and lifecycle host.
+- **`Realtime.Client`** is the .NET Standard 2.0 client, including transport abstraction, authentication refresh, bounded queues, request correlation, heartbeats, reconnect, and subscription restoration.
+- **`sdk/typescript`** is the canonical TypeScript/browser client and deterministic ESM/IIFE asset pipeline. **`Realtime.Browser`** packages those browser artifacts for ASP.NET Core consumers.
+- **`Realtime.HttpFallback`** is an optional ASP.NET Core transport package. It maps authenticated HTTP command and long-poll/stream endpoints while reusing the gateway's dispatcher, connection registry, authorization, and Redis delivery path.
 - **Helm, bootstrap, cluster, observability, and load assets** turn the runtime contracts into validated deployment plans, Kubernetes resources, telemetry, runbooks, and repeatable test workloads.
 - **Tests and examples** verify unit behavior, the hosted HTTP/WebSocket system, .NET clients, Kubernetes/rendered contracts, load-harness behavior, clean package consumers, browsers, and alternative server stacks.
 
@@ -24,7 +24,7 @@ The dependency direction is inward: hosts and clients depend on the public contr
 
 ## Connection and authentication flow
 
-1. The client connects to the configured WebSocket endpoint using the `cormier.realtime.v1` subprotocol.
+1. The client connects to the configured WebSocket endpoint using the `realtime.v1` subprotocol.
 2. The gateway resolves a server-controlled session identifier from the configured cookie or ASP.NET Core session source, or consumes a short-lived connection ticket. Query-string tickets are intended for clients that cannot send the session cookie and are redacted from application logging paths.
 3. Redis supplies the session/ticket identity, tenant, user, allowed topics, expiry, and revocation state. A ticket is audience-bound and atomically consumed once.
 4. The gateway registers the socket locally and periodically revalidates the authenticated session. Expired, revoked, invalid, or unavailable authentication closes the connection with a protocol-defined reason.

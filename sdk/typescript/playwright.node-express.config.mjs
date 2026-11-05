@@ -28,7 +28,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "dotnet run --project examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
+      command: "dotnet run --project examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
       cwd: repositoryRoot,
       url: `${gatewayOrigin}/health`,
       timeout: readinessTimeout,
@@ -39,7 +39,7 @@ export default defineConfig({
         FullCircle__Topology: "non-ha",
         FullCircle__InstanceName: "gateway-a",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "cormier:node-express-tests",
+        Redis__InstancePrefix: "realtime:node-express-tests",
         Realtime__SessionSource: "Cookie",
         Realtime__AllowedOrigins__0: frontendOrigin,
       },
@@ -62,7 +62,7 @@ export default defineConfig({
         HEARTBEAT_INTERVAL_MILLISECONDS: "5000",
         INSTANCE_NAME: "node-express-a",
         TOPOLOGY: "non-ha",
-        REDIS_INSTANCE_PREFIX: "cormier:node-express-tests",
+        REDIS_INSTANCE_PREFIX: "realtime:node-express-tests",
         REDIS_SESSION_KEY_PREFIX: "sessions",
         ALLOWED_TENANTS: "tenant-a,tenant-b",
         ALLOWED_USERS: "user-a,user-b",

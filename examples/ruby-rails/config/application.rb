@@ -9,7 +9,7 @@ require "logger"
 
 require_relative "../lib/reference_config"
 
-module CormierRealtimeExample
+module RealtimeExample
   class Application < Rails::Application
     config.load_defaults 8.1
     config.eager_load = true
@@ -21,7 +21,7 @@ module CormierRealtimeExample
     config.x.reference = reference
     config.secret_key_base = Digest::SHA256.hexdigest(reference.session_secret)
     config.session_store :cookie_store,
-      key: "_cormier_realtime_reference",
+      key: "_realtime_reference",
       httponly: true,
       same_site: :strict,
       secure: reference.public_origin.start_with?("https://")

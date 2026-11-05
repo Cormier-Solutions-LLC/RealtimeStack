@@ -202,7 +202,7 @@ class HttpStreamingSocket implements WebSocketLike {
       const response = await this.fetcher(this.connectionUrl(id, "messages"), {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", "X-Cormier-Connection": token },
+        headers: { "Content-Type": "application/json", "X-Realtime-Connection": token },
         body: data,
         signal: this.controller.signal,
       });
@@ -219,7 +219,7 @@ class HttpStreamingSocket implements WebSocketLike {
       void this.fetcher(this.connectionUrl(id), {
         method: "DELETE",
         credentials: "include",
-        headers: { "X-Cormier-Connection": token },
+        headers: { "X-Realtime-Connection": token },
         keepalive: true,
       }).catch(() => undefined);
     }
@@ -256,7 +256,7 @@ class HttpStreamingSocket implements WebSocketLike {
       const response = await this.fetcher(this.connectionUrl(this.connectionId, "poll"), {
         method: "POST",
         credentials: "include",
-        headers: { Accept: "application/json", "X-Cormier-Connection": this.connectionToken },
+        headers: { Accept: "application/json", "X-Realtime-Connection": this.connectionToken },
         signal: this.controller.signal,
       });
       if (response.status === 204) continue;

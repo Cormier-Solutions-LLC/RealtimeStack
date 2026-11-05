@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Builds, tests, packs, inspects, and records one immutable Cormier.Realtime package candidate.
+    Builds, tests, packs, inspects, and records one immutable Realtime package candidate.
 .DESCRIPTION
     Uses isolated staging and promotes only byte-identical repeatable artifacts. Network endpoints are explicit
     configuration. WhatIf prints the plan without invoking build tools or changing output.
 .NOTES
     Version: 1.1.0-beta
-    Project: Cormier.Realtime
+    Project: Realtime
     Requires: PowerShell 7, .NET SDK 10, Node.js 26.10.0, npm 12.1.0, and Git.
     Outputs: artifacts/packages/<commit> by default and a redacted log beneath .logs.
     Exit codes: 0 success; 1 build/validation failure; 2 invalid input; 3 missing prerequisite.
@@ -36,7 +36,7 @@ $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $timestamp = [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmss')
 $logDirectory = Join-Path $repositoryRoot '.logs'
 $logPath = Join-Path $logDirectory "package-build-$timestamp.log"
-$stageRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("cormier-realtime-packages-" + [guid]::NewGuid().ToString('N'))
+$stageRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-packages-" + [guid]::NewGuid().ToString('N'))
 $phase = 'Initialize'
 $scriptExitCode = 0
 
@@ -383,39 +383,39 @@ try {
     $phase = 'Restore and build'
     Invoke-ReleaseTool $npm @('ci') (Join-Path $repositoryRoot 'sdk/typescript')
     Invoke-ReleaseTool $npm @('run', 'check') (Join-Path $repositoryRoot 'sdk/typescript')
-    Invoke-ReleaseTool $dotnet (@('restore', 'Cormier.Realtime.sln', '--runtime', 'linux-x64', '--locked-mode', '--source', $UpstreamPackageSource) + $properties)
-    Invoke-ReleaseTool $dotnet (@('build', 'Cormier.Realtime.sln', '--configuration', 'Release', '--no-restore') + $properties)
+    Invoke-ReleaseTool $dotnet (@('restore', 'Realtime.sln', '--runtime', 'linux-x64', '--locked-mode', '--source', $UpstreamPackageSource) + $properties)
+    Invoke-ReleaseTool $dotnet (@('build', 'Realtime.sln', '--configuration', 'Release', '--no-restore') + $properties)
 
     $phase = 'Test'
     if ($SkipIntegrationTests) {
         Write-ReleaseLog WARN 'Integration tests were explicitly skipped; this candidate is not publishable.'
         foreach ($project in @(
-            'tests/Cormier.Realtime.Client.Tests/Cormier.Realtime.Client.Tests.csproj',
-            'tests/Cormier.Realtime.UnitTests/Cormier.Realtime.UnitTests.csproj',
-            'tests/Cormier.Realtime.KubernetesTests/Cormier.Realtime.KubernetesTests.csproj',
-            'tests/Cormier.Realtime.LoadTests/Cormier.Realtime.LoadTests.csproj',
+            'tests/Realtime.Client.Tests/Realtime.Client.Tests.csproj',
+            'tests/Realtime.UnitTests/Realtime.UnitTests.csproj',
+            'tests/Realtime.KubernetesTests/Realtime.KubernetesTests.csproj',
+            'tests/Realtime.LoadTests/Realtime.LoadTests.csproj',
             'tests/Realtime.Plugins.Tests/Realtime.Plugins.Tests.csproj'
         )) {
             Invoke-ReleaseTool $dotnet @('test', $project, '--configuration', 'Release', '--no-build', '--no-restore', '--logger', 'trx', '--results-directory', 'artifacts/package-test-results')
         }
     }
     else {
-        Invoke-ReleaseTool $dotnet @('test', 'Cormier.Realtime.sln', '--configuration', 'Release', '--no-build', '--no-restore', '--logger', 'trx', '--results-directory', 'artifacts/package-test-results') `
+        Invoke-ReleaseTool $dotnet @('test', 'Realtime.sln', '--configuration', 'Release', '--no-build', '--no-restore', '--logger', 'trx', '--results-directory', 'artifacts/package-test-results') `
             -Environment @{ REDIS_TEST_ENDPOINT = $RedisTestEndpoint }
     }
 
     $phase = 'Pack and inspect'
     $projects = @(
-        'src/Cormier.Realtime.Contracts/Cormier.Realtime.Contracts.csproj',
-        'src/Cormier.Realtime.Client/Cormier.Realtime.Client.csproj',
-        'src/Cormier.Realtime.Redis/Cormier.Realtime.Redis.csproj',
-        'src/Cormier.Realtime.AspNetCore/Cormier.Realtime.AspNetCore.csproj',
-        'src/Cormier.Realtime.HttpFallback/Cormier.Realtime.HttpFallback.csproj',
-        'src/Cormier.Realtime.Browser/Cormier.Realtime.Browser.csproj'
+        'src/Realtime.Contracts/Realtime.Contracts.csproj',
+        'src/Realtime.Client/Realtime.Client.csproj',
+        'src/Realtime.Redis/Realtime.Redis.csproj',
+        'src/Realtime.AspNetCore/Realtime.AspNetCore.csproj',
+        'src/Realtime.HttpFallback/Realtime.HttpFallback.csproj',
+        'src/Realtime.Browser/Realtime.Browser.csproj'
     )
     $pluginNames = @('Persistence', 'PostgreSql', 'MySql', 'MariaDb', 'SqlServer', 'AzureSql', 'Oracle', 'Sqlite', 'Db2', 'CockroachDb', 'Snowflake')
     $projects += @($pluginNames | ForEach-Object { "src/Realtime.Plugins.$_/Realtime.Plugins.$_.csproj" })
-    $projects += 'src/Cormier.Realtime.Config/Cormier.Realtime.Config.csproj'
+    $projects += 'src/Realtime.Config/Realtime.Config.csproj'
     foreach ($destination in @($firstPack, $secondPack)) {
         foreach ($project in $projects) {
             Invoke-ReleaseTool $dotnet (@('pack', $project, '--configuration', 'Release', '--no-build', '--no-restore', '--output', $destination) + $properties)
@@ -430,21 +430,21 @@ try {
     Assert-Reproducible $firstPack $secondPack
     $metadata = @('<license type="expression">MIT</license>', '<readme>README.md</readme>', '<repository type="git"')
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.Contracts.$(($ContractsVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'lib/netstandard2.0/Cormier.Realtime.Contracts.dll', 'lib/net10.0/Cormier.Realtime.Contracts.dll') $metadata
+        @('README.md', 'lib/netstandard2.0/Realtime.Contracts.dll', 'lib/net10.0/Realtime.Contracts.dll') $metadata
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.Client.$(($DotNetClientVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'lib/netstandard2.0/Cormier.Realtime.Client.dll') `
+        @('README.md', 'lib/netstandard2.0/Realtime.Client.dll') `
         ($metadata + ('<dependency id="Realtime.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.Redis.$(($RedisAdapterVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'lib/net10.0/Cormier.Realtime.Redis.dll') `
+        @('README.md', 'lib/net10.0/Realtime.Redis.dll') `
         ($metadata + ('<dependency id="Realtime.Contracts" version="[{0}, {1})"' -f $normalizedContractsVersion, $ContractsCompatibilityUpperBound))
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.AspNetCore.$(($AspNetCoreIntegrationVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'lib/net10.0/Cormier.Realtime.AspNetCore.dll') `
+        @('README.md', 'lib/net10.0/Realtime.AspNetCore.dll') `
         ($metadata + ('<dependency id="Realtime.Redis" version="[{0}, {1})"' -f $normalizedRedisVersion, $RedisAdapterCompatibilityUpperBound))
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.HttpFallback.$(($HttpFallbackVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'lib/net10.0/Cormier.Realtime.HttpFallback.dll') `
+        @('README.md', 'lib/net10.0/Realtime.HttpFallback.dll') `
         ($metadata + ('<dependency id="Realtime.AspNetCore" version="[{0}, {1})"' -f $normalizedAspNetCoreVersion, $AspNetCoreCompatibilityUpperBound))
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.Browser.$(($BrowserPackageVersion -split '\+', 2)[0]).nupkg") `
-        @('README.md', 'staticwebassets/cormier-realtime.js', 'staticwebassets/cormier-realtime.min.js', 'staticwebassets/cormier-realtime.iife.js', 'staticwebassets/cormier-realtime.iife.min.js', 'staticwebassets/types/index.d.ts', 'staticwebassets/version.json', 'buildTransitive/Realtime.Browser.props') $metadata
+        @('README.md', 'staticwebassets/realtime.js', 'staticwebassets/realtime.min.js', 'staticwebassets/realtime.iife.js', 'staticwebassets/realtime.iife.min.js', 'staticwebassets/types/index.d.ts', 'staticwebassets/version.json', 'buildTransitive/Realtime.Browser.props') $metadata
     foreach ($packageId in @('Contracts', 'Client', 'Redis', 'AspNetCore', 'HttpFallback', 'Browser')) {
         if (-not (Get-ChildItem -LiteralPath $firstPack -Filter "Realtime.$packageId.*.snupkg" -File)) {
             throw "The symbol package for Realtime.$packageId was not produced."
@@ -462,13 +462,13 @@ try {
         }
     }
     Assert-NuGetPackage (Join-Path $firstPack "Realtime.Config.$normalizedContractsVersion.nupkg") `
-        @('README.md', 'lib/net10.0/Cormier.Realtime.Config.dll') $metadata
+        @('README.md', 'lib/net10.0/Realtime.Config.dll') $metadata
     $npmTarball = Get-ChildItem -LiteralPath $firstPack -Filter '*.tgz' -File | Select-Object -First 1
     $npmConsumer = Join-Path $stageRoot 'npm-consumer'
     New-Item -ItemType Directory -Path $npmConsumer -Force | Out-Null
     Invoke-ReleaseTool $npm @('init', '--yes') $npmConsumer
     Invoke-ReleaseTool $npm @('install', $npmTarball.FullName, '--ignore-scripts', '--no-audit', '--no-fund') $npmConsumer
-    Invoke-ReleaseTool $node @('--input-type=module', '--eval', "import('@cormier/realtime').then(m => { if (typeof m.RealtimeClient !== 'function') process.exit(1); })") $npmConsumer
+    Invoke-ReleaseTool $node @('--input-type=module', '--eval', "import('@realtime/client').then(m => { if (typeof m.RealtimeClient !== 'function') process.exit(1); })") $npmConsumer
     Invoke-ReleaseTool $pwsh @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Test-AspNetCorePackage.ps1'), '-AspNetCoreIntegrationVersion', $AspNetCoreIntegrationVersion, '-HttpFallbackVersion', $HttpFallbackVersion, '-ContractsVersion', $ContractsVersion, '-RedisAdapterVersion', $RedisAdapterVersion, '-PackageSource', $firstPack, '-UpstreamPackageSource', $UpstreamPackageSource)
     Invoke-ReleaseTool $pwsh @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Test-DotNetClientPackage.ps1'), '-DotNetClientVersion', $DotNetClientVersion, '-ContractsVersion', $ContractsVersion, '-PackageSource', $firstPack, '-UpstreamPackageSource', $UpstreamPackageSource)
     Invoke-ReleaseTool $pwsh @('-NoLogo', '-NoProfile', '-File', (Join-Path $PSScriptRoot 'Test-BrowserPackage.ps1'), '-BrowserPackageVersion', $BrowserPackageVersion, '-PackageSource', $firstPack, '-UpstreamPackageSource', $UpstreamPackageSource)

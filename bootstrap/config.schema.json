@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.example.com/cormier/realtime/bootstrap/v2",
-  "title": "Cormier.Realtime bootstrap configuration",
+  "$id": "https://schemas.example.com/realtime/bootstrap/v2",
+  "title": "Realtime bootstrap configuration",
   "type": "object",
   "additionalProperties": false,
   "$defs": {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DiagnosticsClient } from "../dist/cormier-realtime.js";
+import { DiagnosticsClient } from "../dist/realtime.js";
 
 test("diagnostics client uses explicit operator headers and bounded control payloads", async () => {
   const requests = [];
@@ -8,7 +8,7 @@ test("diagnostics client uses explicit operator headers and bounded control payl
     requests.push({ url, init });
     return new Response(JSON.stringify({
       id: "a".repeat(32),
-      category: "Cormier.Realtime",
+      category: "Realtime",
       level: "Debug",
       scope: "all",
       startedAt: "2026-01-01T00:00:00Z",
@@ -23,7 +23,7 @@ test("diagnostics client uses explicit operator headers and bounded control payl
   });
 
   const result = await client.applyLogLevel({
-    category: "Cormier.Realtime",
+    category: "Realtime",
     level: "Debug",
     durationSeconds: 300,
     reason: "investigate queue pressure",
@@ -52,7 +52,7 @@ test("diagnostics streams carry authentication and stop on server disconnect", a
   };
   const client = new DiagnosticsClient({ headers: { authorization: "Bearer opaque" }, fetch });
 
-  const disconnect = client.tailLogs({ level: "Warning", category: "Cormier.Realtime" }, (event) => events.push(event));
+  const disconnect = client.tailLogs({ level: "Warning", category: "Realtime" }, (event) => events.push(event));
   for (let attempt = 0; attempt < 20 && !requests[0]?.init.signal.aborted; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 1));
   }

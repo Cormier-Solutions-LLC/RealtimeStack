@@ -5,7 +5,7 @@ const mode = location.pathname.endsWith("fallback.html") ? "fallback"
   : location.pathname.endsWith("failover.html") ? "failover" : "websocket";
 const control = document.querySelector("#websocket-control");
 control.hidden = mode !== "failover";
-const client = new CormierRealtime.RealtimeClient({
+const client = new Realtime.RealtimeClient({
   url: "/realtime/ws",
   authentication: { kind: "ticket" },
   ...(mode === "fallback" ? { transports: ["http-streaming"], httpStreaming: { url: "/realtime/http" } } : {}),

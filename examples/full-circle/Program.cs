@@ -1,15 +1,15 @@
-using Cormier.Realtime.Config;
+using Realtime.Config;
 using Microsoft.Data.Sqlite;
 using Npgsql;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Cormier.Realtime.AspNetCore;
-using Cormier.Realtime.Contracts;
-using Cormier.Realtime.Example.FullCircle;
-using Cormier.Realtime.Gateway;
-using Cormier.Realtime.HttpFallback;
-using Cormier.Realtime.Redis;
+using Realtime.AspNetCore;
+using Realtime.Contracts;
+using Realtime.Example.FullCircle;
+using Realtime.Gateway;
+using Realtime.HttpFallback;
+using Realtime.Redis;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -115,7 +115,7 @@ app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOpt
     var json = JsonSerializer.Serialize(record, RealtimeJsonSerializerContext.Default.RedisSessionRecord);
     var database = (await connections.GetConnectionAsync(cancellationToken)).GetDatabase();
     await database.StringSetAsync($"{redis.InstancePrefix}:{redis.SessionKeyPrefix}:{sessionId}", json, expiresAt - DateTimeOffset.UtcNow);
-    context.Session.SetString("Cormier.Realtime.SessionId", sessionId);
+    context.Session.SetString("Realtime.SessionId", sessionId);
     await context.Session.CommitAsync(cancellationToken);
     return Results.Ok(new { request.TenantId, request.UserId, expiresAt });
 });
@@ -123,7 +123,7 @@ app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOpt
 app.MapPost("/api/logout", async (HttpContext context, RedisConnectionProvider connections, RedisOptions redis,
     CancellationToken cancellationToken) =>
 {
-    var sessionId = context.Session.GetString("Cormier.Realtime.SessionId");
+    var sessionId = context.Session.GetString("Realtime.SessionId");
     if (!string.IsNullOrWhiteSpace(sessionId))
     {
         var database = (await connections.GetConnectionAsync(cancellationToken)).GetDatabase();
@@ -136,7 +136,7 @@ app.MapPost("/api/logout", async (HttpContext context, RedisConnectionProvider c
 
 app.MapGet("/api/session", async (HttpContext context, IRealtimeSessionStore sessions, CancellationToken cancellationToken) =>
 {
-    var sessionId = context.Session.GetString("Cormier.Realtime.SessionId");
+    var sessionId = context.Session.GetString("Realtime.SessionId");
     var identity = string.IsNullOrWhiteSpace(sessionId) ? null : await sessions.ValidateAsync(sessionId, cancellationToken);
     return identity is null
         ? Results.Json(new { authenticated = false }, statusCode: StatusCodes.Status401Unauthorized)

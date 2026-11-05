@@ -21,7 +21,7 @@ The `backup` action captures the installed gateway and managed-Redis Helm releas
 
 The files under `cluster/redis` are manual reference values:
 
-- `managed-values.yaml` demonstrates the verified HA Bitnami Redis configuration, immutable component digests, ordered startup/probe settings, and placeholder Secret identity `cormier-redis-auth`.
+- `managed-values.yaml` demonstrates the verified HA Bitnami Redis configuration, immutable component digests, ordered startup/probe settings, and placeholder Secret identity `realtime-redis-auth`.
 - `managed-gateway-values.example.yaml` demonstrates gateway-side managed Redis settings with separate placeholder identities that must be reconciled with the Redis values.
 - `external-values.example.yaml` demonstrates TLS and egress settings for an external endpoint.
 
@@ -38,9 +38,9 @@ helm repo add traefik https://traefik.github.io/charts
 helm upgrade --install traefik traefik/traefik --version 34.3.0 --namespace traefik --create-namespace --values cluster/edge/development/traefik-values.yaml
 ```
 
-Deploy the gateway with `gateway-values.yaml` to the `development-realtime` namespace and apply `certificate.yaml` after the `cormier-local-ca` ClusterIssuer is available.
+Deploy the gateway with `gateway-values.yaml` to the `development-realtime` namespace and apply `certificate.yaml` after the `realtime-local-ca` ClusterIssuer is available.
 
-The Traefik Service is annotated for ExternalDNS to create `realtime.cormier.local`. The Traefik route accepts only `realtime.cormier.local/realtime/ws`, terminates TLS with the certificate Secret, and streams upgrades without response buffering. Gateway origin validation remains authoritative through `gateway.allowedOrigins`; Traefik access logs drop all request headers and request path/address fields, preventing credentials and query-string tickets from entering edge diagnostics. Traefik's Prometheus endpoint and the gateway's internal `/metrics` endpoint provide edge and gateway telemetry. The 60-second read/write and 120-second idle edge timeouts exceed the gateway's 15-second heartbeat while bounding connections for this dedicated entry point.
+The Traefik Service is annotated for ExternalDNS to create `realtime.example.test`. The Traefik route accepts only `realtime.example.test/realtime/ws`, terminates TLS with the certificate Secret, and streams upgrades without response buffering. Gateway origin validation remains authoritative through `gateway.allowedOrigins`; Traefik access logs drop all request headers and request path/address fields, preventing credentials and query-string tickets from entering edge diagnostics. Traefik's Prometheus endpoint and the gateway's internal `/metrics` endpoint provide edge and gateway telemetry. The 60-second read/write and 120-second idle edge timeouts exceed the gateway's 15-second heartbeat while bounding connections for this dedicated entry point.
 
 The LoadBalancer uses `externalTrafficPolicy: Local`: MetalLB advertises the VIP only from nodes with local ready Traefik endpoints and Traefik receives the original client source IP. Three Traefik replicas, hostname spread, and its disruption budget maintain two available replicas. For BGP environments, replace the `L2Advertisement` with a MetalLB `BGPAdvertisement` referencing the same pool—do not advertise one pool through both mechanisms.
 

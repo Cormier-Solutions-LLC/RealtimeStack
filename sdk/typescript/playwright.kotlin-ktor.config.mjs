@@ -26,7 +26,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "dotnet run --project examples/full-circle/Cormier.Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
+      command: "dotnet run --project examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
       cwd: repositoryRoot,
       url: `${gatewayOrigin}/health`,
       timeout: 60_000,
@@ -37,7 +37,7 @@ export default defineConfig({
         FullCircle__Topology: "non-ha",
         FullCircle__InstanceName: "gateway-a",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "cormier:kotlin-ktor-tests",
+        Redis__InstancePrefix: "realtime:kotlin-ktor-tests",
         Realtime__SessionSource: "Cookie",
         Realtime__AllowedOrigins__0: frontendOrigin,
       },
@@ -58,7 +58,7 @@ export default defineConfig({
         HEARTBEAT_INTERVAL_MILLISECONDS: "5000",
         INSTANCE_NAME: "kotlin-ktor-a",
         TOPOLOGY: "non-ha",
-        REDIS_INSTANCE_PREFIX: "cormier:kotlin-ktor-tests",
+        REDIS_INSTANCE_PREFIX: "realtime:kotlin-ktor-tests",
         REDIS_SESSION_KEY_PREFIX: "sessions",
         ALLOWED_TENANTS: "tenant-a,tenant-b",
         ALLOWED_USERS: "user-a,user-b",

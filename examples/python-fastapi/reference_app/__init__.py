@@ -1,1 +1,1 @@
-"""Cormier.Realtime FastAPI reference adapter."""
+"""Realtime FastAPI reference adapter."""

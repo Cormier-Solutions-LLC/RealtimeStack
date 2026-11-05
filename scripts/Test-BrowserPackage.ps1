@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Packs and validates the Cormier.Realtime.Browser static-web-asset package.
+    Packs and validates the Realtime.Browser static-web-asset package.
 .NOTES
     Version: 1.1.0-beta
     Requires: PowerShell 7 and .NET SDK 10
@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($UpstreamPackageSource)) {
 }
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("cormier-realtime-browser-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-browser-" + [guid]::NewGuid().ToString('N'))
 $feedPath = Join-Path $scratchRoot 'feed'
 $packagesPath = Join-Path $scratchRoot 'packages'
 $consumerPath = Join-Path $scratchRoot 'consumer'
@@ -47,7 +47,7 @@ try {
 "@ | Set-Content -LiteralPath $nugetConfigPath -Encoding utf8NoBOM
 
     if ([string]::IsNullOrWhiteSpace($PackageSource)) {
-        dotnet pack (Join-Path $repositoryRoot 'src/Cormier.Realtime.Browser/Cormier.Realtime.Browser.csproj') `
+        dotnet pack (Join-Path $repositoryRoot 'src/Realtime.Browser/Realtime.Browser.csproj') `
             --configuration Release --no-build --output $feedPath `
             -p:BrowserPackageVersion=$BrowserPackageVersion
         if ($LASTEXITCODE -ne 0) { throw 'Packing the browser package failed.' }
@@ -67,10 +67,10 @@ try {
     try {
         $entries = @($archive.Entries | ForEach-Object FullName)
         foreach ($required in @(
-            'staticwebassets/cormier-realtime.js',
-            'staticwebassets/cormier-realtime.min.js',
-            'staticwebassets/cormier-realtime.iife.js',
-            'staticwebassets/cormier-realtime.iife.min.js',
+            'staticwebassets/realtime.js',
+            'staticwebassets/realtime.min.js',
+            'staticwebassets/realtime.iife.js',
+            'staticwebassets/realtime.iife.min.js',
             'staticwebassets/types/index.d.ts',
             'staticwebassets/version.json',
             'buildTransitive/Realtime.Browser.props'
@@ -100,7 +100,7 @@ try {
     $webRoot = Join-Path $consumerPath 'wwwroot'
     New-Item -ItemType Directory -Path $webRoot -Force | Out-Null
     $exampleHtml = (Get-Content -LiteralPath (Join-Path $repositoryRoot 'examples/browser/index.html') -Raw).
-        Replace('../../sdk/typescript/dist/cormier-realtime.iife.min.js', '/_content/Cormier.Realtime.Browser/cormier-realtime.iife.min.js')
+        Replace('../../sdk/typescript/dist/realtime.iife.min.js', '/_content/Realtime.Browser/realtime.iife.min.js')
     Set-Content -LiteralPath (Join-Path $webRoot 'index.html') -Value $exampleHtml -Encoding utf8NoBOM
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'examples/browser/realtime-example.js') -Destination $webRoot
 
@@ -110,12 +110,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Clean browser consumer build failed.' }
     $manifests = @(Get-ChildItem (Join-Path $consumerPath 'obj') -Filter '*staticwebassets*.json' -Recurse)
     $assetManifest = $manifests | Where-Object {
-        (Get-Content -LiteralPath $_.FullName -Raw) -match 'cormier-realtime\.iife\.min\.js'
+        (Get-Content -LiteralPath $_.FullName -Raw) -match 'realtime\.iife\.min\.js'
     } | Select-Object -First 1
     if ($null -eq $assetManifest) {
         throw 'The clean consumer static-web-asset manifest does not expose the browser package.'
     }
-    if ((Get-Content -LiteralPath (Join-Path $webRoot 'index.html') -Raw) -notmatch '/_content/Cormier\.Realtime\.Browser/cormier-realtime\.iife\.min\.js') {
+    if ((Get-Content -LiteralPath (Join-Path $webRoot 'index.html') -Raw) -notmatch '/_content/Realtime\.Browser/realtime\.iife\.min\.js') {
         throw 'The browser example does not consume the packaged production asset.'
     }
 }

@@ -1,9 +1,9 @@
-defmodule CormierRealtimeExample.MixProject do
+defmodule RealtimeExample.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :cormier_realtime_example,
+      app: :realtime_example,
       version: "1.1.0-beta",
       elixir: "~> 1.20.4",
       start_permanent: Mix.env() == :prod,
@@ -12,7 +12,7 @@ defmodule CormierRealtimeExample.MixProject do
   end
 
   def application do
-    [mod: {CormierRealtimeExample.Application, []}, extra_applications: [:logger, :crypto]]
+    [mod: {RealtimeExample.Application, []}, extra_applications: [:logger, :crypto]]
   end
 
   defp deps do

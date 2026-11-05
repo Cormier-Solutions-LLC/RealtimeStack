@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PROTOCOL_VERSION, RealtimeClient, createTransportSocket } from "../dist/cormier-realtime.js";
+import { PROTOCOL_VERSION, RealtimeClient, createTransportSocket } from "../dist/realtime.js";
 
 function httpHarness() {
   const messages = [];
@@ -116,7 +116,7 @@ test("cancelling a pending fallback ticket refresh emits only the requested clos
   const ticket = Promise.withResolvers();
   const socket = createTransportSocket(
     "wss://gateway.example/realtime/ws?ticket=initial",
-    "cormier.realtime.v1",
+    "realtime.v1",
     {
       transports: ["websocket", "http-streaming"],
       webSocketFactory: () => { throw new Error("disabled for test"); },

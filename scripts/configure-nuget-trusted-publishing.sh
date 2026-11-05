@@ -99,7 +99,7 @@ cat <<EOF
 GitHub configuration is ready.
 
 Create this policy at https://www.nuget.org/account/trustedpublishing:
-  Policy name:      Cormier Realtime GitHub Actions
+  Policy name:      Realtime GitHub Actions
   Package owner:    the NuGet.org user or organization that will own the packages
   Repository owner: ${owner}
   Repository:       ${name}

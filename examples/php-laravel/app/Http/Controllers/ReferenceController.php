@@ -14,7 +14,7 @@ use Throwable;
 
 final class ReferenceController
 {
-    private const string COOKIE = 'cormier_session';
+    private const string COOKIE = 'realtime_session';
 
     private const int MAXIMUM_BODY_BYTES = 65536;
 

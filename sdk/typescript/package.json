@@ -1,7 +1,7 @@
 {
-  "name": "@cormier/realtime",
+  "name": "@realtime/client",
   "version": "1.1.0-beta",
-  "description": "Browser and TypeScript client for Cormier.Realtime",
+  "description": "Browser and TypeScript client for Realtime",
   "license": "MIT",
   "packageManager": "npm@12.1.0",
   "type": "module",
@@ -10,16 +10,16 @@
     "dist",
     "README.md"
   ],
-  "main": "./dist/cormier-realtime.js",
-  "module": "./dist/cormier-realtime.js",
+  "main": "./dist/realtime.js",
+  "module": "./dist/realtime.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/cormier-realtime.js",
-      "default": "./dist/cormier-realtime.js"
+      "import": "./dist/realtime.js",
+      "default": "./dist/realtime.js"
     },
-    "./browser": "./dist/cormier-realtime.iife.js"
+    "./browser": "./dist/realtime.iife.js"
   },
   "scripts": {
     "build": "node ./scripts/build.mjs",

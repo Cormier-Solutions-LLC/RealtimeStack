@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Updates the coordinated Cormier.Realtime version across active repository surfaces.
+    Updates the coordinated Realtime version across active repository surfaces.
 .DESCRIPTION
     Replaces the current coordinated version in tracked, nonhistorical text files, adds a
     new entry to each reference-application changelog, and creates a release-notes stub.
@@ -126,7 +126,7 @@ $pythonLockPath = Join-Path $repositoryRoot $pythonLockRelativePath
 $currentPythonVersion = ConvertTo-PythonVersion $currentVersion
 $targetPythonVersion = ConvertTo-PythonVersion $Version
 $pythonLockContent = [IO.File]::ReadAllText($pythonLockPath)
-$pythonLockPattern = '(?ms)(\[\[package\]\]\s+name = "cormier-realtime-example-fastapi"\s+version = ")' +
+$pythonLockPattern = '(?ms)(\[\[package\]\]\s+name = "realtime-example-fastapi"\s+version = ")' +
     [regex]::Escape($currentPythonVersion) + '("\s+source = \{ virtual = "\." \})'
 $pythonLockMatch = [regex]::Match($pythonLockContent, $pythonLockPattern)
 if (-not $pythonLockMatch.Success) {
@@ -191,7 +191,7 @@ foreach ($update in $changelogUpdates) {
 }
 
 $releaseNotes = @"
-# Cormier Realtime $Version
+# Realtime $Version
 
 This coordinated release updates the gateway application and container, Helm chart, .NET and browser packages, automation scripts, and reference applications to ``$Version``.
 

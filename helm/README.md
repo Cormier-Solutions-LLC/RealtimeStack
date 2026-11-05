@@ -1,6 +1,6 @@
 # Realtime gateway Helm chart
 
-`helm/realtime-gateway` is the versioned deployment chart for the Cormier Realtime gateway.
+`helm/realtime-gateway` is the versioned deployment chart for the Realtime gateway.
 
 ## What the chart renders
 

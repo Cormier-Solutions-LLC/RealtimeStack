@@ -27,7 +27,7 @@ test('isolated adapter changes do not run unrelated adapters', () => {
 
 test('shared runtime and browser changes exercise every downstream adapter', () => {
   for (const path of [
-    'src/Cormier.Realtime.Contracts/ProtocolContracts.cs',
+    'src/Realtime.Contracts/ProtocolContracts.cs',
     'protocol/fixtures/v1/envelopes.json',
     'sdk/typescript/src/client.ts',
     'examples/shared-web/wwwroot/app.js',
@@ -50,13 +50,13 @@ test('deployment changes retain topology, cross-shell, runtime contract, and ful
   assert.deepEqual(selectJobs(['tests/bootstrap/branch-sync.test.mjs']), [
     'helm-and-automation', 'bootstrap-powershell-windows', 'bootstrap-lifecycle-parity',
   ]);
-  assert.deepEqual(selectJobs(['tests/Cormier.Realtime.UnitTests/ProtocolTests.cs']), ['build-test-aot']);
+  assert.deepEqual(selectJobs(['tests/Realtime.UnitTests/ProtocolTests.cs']), ['build-test-aot']);
 });
 
 test('shared automation, CI, root build inputs, and unknown surfaces conservatively run all jobs', () => {
   for (const path of [
     'scripts/ci-impact.mjs', 'scripts/setup-ci-node-prerequisites.sh',
-    '.github/workflows/ci.yml', '.github/actions/setup-cormier-runner/action.yml',
+    '.github/workflows/ci.yml', '.github/actions/setup-realtime-runner/action.yml',
     'Directory.Build.props', 'global.json', '.dockerignore', 'new-component/source.ts',
     'examples/new-adapter/source.ts',
   ]) assert.deepEqual(selectJobs([path]), validationJobs, path);

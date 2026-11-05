@@ -45,7 +45,7 @@ def settings(**overrides: object) -> Settings:
         "HEARTBEAT_INTERVAL_MILLISECONDS": 5000,
         "INSTANCE_NAME": "python-fastapi-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "cormier:test",
+        "REDIS_INSTANCE_PREFIX": "realtime:test",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a",
         "ALLOWED_USERS": "user-a",
@@ -61,8 +61,8 @@ def test_public_forwarding_headers_use_the_validated_browser_scheme() -> None:
 
 def test_websocket_requires_the_exact_subprotocol() -> None:
     assert offers_protocol(None) is False
-    assert offers_protocol("other, cormier.realtime.v10") is False
-    assert offers_protocol("other, cormier.realtime.v1") is True
+    assert offers_protocol("other, realtime.v10") is False
+    assert offers_protocol("other, realtime.v1") is True
 
 
 @pytest.mark.asyncio
@@ -153,7 +153,7 @@ async def test_timezone_less_session_expiry_is_unauthenticated() -> None:
             )
 
     request = SimpleNamespace(
-        cookies={"cormier_session": "0123456789abcdef"},
+        cookies={"realtime_session": "0123456789abcdef"},
         app=SimpleNamespace(state=SimpleNamespace(redis=Redis())),
     )
     assert await read_session(request, settings()) is None  # type: ignore[arg-type]

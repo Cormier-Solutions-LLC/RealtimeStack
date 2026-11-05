@@ -1,9 +1,9 @@
 apiVersion: v2
 name: realtime-gateway
-description: Cormier realtime WebSocket gateway
+description: Realtime WebSocket gateway
 type: application
 version: 1.1.0-beta
 appVersion: "1.1.0-beta"
 kubeVersion: ">=1.29.0-0"
 annotations:
-  cormier.io/redis-chart: "oci://registry-1.docker.io/bitnamicharts/redis@23.1.1"
+  realtime.example/redis-chart: "oci://registry-1.docker.io/bitnamicharts/redis@23.1.1"

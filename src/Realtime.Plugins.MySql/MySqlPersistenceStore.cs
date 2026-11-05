@@ -1,7 +1,7 @@
 using System.Data.Common;
-using Cormier.Realtime.Plugins.Persistence;
+using Realtime.Plugins.Persistence;
 
-namespace Cormier.Realtime.Plugins.MySql;
+namespace Realtime.Plugins.MySql;
 
 /// <summary>MySql storage using a fresh host-configured ADO.NET connection for each operation.</summary>
 public sealed class MySqlPersistenceStore(Func<DbConnection> connectionFactory,

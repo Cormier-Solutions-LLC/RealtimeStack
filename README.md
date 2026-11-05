@@ -1,18 +1,18 @@
-# Cormier Realtime Gateway
+# Realtime Gateway
 
-Cormier Realtime Gateway is an independently deployable .NET 10 Native AOT foundation for the Cormier realtime WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
+Realtime Gateway is an independently deployable .NET 10 Native AOT foundation for the Realtime WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
 
 The repository also contains the shared protocol contracts, Redis integration, .NET and browser clients, Kubernetes and Helm deployment assets, cross-platform lifecycle automation, observability assets, load tooling, and reference applications used to verify the platform end to end.
 
 ## Repository map
 
-- `src/Cormier.Realtime.Gateway` — standalone Native AOT ASP.NET Core gateway host.
-- `src/Cormier.Realtime.AspNetCore` — reusable hosting, endpoint, diagnostics, and session integration.
-- `src/Cormier.Realtime.Contracts` — source-generated JSON wire contracts targeting .NET 10 and .NET Standard 2.0.
-- `src/Cormier.Realtime.Redis` — Redis session, ticket, pub/sub, and optional durable-stream integration.
-- `src/Cormier.Realtime.Client` — runtime-neutral .NET Standard 2.0 WebSocket client.
-- `src/Cormier.Realtime.Browser` and `sdk/typescript` — NuGet-packaged browser assets and the canonical TypeScript/npm client.
-- `src/Cormier.Realtime.HttpFallback` — optional HTTP fallback endpoints for environments where WebSockets cannot initialize.
+- `src/Realtime.Gateway` — standalone Native AOT ASP.NET Core gateway host.
+- `src/Realtime.AspNetCore` — reusable hosting, endpoint, diagnostics, and session integration.
+- `src/Realtime.Contracts` — source-generated JSON wire contracts targeting .NET 10 and .NET Standard 2.0.
+- `src/Realtime.Redis` — Redis session, ticket, pub/sub, and optional durable-stream integration.
+- `src/Realtime.Client` — runtime-neutral .NET Standard 2.0 WebSocket client.
+- `src/Realtime.Browser` and `sdk/typescript` — NuGet-packaged browser assets and the canonical TypeScript/npm client.
+- `src/Realtime.HttpFallback` — optional HTTP fallback endpoints for environments where WebSockets cannot initialize.
 - `protocol/fixtures` — language-neutral protocol and compatibility fixtures.
 - `examples` — .NET consumers, browser assets, a full-circle test application, and ten alternative web-stack adapters.
 - `bootstrap`, `scripts`, `helm`, and `cluster` — versioned lifecycle configuration, cross-shell automation, chart, and cluster assets.
@@ -32,10 +32,10 @@ Git is required by the lifecycle automation. Docker is optional for normal build
 Restore, build, test, and start the standalone gateway:
 
 ```powershell
-dotnet restore ./Cormier.Realtime.sln --locked-mode
-dotnet build ./Cormier.Realtime.sln -c Release --no-restore
-dotnet test ./Cormier.Realtime.sln -c Release --no-build
-dotnet run --project ./src/Cormier.Realtime.Gateway
+dotnet restore ./Realtime.sln --locked-mode
+dotnet build ./Realtime.sln -c Release --no-restore
+dotnet test ./Realtime.sln -c Release --no-build
+dotnet run --project ./src/Realtime.Gateway
 ```
 
 The development profile listens on `http://localhost:5097`. Redis is optional for process startup in the default development configuration; configure `Redis__Endpoint` when exercising distributed sessions, tickets, pub/sub, streams, or multi-instance behavior. The [developer guide](docs/developer-guide.md) documents the pinned Redis fixture and the broader local verification workflow.
@@ -46,7 +46,7 @@ The standalone gateway exposes these default routes:
 - `/health/live` — process liveness.
 - `/health/ready` — traffic readiness, including shutdown draining and configured dependencies.
 - `/metrics` — Prometheus/OpenMetrics-compatible telemetry.
-- `/realtime/ws` — authenticated WebSocket endpoint using `cormier.realtime.v1`.
+- `/realtime/ws` — authenticated WebSocket endpoint using `realtime.v1`.
 - `/realtime/tickets` — same-origin issuance of short-lived, single-use connection tickets.
 
 Diagnostics endpoints are disabled by default and have separate production, authorization, origin, and network controls. See the [diagnostics runbook](docs/runbooks/diagnostics.md) before enabling them.
@@ -81,7 +81,7 @@ Publish the gateway for the runtime identifier matching the build host:
 
 ```powershell
 $runtimeIdentifier = 'win-x64' # or linux-x64, osx-x64, osx-arm64
-dotnet publish ./src/Cormier.Realtime.Gateway -c Release -r $runtimeIdentifier --self-contained
+dotnet publish ./src/Realtime.Gateway -c Release -r $runtimeIdentifier --self-contained
 ```
 
 CI restores locked dependencies, builds and tests the solution, validates clean package consumers and both bootstrap topologies, checks Helm and Kubernetes output, runs cross-browser and reference-stack scenarios, publishes and smoke-tests a Linux x64 Native AOT executable and rootless read-only OCI image, scans artifacts, and emits an SBOM and immutable build evidence.
@@ -92,7 +92,7 @@ Application, container, NuGet package, npm package, Helm chart, scripts, and ref
 
 The TypeScript client produces deterministic ESM and direct-browser IIFE artifacts, readable and optimized web profiles, declarations, source maps, and integrity metadata. The .NET client targets .NET Standard 2.0. Both clients implement the versioned envelope, single-use ticket flow, bounded command handling, heartbeats, reconnect with fresh authentication, and duplicate-free subscription restoration.
 
-Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/typescript-sdk.md), [.NET client guide](src/Cormier.Realtime.Client/README.md), and [optimized-assets guide](docs/optimized-assets.md). Applications embedding the gateway should use the [ASP.NET Core package guide](src/Cormier.Realtime.AspNetCore/README.md) and [minimal host example](examples/aspnet-core/README.md).
+Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/typescript-sdk.md), [.NET client guide](src/Realtime.Client/README.md), and [optimized-assets guide](docs/optimized-assets.md). Applications embedding the gateway should use the [ASP.NET Core package guide](src/Realtime.AspNetCore/README.md) and [minimal host example](examples/aspnet-core/README.md).
 
 ## Further documentation
 

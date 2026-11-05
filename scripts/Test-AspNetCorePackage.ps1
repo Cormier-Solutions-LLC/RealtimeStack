@@ -18,7 +18,7 @@ if ([string]::IsNullOrWhiteSpace($UpstreamPackageSource)) {
     throw 'UpstreamPackageSource or NUGET_UPSTREAM_SOURCE must identify the configured upstream NuGet feed.'
 }
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("cormier-realtime-package-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-package-" + [guid]::NewGuid().ToString('N'))
 $feedPath = Join-Path $scratchRoot 'feed'
 $consumerPath = Join-Path $scratchRoot 'consumer'
 $nugetConfigPath = Join-Path $scratchRoot 'NuGet.Config'

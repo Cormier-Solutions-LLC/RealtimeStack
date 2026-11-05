@@ -1,4 +1,4 @@
-name: cormier-realtime-full-circle
+name: realtime-full-circle
 
 services:
   redis:

@@ -1,12 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Cormier.Realtime.Config;
-using Cormier.Realtime.Contracts;
-using Cormier.Realtime.Gateway;
-using Cormier.Realtime.Plugins.Persistence;
-using Cormier.Realtime.Plugins.Sqlite;
-using Cormier.Realtime.Redis;
+using Realtime.Config;
+using Realtime.Contracts;
+using Realtime.Gateway;
+using Realtime.Plugins.Persistence;
+using Realtime.Plugins.Sqlite;
+using Realtime.Redis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +15,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cormier.Realtime.Plugins.Tests;
+namespace Realtime.Plugins.Tests;
 
 public sealed class PersistenceApiTests
 {

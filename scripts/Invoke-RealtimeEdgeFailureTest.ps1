@@ -23,13 +23,13 @@ param(
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$TraefikRelease = 'traefik',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$TraefikService = 'traefik',
     [Parameter()][string]$TraefikPodSelector = 'app.kubernetes.io/name=traefik',
-    [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$CertificateName = 'realtime-cormier-local',
+    [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$CertificateName = 'realtime-local',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$MetalLbNamespace = 'metallb-system',
     [Parameter()][ValidatePattern('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')][string]$MetalLbAdvertisement = 'development-traefik',
     [Parameter()][ValidateSet('l2', 'bgp')][string]$MetalLbAdvertisementMode = 'l2',
     [Parameter()][string]$MetalLbSpeakerSelector = 'component=speaker',
     [Parameter()][string]$MetalLbSpeakerNode = '',
-    [Parameter()][ValidatePattern('^[a-z0-9.-]+$')][string]$HostName = 'realtime.cormier.local',
+    [Parameter()][ValidatePattern('^[a-z0-9.-]+$')][string]$HostName = 'realtime.example.test',
     [Parameter()][ValidatePattern('^/[A-Za-z0-9._/-]*$')][string]$Path = '/realtime/ws',
     [Parameter()][ValidatePattern('^$|^https://[a-z0-9.-]+(:[0-9]{1,5})?$')][string]$Origin = '',
     [Parameter()][ValidateRange(1, 65535)][int]$ExternalPort = 443,
@@ -127,7 +127,7 @@ function Get-GatewayActiveConnectionsByPod {
             $forward.WaitForExit()
             $forward.Dispose()
         }
-        $match = [Regex]::Match($metrics, '(?m)^cormier_realtime_active_connections\s+([0-9]+)$')
+        $match = [Regex]::Match($metrics, '(?m)^realtime_active_connections\s+([0-9]+)$')
         if (-not $match.Success) { throw "pod/$($pod.metadata.name) did not expose the active-connection metric." }
         $values[[string]$pod.metadata.name] = [long]$match.Groups[1].Value
     }
@@ -333,14 +333,14 @@ function Get-ExternalStatus {
 
 function Assert-ApprovedMetadata([object]$Metadata, [string]$TargetDescription) {
     if ($null -eq $Metadata.PSObject.Properties['labels'] -or $null -eq $Metadata.labels) { throw "SAFETY STOP: $TargetDescription has no approval labels." }
-    $environmentLabel = $Metadata.labels.PSObject.Properties['cormier.io/environment']
-    $approvalLabel = $Metadata.labels.PSObject.Properties['cormier.io/failure-testing']
-    $classificationLabel = $Metadata.labels.PSObject.Properties['cormier.io/environment-class']
+    $environmentLabel = $Metadata.labels.PSObject.Properties['realtime.example/environment']
+    $approvalLabel = $Metadata.labels.PSObject.Properties['realtime.example/failure-testing']
+    $classificationLabel = $Metadata.labels.PSObject.Properties['realtime.example/environment-class']
     $targetEnvironment = if ($null -eq $environmentLabel) { '' } else { [string]$environmentLabel.Value }
     $failureApproval = if ($null -eq $approvalLabel) { '' } else { [string]$approvalLabel.Value }
     $environmentClass = if ($null -eq $classificationLabel) { '' } else { [string]$classificationLabel.Value }
     if ($targetEnvironment -ne $Environment -or $failureApproval -ne 'approved' -or $environmentClass -ne 'nonproduction') {
-        throw "SAFETY STOP: $TargetDescription must have cormier.io/environment=$Environment, cormier.io/environment-class=nonproduction, and cormier.io/failure-testing=approved."
+        throw "SAFETY STOP: $TargetDescription must have realtime.example/environment=$Environment, realtime.example/environment-class=nonproduction, and realtime.example/failure-testing=approved."
     }
 }
 
@@ -435,9 +435,9 @@ if ($context -ne $ExpectedContext) { throw "TARGET MISMATCH: expected '$Expected
 $pinKubectlContext = $true
 $gatewayNamespaceMetadata = Get-KubeJson @('get', 'namespace', $GatewayNamespace) 'Read gateway namespace safety labels'
 Assert-ApprovedMetadata $gatewayNamespaceMetadata.metadata "namespace $GatewayNamespace"
-$lockNamespaces = Get-KubeJson @('get', 'namespaces', '-l', 'cormier.io/edge-failure-lock=canonical') 'Resolve canonical failure-lock namespace'
+$lockNamespaces = Get-KubeJson @('get', 'namespaces', '-l', 'realtime.example/edge-failure-lock=canonical') 'Resolve canonical failure-lock namespace'
 $canonicalLockNamespaces = @($lockNamespaces.items | Where-Object { $_.status.phase -eq 'Active' })
-if ($canonicalLockNamespaces.Count -ne 1) { throw 'SAFETY STOP: exactly one Active namespace must carry cormier.io/edge-failure-lock=canonical.' }
+if ($canonicalLockNamespaces.Count -ne 1) { throw 'SAFETY STOP: exactly one Active namespace must carry realtime.example/edge-failure-lock=canonical.' }
 $effectiveFailureLockNamespace = [string]$canonicalLockNamespaces[0].metadata.name
 $gatewayDeploymentMetadata = Get-KubeJson @('get', 'deployment', $GatewayRelease, '-n', $GatewayNamespace) 'Read gateway Deployment selector'
 $effectiveGatewayPodSelector = if ([string]::IsNullOrWhiteSpace($GatewayPodSelector)) {
@@ -609,7 +609,7 @@ try {
             $replacement = [ordered]@{
                 apiVersion = [string]$certificate.apiVersion
                 kind = 'Certificate'
-                metadata = [ordered]@{ name = $replacementCertificateName; namespace = $GatewayNamespace; labels = @{ 'cormier.io/failure-test' = 'certificate-renewal' } }
+                metadata = [ordered]@{ name = $replacementCertificateName; namespace = $GatewayNamespace; labels = @{ 'realtime.example/failure-test' = 'certificate-renewal' } }
                 spec = $certificate.spec
             }
             $replacement.spec.secretName = $replacementSecretName

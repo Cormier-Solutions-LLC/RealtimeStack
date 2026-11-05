@@ -2,7 +2,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 
-namespace Cormier.Realtime.Plugins.Persistence;
+namespace Realtime.Plugins.Persistence;
 
 public enum RelationalDialect { PostgreSql, MySql, MariaDb, SqlServer, AzureSql, Oracle, Sqlite, Db2, CockroachDb, Snowflake }
 

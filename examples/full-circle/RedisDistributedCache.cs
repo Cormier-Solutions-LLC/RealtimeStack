@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 
-namespace Cormier.Realtime.Example.FullCircle;
+namespace Realtime.Example.FullCircle;
 
 internal sealed class RedisDistributedCache(
-    Cormier.Realtime.Redis.RedisConnectionProvider connections,
-    Cormier.Realtime.Redis.RedisOptions redisOptions) : IDistributedCache
+    Realtime.Redis.RedisConnectionProvider connections,
+    Realtime.Redis.RedisOptions redisOptions) : IDistributedCache
 {
     private string Key(string key) => $"{redisOptions.InstancePrefix}:aspnet-session:{key}";
 

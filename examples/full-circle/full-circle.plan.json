@@ -21,7 +21,7 @@
     "endpointEnvironment": "REDIS_TEST_ENDPOINT",
     "defaultEndpoint": "127.0.0.1:16379",
     "composeFile": "examples/full-circle/compose.yaml",
-    "instancePrefix": "cormier:full-circle-tests"
+    "instancePrefix": "realtime:full-circle-tests"
   },
   "timeouts": {
     "commandSeconds": 300,

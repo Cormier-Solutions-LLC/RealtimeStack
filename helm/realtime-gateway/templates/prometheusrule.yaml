@@ -47,7 +47,7 @@ spec:
     - name: realtime-gateway.performance
       rules:
         - alert: RealtimeGatewayAbnormalDisconnects
-          expr: (sum(rate(cormier_realtime_abnormal_websocket_closes_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) > 1) or (sum(rate(cormier_realtime_connections_closed_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},reason=~"abrupt_disconnect|socket_closed"}[5m])) > 1)
+          expr: (sum(rate(realtime_abnormal_websocket_closes_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) > 1) or (sum(rate(realtime_connections_closed_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},reason=~"abrupt_disconnect|socket_closed"}[5m])) > 1)
           for: 10m
           labels:
             severity: warning
@@ -56,7 +56,7 @@ spec:
             summary: Abnormal WebSocket disconnect rate is elevated
             runbook_url: {{ printf "%s/disconnects" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayReconnectStorm
-          expr: sum(increase(cormier_realtime_reconnect_authentications_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) / clamp_min(sum(increase(cormier_realtime_connections_opened_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])), 1) > {{ .Values.observability.alertThresholds.reconnectRatio }}
+          expr: sum(increase(realtime_reconnect_authentications_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) / clamp_min(sum(increase(realtime_connections_opened_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])), 1) > {{ .Values.observability.alertThresholds.reconnectRatio }}
           for: 10m
           labels:
             severity: warning
@@ -65,7 +65,7 @@ spec:
             summary: Connection churn indicates an abnormal reconnect storm
             runbook_url: {{ printf "%s/disconnects" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayAuthenticationFailures
-          expr: sum(rate(cormier_realtime_authentication_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},outcome="failure"}[5m])) > 2
+          expr: sum(rate(realtime_authentication_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},outcome="failure"}[5m])) > 2
           for: 10m
           labels:
             severity: warning
@@ -74,7 +74,7 @@ spec:
             summary: Realtime authentication failures are elevated
             runbook_url: {{ printf "%s/authentication" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayAuthorizationFailures
-          expr: sum(rate(cormier_realtime_authorization_failures_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) > 2
+          expr: sum(rate(realtime_authorization_failures_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m])) > 2
           for: 10m
           labels:
             severity: warning
@@ -83,7 +83,7 @@ spec:
             summary: Realtime authorization failures are elevated
             runbook_url: {{ printf "%s/authorization" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayQueueDrops
-          expr: sum(increase(cormier_realtime_queue_dropped_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[10m])) > 0
+          expr: sum(increase(realtime_queue_dropped_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[10m])) > 0
           for: 1m
           labels:
             severity: critical
@@ -92,7 +92,7 @@ spec:
             summary: Realtime gateway is dropping queued messages
             runbook_url: {{ printf "%s/backpressure" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayQueueSaturation
-          expr: max(cormier_realtime_queue_depth{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}) > {{ .Values.observability.alertThresholds.queueDepth }}
+          expr: max(realtime_queue_depth{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}) > {{ .Values.observability.alertThresholds.queueDepth }}
           for: 5m
           labels:
             severity: warning
@@ -101,7 +101,7 @@ spec:
             summary: Realtime outbound queues exceed the configured depth threshold
             runbook_url: {{ printf "%s/backpressure" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewaySlowConsumers
-          expr: sum(increase(cormier_realtime_slow_consumer_disconnects_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[10m])) > 0
+          expr: sum(increase(realtime_slow_consumer_disconnects_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[10m])) > 0
           for: 1m
           labels:
             severity: warning
@@ -110,7 +110,7 @@ spec:
             summary: Slow consumers are being disconnected
             runbook_url: {{ printf "%s/slow-consumers" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayHandlerLatency
-          expr: histogram_quantile(0.99, sum by (le) (rate(cormier_realtime_handler_duration_seconds_bucket{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m]))) > {{ .Values.observability.alertThresholds.handlerLatencySeconds }}
+          expr: histogram_quantile(0.99, sum by (le) (rate(realtime_handler_duration_seconds_bucket{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m]))) > {{ .Values.observability.alertThresholds.handlerLatencySeconds }}
           for: 10m
           labels:
             severity: warning
@@ -121,7 +121,7 @@ spec:
     - name: realtime-gateway.dependencies
       rules:
         - alert: RealtimeGatewayRedisErrors
-          expr: sum(increase(cormier_realtime_redis_operations_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},outcome="failure"}[10m])) > 0
+          expr: sum(increase(realtime_redis_operations_total{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }},outcome="failure"}[10m])) > 0
           for: 1m
           labels:
             severity: critical
@@ -130,7 +130,7 @@ spec:
             summary: Realtime Redis operations are failing
             runbook_url: {{ printf "%s/redis" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayRedisDisconnected
-          expr: min(cormier_realtime_redis_subscription_active{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}) < 1
+          expr: min(realtime_redis_subscription_active{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}) < 1
           for: 2m
           labels:
             severity: critical
@@ -139,7 +139,7 @@ spec:
             summary: Realtime gateway Redis subscription is disconnected
             runbook_url: {{ printf "%s/redis" (trimSuffix "/" .Values.observability.links.runbookBaseUrl) | quote }}
         - alert: RealtimeGatewayRedisLatency
-          expr: histogram_quantile(0.99, sum by (le) (rate(cormier_realtime_redis_operation_duration_seconds_bucket{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m]))) > {{ .Values.observability.alertThresholds.redisLatencySeconds }}
+          expr: histogram_quantile(0.99, sum by (le) (rate(realtime_redis_operation_duration_seconds_bucket{namespace={{ .Release.Namespace | quote }},service={{ include "realtime-gateway.fullname" . | quote }}}[5m]))) > {{ .Values.observability.alertThresholds.redisLatencySeconds }}
           for: 10m
           labels:
             severity: warning

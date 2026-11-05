@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Validates, deploys, rolls back, backs up, restores, or removes Cormier realtime.
+  Validates, deploys, rolls back, backs up, restores, or removes Realtime.
 .DESCRIPTION
   Idempotent PowerShell 7 lifecycle automation governed by Scripts Standard 4.2.
   Captures current Helm values/resources before mutation, uses bounded waits, and
@@ -98,7 +98,7 @@ $logDir = Join-Path $root '.logs'
 $backupDir = Join-Path $root ".backups/$target"
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $logPath = Join-Path $logDir "Deploy-Realtime-$target-$stamp.log"
-$lockPath = Join-Path ([IO.Path]::GetTempPath()) "cormier-realtime-$target.lock"
+$lockPath = Join-Path ([IO.Path]::GetTempPath()) "realtime-$target.lock"
 $lockStream = $null
 $summary = [ordered]@{ Created=0; Updated=0; Unchanged=0; Skipped=0; Errors=0 }
 [IO.Directory]::CreateDirectory($logDir) | Out-Null

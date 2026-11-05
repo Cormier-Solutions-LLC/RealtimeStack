@@ -2,13 +2,13 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "Realtime.Client": {
+      "realtime.client": {
         "type": "Project",
         "dependencies": {
           "Realtime.Contracts": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Contracts": {
+      "realtime.contracts": {
         "type": "Project"
       }
     },

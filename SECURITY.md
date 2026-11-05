@@ -1,7 +1,7 @@
 # Security policy
 
 
-Security is part of the Cormier Realtime Gateway contract. This policy covers the gateway, reusable .NET packages, TypeScript/browser client, protocol, lifecycle automation, deployment assets, and reference applications maintained in this repository.
+Security is part of the Realtime Gateway contract. This policy covers the gateway, reusable .NET packages, TypeScript/browser client, protocol, lifecycle automation, deployment assets, and reference applications maintained in this repository.
 
 ## Supported versions
 
@@ -19,7 +19,7 @@ This table will be replaced with explicit release ranges when the first supporte
 
 Do not disclose a suspected vulnerability in a GitHub issue, discussion, pull request, commit message, CI log, or other public or broadly visible channel. Do not include credentials, tokens, cookies, private keys, production configuration, customer data, or exploit material in ordinary project tickets.
 
-Because this is an internal repository and GitHub private vulnerability reporting is not currently enabled, contact the Cormier Solutions security team or a repository administrator through an organization-approved private channel. Repository administrators can create a private draft security advisory under the repository's **Security** tab and add the reporter as a collaborator when coordinated investigation is needed.
+Because this is an internal repository and GitHub private vulnerability reporting is not currently enabled, contact the Realtime Solutions security team or a repository administrator through an organization-approved private channel. Repository administrators can create a private draft security advisory under the repository's **Security** tab and add the reporter as a collaborator when coordinated investigation is needed.
 
 Include the following when available:
 

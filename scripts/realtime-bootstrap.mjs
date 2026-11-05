@@ -19,7 +19,7 @@ let logPersistenceEnabled = true;
 
 function parse(arguments_) {
   if (["help", "--help", "-h"].includes(arguments_[0])) return { action: "help" };
-  const result = { action: arguments_[0], config: process.env.CORMIER_BOOTSTRAP_CONFIG ?? "bootstrap/config.example.json", timeoutSeconds: 300 };
+  const result = { action: arguments_[0], config: process.env.REALTIME_BOOTSTRAP_CONFIG ?? "bootstrap/config.example.json", timeoutSeconds: 300 };
   for (let index = 1; index < arguments_.length; index++) {
     const argument = arguments_[index];
     if (argument === "--dry-run") result.dryRun = true;
@@ -38,7 +38,7 @@ function parse(arguments_) {
   return result;
 }
 
-const usage = `Cormier.Realtime bootstrap
+const usage = `Realtime bootstrap
 
 Usage:
   realtime-bootstrap.sh ACTION --config FILE [options]
@@ -328,9 +328,9 @@ async function writeNamingManifest(config) {
   const names = releaseNames(config);
   const [containerRegistry, ...repositoryParts] = config.image.repository.split("/");
   await atomicWrite(resolve(repositoryRoot, ".bootstrap", "naming.json"), stableJson({
-    brand: "Cormier",
+    brand: "Realtime",
     application: names.application,
-    serviceName: `cormier-${names.application}-gateway`,
+    serviceName: `realtime-${names.application}-gateway`,
     containerRegistry,
     containerRepository: repositoryParts.join("/"),
     imageRepository: config.image.repository,
@@ -463,7 +463,7 @@ function capturedRedisChartVersion(releaseInventory, release) {
 }
 
 function managedRedisChartForBackup(plan, config, release, values, installedVersion, options) {
-  const annotatedChart = values.commonAnnotations?.["cormier.solutions/managed-chart"];
+  const annotatedChart = values.commonAnnotations?.["realtime.example/managed-chart"];
   if (typeof annotatedChart === "string" && annotatedChart.startsWith("oci://")) return annotatedChart;
 
   const expectedRedis = plan.values?.redis;
@@ -701,8 +701,8 @@ async function main() {
     }
     if (options.action === "bootstrap") {
       await command("git", ["--version"], "Validate Git", options);
-      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["restore", "Cormier.Realtime.sln", "--locked-mode"], "Restore locked .NET dependencies", options);
-      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["build", "Cormier.Realtime.sln", "--configuration", "Release", "--no-restore"], "Build the Release solution", options);
+      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["restore", "Realtime.sln", "--locked-mode"], "Restore locked .NET dependencies", options);
+      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["build", "Realtime.sln", "--configuration", "Release", "--no-restore"], "Build the Release solution", options);
       emit("pass", options.action, "Workspace bootstrap completed.", { summary: { executed: 3, skipped: 0 } });
       await flushLog();
       return;

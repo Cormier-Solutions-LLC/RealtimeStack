@@ -1,13 +1,13 @@
 server:
   address: ${LISTEN_HOST}
-  port: ${cormier.reference.port}
+  port: ${realtime.reference.port}
   shutdown: graceful
 spring:
   http:
     codecs:
       max-in-memory-size: 64KB
   application:
-    name: cormier-realtime-java-spring-boot-example
+    name: realtime-java-spring-boot-example
   data:
     redis:
       url: ${REDIS_URL}
@@ -23,7 +23,7 @@ management:
   endpoint:
     health:
       show-details: never
-cormier:
+realtime:
   reference:
     listen-host: ${LISTEN_HOST}
     port: ${PORT}

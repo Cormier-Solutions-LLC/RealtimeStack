@@ -8,10 +8,10 @@
     <version>4.1.1</version>
     <relativePath />
   </parent>
-  <groupId>com.cormier.realtime.examples</groupId>
+  <groupId>com.realtime.examples</groupId>
   <artifactId>java-spring-boot</artifactId>
   <version>1.1.0-beta</version>
-  <name>Cormier.Realtime Java Spring Boot example</name>
+  <name>Realtime Java Spring Boot example</name>
   <properties>
     <java.version>25</java.version>
     <spring-cloud.version>2025.1.3</spring-cloud.version>

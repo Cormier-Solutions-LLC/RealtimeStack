@@ -343,7 +343,7 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "Realtime.AspNetCore": {
+      "realtime.aspnetcore": {
         "type": "Project",
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
@@ -352,16 +352,16 @@
           "Realtime.Redis": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Browser": {
+      "realtime.browser": {
         "type": "Project"
       },
-      "Realtime.Client": {
+      "realtime.client": {
         "type": "Project",
         "dependencies": {
           "Realtime.Contracts": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Config": {
+      "realtime.config": {
         "type": "Project",
         "dependencies": {
           "Realtime.AspNetCore": "[1.1.0-beta, )",
@@ -383,10 +383,10 @@
           "Realtime.Redis": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Contracts": {
+      "realtime.contracts": {
         "type": "Project"
       },
-      "Realtime.HttpFallback": {
+      "realtime.httpfallback": {
         "type": "Project",
         "dependencies": {
           "Realtime.AspNetCore": "[1.1.0-beta, )"
@@ -455,7 +455,7 @@
           "Realtime.Plugins.Persistence": "[1.1.0-beta, )"
         }
       },
-      "Realtime.Redis": {
+      "realtime.redis": {
         "type": "Project",
         "dependencies": {
           "Realtime.Contracts": "[1.1.0-beta, )",

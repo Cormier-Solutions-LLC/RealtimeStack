@@ -1,6 +1,6 @@
 gateway:
   allowedOrigins:
-    - https://realtime.cormier.local
+    - https://realtime.example.test
   shutdownDrainSeconds: 25
 
 networkPolicy:
@@ -13,6 +13,6 @@ networkPolicy:
 
 ingressRoute:
   enabled: true
-  host: realtime.cormier.local
+  host: realtime.example.test
   path: /realtime/ws
-  tlsSecretName: realtime-cormier-local-tls
+  tlsSecretName: realtime-local-tls

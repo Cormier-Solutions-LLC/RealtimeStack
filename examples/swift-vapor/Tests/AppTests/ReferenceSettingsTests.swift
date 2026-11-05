@@ -32,7 +32,7 @@ struct ReferenceSettingsTests {
       "HEARTBEAT_INTERVAL_MILLISECONDS": "5000",
       "INSTANCE_NAME": "swift-vapor-a",
       "TOPOLOGY": "non-ha",
-      "REDIS_INSTANCE_PREFIX": "cormier:test",
+      "REDIS_INSTANCE_PREFIX": "realtime:test",
       "REDIS_SESSION_KEY_PREFIX": "sessions",
       "ALLOWED_TENANTS": "tenant-a",
       "ALLOWED_USERS": "user-a",
@@ -46,7 +46,7 @@ struct ReferenceSettingsTests {
     #expect(settings.port == 15_500)
     #expect(settings.publicScheme == "http")
     #expect(settings.allows(tenant: "tenant-a", user: "user-a"))
-    #expect(settings.sessionKey("id") == "cormier:test:sessions:id")
+    #expect(settings.sessionKey("id") == "realtime:test:sessions:id")
     #expect(settings.heartbeatIntervalMilliseconds == 5_000)
   }
 
@@ -150,8 +150,8 @@ struct ReferenceSettingsTests {
   @Test("preflight checks the SDK bundle loaded by the shared page")
   func preflightChecksLoadedSDKBundle() throws {
     let source = try String(contentsOfFile: "Sources/App/configure.swift", encoding: .utf8)
-    #expect(source.contains("cormier-realtime.iife.js"))
-    #expect(source.contains("cormier-realtime.iife.min.js"))
+    #expect(source.contains("realtime.iife.js"))
+    #expect(source.contains("realtime.iife.min.js"))
   }
 
   @Test("caps ticket responses while the HTTP client streams them")

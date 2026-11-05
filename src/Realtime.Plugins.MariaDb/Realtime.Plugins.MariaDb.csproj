@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.MariaDb</RootNamespace>
+    <RootNamespace>Realtime.Plugins.MariaDb</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.MariaDb</PackageId>
     <Description>MariaDb durable realtime messages, notifications, and task status storage.</Description>

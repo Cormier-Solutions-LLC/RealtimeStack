@@ -1,4 +1,4 @@
-namespace Cormier.Realtime.Example.FullCircle;
+namespace Realtime.Example.FullCircle;
 
 public sealed class FullCircleOptions
 {

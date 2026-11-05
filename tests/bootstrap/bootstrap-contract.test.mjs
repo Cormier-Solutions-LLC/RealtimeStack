@@ -71,7 +71,7 @@ test("environment path templates expand only the validated environment token", (
 });
 
 test("environment workspace relationship failures use the invalid-input exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-paths-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-paths-"));
   const config = configuration();
   config.paths.generatedDirectory = ".bootstrap/lifecycle";
   config.paths.logDirectory = ".logs";
@@ -100,7 +100,7 @@ test("layout actions expose invalid-input and safety-stop exit classifications",
     execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "restore-layout"], { cwd: repositoryRoot }),
     error => error.code === 2 && /requires --manifest/.test(error.stdout),
   );
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-invalid-manifest-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-invalid-manifest-"));
   const manifestPath = resolve(directory, ".bootstrap/organization/invalid.json");
   await mkdir(dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, "{}\n");
@@ -130,7 +130,7 @@ test("legacy bootstrap artifacts are classified by their target slot rather than
 });
 
 test("environment organization previews, applies, remains idempotent, and restores from its manifest", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environments-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environments-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   await mkdir(resolve(bootstrapRoot, "lifecycle"), { recursive: true });
   const files = [
@@ -197,7 +197,7 @@ test("environment organization previews, applies, remains idempotent, and restor
 });
 
 test("environment organization fails safely while another organizer holds the workspace lock", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-lock-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-lock-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const lockPath = resolve(bootstrapRoot, "locks/environment-organization");
   await mkdir(lockPath, { recursive: true });
@@ -218,7 +218,7 @@ test("environment organization fails safely while another organizer holds the wo
 });
 
 test("environment organization rejects symlinked destination directories", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(resolve(bootstrapRoot, "env"), { recursive: true });
@@ -235,7 +235,7 @@ test("environment organization rejects symlinked destination directories", async
 });
 
 test("environment organization rejects a symlinked environment root without movable files", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-root-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-root-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(bootstrapRoot, { recursive: true });
@@ -252,7 +252,7 @@ test("environment organization rejects a symlinked environment root without mova
 });
 
 test("environment organization rejects a symlinked manifest directory before moving files", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-organization-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-organization-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(bootstrapRoot, { recursive: true });
@@ -269,7 +269,7 @@ test("environment organization rejects a symlinked manifest directory before mov
 });
 
 test("environment restoration reconciles a journaled move interrupted after rename", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-journal-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-journal-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const manifestPath = resolve(bootstrapRoot, "organization/interrupted.json");
   const move = { environment: "qa", source: "config.qa.json", destination: "env/qa/config.qa.json" };
@@ -298,7 +298,7 @@ test("environment restoration reconciles a journaled move interrupted after rena
 });
 
 test("environment organization fails closed before moving files when a destination collides", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-environment-collision-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-collision-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   await mkdir(resolve(bootstrapRoot, "env/test"), { recursive: true });
   await writeFile(resolve(bootstrapRoot, "plan.test.log"), "legacy\n");
@@ -473,7 +473,7 @@ test("managed Redis accepts top-level repositories and renders existing pull Sec
 
 test("managed Redis chart preparation terminates a command that exceeds its lifecycle deadline", { timeout: 10_000 }, async t => {
   if (process.platform === "win32") return t.skip("POSIX process termination is exercised on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-chart-timeout-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-chart-timeout-"));
   const helm = resolve(directory, "helm");
   await writeFile(helm, "#!/usr/bin/env bash\ntrap 'exit 143' TERM\nsleep 30\n", { mode: 0o755 });
   const started = Date.now();
@@ -519,7 +519,7 @@ test("WebSocket routing rejects case-insensitive collisions with fallback and fi
 });
 
 test("credential and Certificate helpers derive target identities from configuration", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-helper-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-helper-config-"));
   const config = structuredClone(haExample);
   config.kubernetes.context = "prod-context";
   const configPath = resolve(directory, "config.json");
@@ -561,7 +561,7 @@ test("topology changes are classified and require backup and confirmation", () =
 });
 
 test("offline plans preserve topology state from the legacy lifecycle root", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-legacy-state-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-state-"));
   const config = configuration("ha");
   config.naming.suffix = "legacy-state";
   const release = "dev-realtime-legacy-state";
@@ -653,7 +653,7 @@ test("MetalLB monitoring accepts IPv4 and IPv6 addresses and rejects malformed v
 
 test("rollback plans use the exact captured gateway and managed Redis values", () => {
   const desired = buildPlan("rollback", configuration(), profiles["non-ha"]);
-  const gateway = { image: { repository: "registry.example.test/cormier/realtime", tag: "captured" }, topology: "non-ha" };
+  const gateway = { image: { repository: "registry.example.test/realtime", tag: "captured" }, topology: "non-ha" };
   const redis = { architecture: "standalone", master: { persistence: { size: "32Gi" } } };
   const captured = useCapturedDeploymentValues(desired, gateway, redis, "oci://registry.example.test/charts/redis", "22.3.4");
   assert.deepEqual(captured.values, gateway);
@@ -739,7 +739,7 @@ test("proxy trust, observability labels, and resource units fail closed", () => 
 });
 
 test("requested shell profile must match the versioned configuration", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-test-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-test-"));
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(configuration()));
   await assert.rejects(loadContract(repositoryRoot, path, "ha"), /does not match configuration topology/);
@@ -753,8 +753,8 @@ test("unsafe configured output paths are rejected before any mutation", () => {
 
 test("installed Helm topology remains authoritative when local state is absent", async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-conversion-"));
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-conversion-tools-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-conversion-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-conversion-tools-"));
   await fakeClusterTools(fakeBin);
   const config = configuration("ha");
   config.naming.suffix = "contract-test";
@@ -773,8 +773,8 @@ test("installed Helm topology remains authoritative when local state is absent",
 
 test("an orphaned managed Redis release still requires topology-conversion confirmation", async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-orphan-redis-"));
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-orphan-redis-tools-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-orphan-redis-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-orphan-redis-tools-"));
   await fakeClusterTools(fakeBin);
   const config = configuration("ha");
   config.naming.suffix = "orphan-redis";
@@ -791,7 +791,7 @@ test("an orphaned managed Redis release still requires topology-conversion confi
 });
 
 test("an existing target lock produces the safety-stop exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-lock-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-lock-"));
   const config = configuration();
   config.naming.suffix = "lock-test";
   config.paths.environmentDirectory = ".bootstrap/alternate-lock-output";
@@ -836,7 +836,7 @@ if [[ "\${BOOTSTRAP_FAKE_FAIL:-}" == 'redis' && "$*" == *"$BOOTSTRAP_FAKE_REDIS_
 case "\${1:-}" in
   version) printf '%s\\n' 'v4.2.0+fake' ;;
   list) if [[ "\${BOOTSTRAP_FAKE_EMPTY_RELEASES:-}" == '1' ]]; then printf '[]\\n'; elif [[ "\${BOOTSTRAP_FAKE_ORPHAN_REDIS:-}" == '1' ]]; then printf '[{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; else printf '[{"name":"%s","chart":"realtime-gateway-0.1.0","revision":"3"},{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_RELEASE" "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; fi ;;
-  get) if [[ "\${BOOTSTRAP_FAKE_INLINE_SECRET:-}" == '1' ]]; then printf '{"auth":{"password":"exposed"}}\\n'; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" && "\${BOOTSTRAP_FAKE_LEGACY_REDIS:-}" == '1' ]]; then printf '{"fullnameOverride":"%s","architecture":"%s","auth":{"existingSecret":"%s","existingSecretPasswordKey":"redis-password","acl":{"userSecret":"%s","users":[{"username":"realtime","keys":"~%s:*","channels":"&%s:*"}]}}}\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-cormier:realtime:dev}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-cormier:realtime:dev}"; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" ]]; then printf '{"architecture":"%s","commonAnnotations":{"cormier.solutions/managed-chart":"%s"}}\\n' "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART:-oci://registry-1.docker.io/bitnamicharts/redis}"; else printf '{"topology":"%s","redis":{"mode":"%s"}}\\n' "\${BOOTSTRAP_FAKE_TOPOLOGY:-non-ha}" "\${BOOTSTRAP_FAKE_REDIS_MODE:-managed}"; fi ;;
+  get) if [[ "\${BOOTSTRAP_FAKE_INLINE_SECRET:-}" == '1' ]]; then printf '{"auth":{"password":"exposed"}}\\n'; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" && "\${BOOTSTRAP_FAKE_LEGACY_REDIS:-}" == '1' ]]; then printf '{"fullnameOverride":"%s","architecture":"%s","auth":{"existingSecret":"%s","existingSecretPasswordKey":"redis-password","acl":{"userSecret":"%s","users":[{"username":"realtime","keys":"~%s:*","channels":"&%s:*"}]}}}\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtime:dev}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtime:dev}"; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" ]]; then printf '{"architecture":"%s","commonAnnotations":{"realtime.example/managed-chart":"%s"}}\\n' "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART:-oci://registry-1.docker.io/bitnamicharts/redis}"; else printf '{"topology":"%s","redis":{"mode":"%s"}}\\n' "\${BOOTSTRAP_FAKE_TOPOLOGY:-non-ha}" "\${BOOTSTRAP_FAKE_REDIS_MODE:-managed}"; fi ;;
   pull) version=''; destination=''; shift; while (( $# )); do case "$1" in --version) version="$2"; shift 2;; --destination) destination="$2"; shift 2;; *) shift;; esac; done; cp '${shellChartFixture}' "$destination/redis-$version.tgz" ;;
   lint|template|upgrade|uninstall|rollback) printf '%s\\n' 'ok' ;;
   *) printf 'unsupported fake helm command: %s\\n' "\${1:-}" >&2; exit 64 ;;
@@ -889,7 +889,7 @@ function shellInvocation(shell, action, configPath, extra = []) {
 
 test("Bash and PowerShell wrappers emit the same normalized plan and exit semantics", async t => {
   if (process.platform === "win32") return t.skip("cross-shell parity runs on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-parity-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-parity-"));
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(configuration("ha")));
   const bash = await execute("bash", [resolve(repositoryRoot, "scripts/realtime-bootstrap.sh"), "plan", "--config", path, "--profile", "ha"], { cwd: repositoryRoot });
@@ -899,7 +899,7 @@ test("Bash and PowerShell wrappers emit the same normalized plan and exit semant
 
 test("both entry points reject an invalid topology with a non-zero exit", async t => {
   if (process.platform === "win32") return t.skip("cross-shell parity runs on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-failure-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failure-"));
   const path = resolve(directory, "config.json");
   const invalid = configuration("ha");
   invalid.kubernetes.failureDomains = 1;
@@ -919,7 +919,7 @@ test("PowerShell delegates unsupported actions to the shared exit-code contract"
 test("both shells execute the complete lifecycle for both profiles with identical safety semantics", { timeout: 60_000 }, async t => {
   if (process.platform === "win32") return t.skip("the hermetic Bash/PowerShell lifecycle matrix runs on Ubuntu CI");
   if (process.env.BOOTSTRAP_SKIP_LIFECYCLE === "1") return t.skip("the lifecycle runs in its dedicated CI matrix");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-tools-"));
   await fakeClusterTools(fakeBin);
   const shells = process.env.BOOTSTRAP_TEST_SHELLS?.split(",").filter(Boolean) ?? ["bash", "pwsh"];
   for (const shell of shells) {
@@ -928,7 +928,7 @@ test("both shells execute the complete lifecycle for both profiles with identica
       const suffix = `${shell}-${topology}`;
       const config = configuration(topology);
       config.naming.suffix = suffix;
-      const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-lifecycle-"));
+      const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-lifecycle-"));
       const configPath = resolve(directory, "config.json");
       const operationLog = resolve(directory, "operations.log");
       await writeFile(configPath, stableJson(config));
@@ -979,9 +979,9 @@ test("both shells execute the complete lifecycle for both profiles with identica
 
 test("managed Redis uses the hardened ACL values and rollback removes releases absent from backup", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-fresh";
   const configPath = resolve(directory, "config.json");
@@ -1033,9 +1033,9 @@ test("managed Redis uses the hardened ACL values and rollback removes releases a
 
 test("update adopts only a verified legacy managed Redis release", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-legacy-redis-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-redis-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-legacy-redis-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-redis-config-"));
   const config = configuration();
   config.naming.suffix = "legacy-adopt";
   config.redis.managedChart = "oci://mirror.example.test/charts/redis";
@@ -1068,9 +1068,9 @@ test("update adopts only a verified legacy managed Redis release", { timeout: 30
 
 test("standalone backup captures installed managed Redis while desired configuration is external", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-drift-backup-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-drift-backup-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-drift-backup-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-drift-backup-config-"));
   const config = configuration();
   config.naming.suffix = "drift-backup";
   config.redis.mode = "external";
@@ -1099,9 +1099,9 @@ test("standalone backup captures installed managed Redis while desired configura
 
 test("backup refuses to mint managed Redis chart provenance from a registry download", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-provenance-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-provenance-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-provenance-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-provenance-config-"));
   const config = configuration();
   config.naming.suffix = "missing-provenance";
   const configPath = resolve(directory, "config.json");
@@ -1128,9 +1128,9 @@ test("backup refuses to mint managed Redis chart provenance from a registry down
 
 test("backup rejects and removes snapshots containing inline Helm credentials", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-secret-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-secret-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-secret-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-secret-config-"));
   const config = configuration();
   config.naming.suffix = "secret-backup";
   const configPath = resolve(directory, "config.json");
@@ -1150,9 +1150,9 @@ test("backup rejects and removes snapshots containing inline Helm credentials", 
 
 test("Redis mode changes require an explicit migration", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-mode-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-mode-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-mode-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-mode-config-"));
   const config = configuration();
   config.naming.suffix = "mode-change";
   config.redis.mode = "external";
@@ -1169,9 +1169,9 @@ test("Redis mode changes require an explicit migration", { timeout: 30_000 }, as
 
 test("rollback classifies conversion from installed topology to backup topology", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-topology-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-topology-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-topology-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-topology-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-topology";
   config.kubernetes.failureDomains = 3;
@@ -1195,7 +1195,7 @@ test("rollback classifies conversion from installed topology to backup topology"
 });
 
 test("rollback rejects a cross-target backup with the safety-stop exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-cross-target-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-cross-target-config-"));
   const config = configuration();
   config.naming.suffix = "cross-target";
   const configPath = resolve(directory, "config.json");
@@ -1216,9 +1216,9 @@ test("rollback rejects a cross-target backup with the safety-stop exit code", as
 
 test("rollback rejects cross-mode restoration and restores the captured Redis chart version", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-version-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-version-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-rollback-version-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-version-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-version";
   const configPath = resolve(directory, "config.json");
@@ -1262,9 +1262,9 @@ test("rollback rejects cross-mode restoration and restores the captured Redis ch
 
 test("teardown skips desired-state prerequisites while retaining target and deletion checks", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-teardown-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-teardown-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-teardown-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-teardown-config-"));
   const config = configuration();
   config.naming.suffix = "teardown-preflight";
   const configPath = resolve(directory, "config.json");
@@ -1292,9 +1292,9 @@ test("teardown skips desired-state prerequisites while retaining target and dele
 
 test("external Redis skips unused storage and HA excludes untolerated nodes", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-capacity-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-capacity-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-capacity-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-capacity-config-"));
   const operationLog = resolve(directory, "operations.log");
   const external = configuration();
   external.naming.suffix = "external-storage";
@@ -1324,9 +1324,9 @@ test("external Redis skips unused storage and HA excludes untolerated nodes", { 
 
 test("stale lifecycle locks are recovered with bounded owner metadata", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-stale-lock-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-stale-lock-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-stale-lock-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-stale-lock-config-"));
   const config = configuration();
   config.naming.suffix = "stale-lock";
   const configPath = resolve(directory, "config.json");
@@ -1356,7 +1356,7 @@ test("stale lifecycle locks are recovered with bounded owner metadata", { timeou
 });
 
 test("configured and overridden name suffixes isolate Redis and update the shared naming manifest", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-name-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-name-config-"));
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(configuration()));
   const namingPath = resolve(repositoryRoot, ".bootstrap/naming.json");
@@ -1366,12 +1366,12 @@ test("configured and overridden name suffixes isolate Redis and update the share
     assert.equal(normalizedPlan(result.stdout).target.application, "realtime-contract-name");
     const naming = JSON.parse(await readFile(namingPath, "utf8"));
     assert.equal(naming.application, "realtime-contract-name");
-    assert.equal(naming.redisInstancePrefix, "cormier:realtime:dev:contract-name");
+    assert.equal(naming.redisInstancePrefix, "realtime:dev:contract-name");
     const configured = configuration();
     configured.naming.suffix = "configured-name";
     await writeFile(configPath, stableJson(configured));
     const configuredResult = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", configPath], { cwd: repositoryRoot });
-    assert.equal(normalizedPlan(configuredResult.stdout).values.redis.instancePrefix, "cormier:realtime:dev:configured-name");
+    assert.equal(normalizedPlan(configuredResult.stdout).values.redis.instancePrefix, "realtime:dev:configured-name");
     assert.equal(await fileExists(resolve(repositoryRoot, ".bootstrap/locks/naming-manifest")), false);
   } finally {
     if (priorNaming === undefined) await rm(namingPath, { force: true });
@@ -1381,12 +1381,12 @@ test("configured and overridden name suffixes isolate Redis and update the share
 
 test("cluster, permission, credential, Redis, and rollout failures stop safely and release the lock", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("the hermetic failure matrix runs on Ubuntu CI");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-failures-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failures-"));
   await fakeClusterTools(fakeBin);
   for (const failure of ["cluster", "permission", "credential", "redis", "rollout"]) {
     const config = configuration();
     config.naming.suffix = `failure-${failure}`;
-    const directory = await mkdtemp(resolve(tmpdir(), "cormier-bootstrap-failure-config-"));
+    const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failure-config-"));
     const configPath = resolve(directory, "config.json");
     await writeFile(configPath, stableJson(config));
     const release = `dev-realtime-failure-${failure}`;

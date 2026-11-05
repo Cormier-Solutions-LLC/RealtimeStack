@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Cormier.Realtime.Plugins.Persistence;
+namespace Realtime.Plugins.Persistence;
 
 /// <summary>Persists task snapshots independently of a browser connection. Does not execute or schedule tasks.</summary>
 public sealed class DurableTasks(IRealtimePersistenceStore store, TimeProvider? timeProvider = null)

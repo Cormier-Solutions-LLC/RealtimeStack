@@ -9,7 +9,7 @@ import {
   createEnvelope,
   validateClientEnvelope,
   validateServerEnvelope,
-} from "../dist/cormier-realtime.js";
+} from "../dist/realtime.js";
 
 const fixturePath = resolve(import.meta.dirname, "../../../protocol/fixtures/v1/envelopes.json");
 const fixtures = JSON.parse(await readFile(fixturePath, "utf8"));

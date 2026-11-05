@@ -8,19 +8,19 @@ failure() {
   exit 1
 }
 
-bundle exec rails runner 'raise "asset" unless ["index.html", "app.css", "app.js"].map { |name| Rails.configuration.x.reference.shared_asset_root + "/" + name }.concat(["cormier-realtime.iife.js", "cormier-realtime.iife.min.js"].map { |name| Rails.configuration.x.reference.sdk_asset_root + "/" + name }).all? { |path| File.file?(path) }' >/dev/null 2>&1 || failure
+bundle exec rails runner 'raise "asset" unless ["index.html", "app.css", "app.js"].map { |name| Rails.configuration.x.reference.shared_asset_root + "/" + name }.concat(["realtime.iife.js", "realtime.iife.min.js"].map { |name| Rails.configuration.x.reference.sdk_asset_root + "/" + name }).all? { |path| File.file?(path) }' >/dev/null 2>&1 || failure
 case "${PUBLIC_ORIGIN:-}" in
   http://*) PUBLIC_SCHEME=http ;;
   https://*) PUBLIC_SCHEME=https ;;
   *) failure ;;
 esac
 export PUBLIC_SCHEME
-rm -f /tmp/cormier-rails.sock
+rm -f /tmp/realtime-rails.sock
 bundle exec puma --config config/puma.rb >/dev/null &
 puma_pid=$!
 
 attempt=0
-while [ ! -S /tmp/cormier-rails.sock ]; do
+while [ ! -S /tmp/realtime-rails.sock ]; do
   kill -0 "$puma_pid" 2>/dev/null || failure
   attempt=$((attempt + 1))
   [ "$attempt" -lt 150 ] || failure

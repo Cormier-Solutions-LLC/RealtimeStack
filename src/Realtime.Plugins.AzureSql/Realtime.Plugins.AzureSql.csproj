@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.AzureSql</RootNamespace>
+    <RootNamespace>Realtime.Plugins.AzureSql</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.AzureSql</PackageId>
     <Description>AzureSql durable realtime messages, notifications, and task status storage.</Description>

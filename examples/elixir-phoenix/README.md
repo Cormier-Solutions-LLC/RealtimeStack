@@ -1,11 +1,11 @@
 # Elixir and Phoenix reference application
 
-This non-production adapter demonstrates a supervised Phoenix front end for Cormier.Realtime. It keeps typed configuration in explicit application state, stores gateway-compatible sessions through Redix, and uses Bandit/WebSock plus Mint.WebSocket to forward the canonical protocol without copying browser assets. `LISTEN_HOST` and `PORT` select the listener explicitly.
+This non-production adapter demonstrates a supervised Phoenix front end for Realtime. It keeps typed configuration in explicit application state, stores gateway-compatible sessions through Redix, and uses Bandit/WebSock plus Mint.WebSocket to forward the canonical protocol without copying browser assets. `LISTEN_HOST` and `PORT` select the listener explicitly.
 
 ## Prerequisites and local run
 
 - Elixir 1.20.4 and Erlang/OTP 29.0.6
-- Redis 7.4 and a Cormier.Realtime 0.1.x gateway using the same Redis prefixes and trusted `PUBLIC_ORIGIN`
+- Redis 7.4 and a Realtime 0.1.x gateway using the same Redis prefixes and trusted `PUBLIC_ORIGIN`
 - Generated `sdk/typescript/dist` and `examples/shared-web/dist` assets from the same build
 
 For ticket and WebSocket relays, the adapter forwards the scheme from validated `PUBLIC_ORIGIN` in `X-Forwarded-Proto`. Configure the gateway's `Proxy:TrustedNetworks` with only the adapter network CIDR so it accepts that single forwarding hop; never trust public or broader ranges.
@@ -24,8 +24,8 @@ mix hex.audit
 Build and run the digest-pinned release container for the local platform from the repository root. Use an approved `docker buildx build --platform ...` release process when producing a multi-architecture image index:
 
 ```text
-docker build -f examples/elixir-phoenix/Dockerfile -t cormier-elixir-phoenix:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15600:15600 --env-file examples/elixir-phoenix/.env.example --env GATEWAY_URL=http://host.docker.internal:15601 --env REDIS_URL=redis://host.docker.internal:16379 cormier-elixir-phoenix:local
+docker build -f examples/elixir-phoenix/Dockerfile -t realtime-elixir-phoenix:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15600:15600 --env-file examples/elixir-phoenix/.env.example --env GATEWAY_URL=http://host.docker.internal:15601 --env REDIS_URL=redis://host.docker.internal:16379 realtime-elixir-phoenix:local
 ```
 
 Configuration and the synchronous Redis connection fail before the endpoint starts. Redis commands, HTTP, WebSocket connection, body/frame sizes, and shutdown are bounded. Bandit, Redix, and the endpoint run under one OTP supervisor; SIGINT/SIGTERM stops the release supervision tree. Logs expose structural lifecycle/failure events without configured dependency details.
@@ -53,7 +53,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Phoenix / Bandit | 1.8.13 / 1.12.5 | Supported endpoint stack |
 | Redix / Req / Mint.WebSocket | 1.9.1 / 0.7.4 / 1.0.6 | Locked dependency clients |
 | Hex graph | `mix.lock` | Locked; `mix hex.audit` required |
-| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
+| Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 | Container base | Hex Elixir 1.20.4, OTP 29.0.6, Alpine 3.24.1 | Digest-pinned amd64/arm64 index |
 

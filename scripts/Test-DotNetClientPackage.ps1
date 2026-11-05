@@ -14,7 +14,7 @@ if ([string]::IsNullOrWhiteSpace($UpstreamPackageSource)) {
     throw 'UpstreamPackageSource or NUGET_UPSTREAM_SOURCE must identify the configured upstream NuGet feed.'
 }
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("cormier-realtime-client-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-client-" + [guid]::NewGuid().ToString('N'))
 $feedPath = Join-Path $scratchRoot 'feed'
 $packagesPath = Join-Path $scratchRoot 'packages'
 $nugetConfigPath = Join-Path $scratchRoot 'NuGet.Config'
@@ -41,8 +41,8 @@ try {
 "@ | Set-Content -LiteralPath $nugetConfigPath -Encoding utf8NoBOM
     if ([string]::IsNullOrWhiteSpace($PackageSource)) {
         foreach ($project in @(
-            'src/Cormier.Realtime.Contracts/Cormier.Realtime.Contracts.csproj',
-            'src/Cormier.Realtime.Client/Cormier.Realtime.Client.csproj'
+            'src/Realtime.Contracts/Realtime.Contracts.csproj',
+            'src/Realtime.Client/Realtime.Client.csproj'
         )) {
             dotnet pack (Join-Path $repositoryRoot $project) --configuration Release --no-build --output $feedPath `
                 -p:DotNetClientVersion=$DotNetClientVersion -p:ContractsVersion=$ContractsVersion
@@ -73,15 +73,15 @@ try {
     $expectedEntries = @{
         $contractsPackage = @(
             'README.md',
-            'lib/netstandard2.0/Cormier.Realtime.Contracts.dll',
-            'lib/netstandard2.0/Cormier.Realtime.Contracts.xml',
-            'lib/net10.0/Cormier.Realtime.Contracts.dll',
-            'lib/net10.0/Cormier.Realtime.Contracts.xml'
+            'lib/netstandard2.0/Realtime.Contracts.dll',
+            'lib/netstandard2.0/Realtime.Contracts.xml',
+            'lib/net10.0/Realtime.Contracts.dll',
+            'lib/net10.0/Realtime.Contracts.xml'
         )
         $clientPackage = @(
             'README.md',
-            'lib/netstandard2.0/Cormier.Realtime.Client.dll',
-            'lib/netstandard2.0/Cormier.Realtime.Client.xml'
+            'lib/netstandard2.0/Realtime.Client.dll',
+            'lib/netstandard2.0/Realtime.Client.xml'
         )
     }
     foreach ($packagePath in $expectedEntries.Keys) {
@@ -142,7 +142,7 @@ try {
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM
 
         @'
-using Cormier.Realtime.Client;
+using Realtime.Client;
 
 using var client = new RealtimeClient(new RealtimeClientOptions
 {

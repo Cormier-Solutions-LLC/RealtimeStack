@@ -950,7 +950,7 @@ export function applySelectorMappings({ css, html, javascript }, selectorManglin
       if (source === target || targets.has(target) || sources.has(target)) {
         throw new Error(`${kind} selector mapping ${source} -> ${target} is ambiguous.`);
       }
-      const probe = "__cormier_selector_target_probe__";
+      const probe = "__realtime_selector_target_probe__";
       const targetExists = kind === "id"
         ? replaceSelector(css, "#", target, probe) !== css
           || replaceHtmlSelectorReferences(html, { [target]: probe }, {}) !== html
@@ -981,8 +981,8 @@ function injectReferences(html, { cssIntegrity, javascriptIntegrity, sdkIntegrit
   return html
     .replace('href="/app.css"', `href="/app.css" integrity="${cssIntegrity}" crossorigin="anonymous"`)
     .replace(
-      'src="/_content/Cormier.Realtime.Browser/cormier-realtime.iife.js"',
-      `src="/_content/Cormier.Realtime.Browser/${sdkName}" integrity="${sdkIntegrity}" crossorigin="anonymous"`,
+      'src="/_content/Realtime.Browser/realtime.iife.js"',
+      `src="/_content/Realtime.Browser/${sdkName}" integrity="${sdkIntegrity}" crossorigin="anonymous"`,
     )
     .replace('src="/app.js"', `src="/app.js" integrity="${javascriptIntegrity}" crossorigin="anonymous"`);
 }
@@ -1092,7 +1092,7 @@ async function buildProfile({ config, outputRoot, profile, source, sdkDist, obfu
     }
   }
 
-  const sdkName = profile === "readable" ? "cormier-realtime.iife.js" : "cormier-realtime.iife.min.js";
+  const sdkName = profile === "readable" ? "realtime.iife.js" : "realtime.iife.min.js";
   const sdkContent = readFileSync(resolve(sdkDist, sdkName));
   const cssSri = integrity(css);
   const javascriptSri = integrity(javascript);

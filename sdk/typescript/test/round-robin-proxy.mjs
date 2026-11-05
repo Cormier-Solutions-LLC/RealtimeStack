@@ -20,7 +20,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const staticFiles = new Map([
   ["/examples/browser/index.html", ["text/html; charset=utf-8", readFileSync(resolve(testRoot, "examples/browser/index.html"))]],
   ["/examples/browser/realtime-example.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "examples/browser/realtime-example.js"))]],
-  ["/sdk/typescript/dist/cormier-realtime.iife.min.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "sdk/typescript/dist/cormier-realtime.iife.min.js"))]],
+  ["/sdk/typescript/dist/realtime.iife.min.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "sdk/typescript/dist/realtime.iife.min.js"))]],
 ]);
 
 const server = createServer((request, response) => {

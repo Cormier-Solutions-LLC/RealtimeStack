@@ -1,4 +1,4 @@
-/*! Cormier.Realtime reference assets | MIT */
+/*! Realtime reference assets | MIT */
 (() => {
   const output = document.querySelector("#events");
   const state = document.querySelector("#state");
@@ -8,12 +8,12 @@
   const transportControls = document.querySelector("#transport-controls");
   transportControls.hidden = pageMode !== "failover";
   document.querySelector("h1").textContent = pageMode === "fallback"
-    ? "Cormier.Realtime HTTP streaming"
-    : pageMode === "failover" ? "Cormier.Realtime transport failover" : "Cormier.Realtime full circle";
+    ? "Realtime HTTP streaming"
+    : pageMode === "failover" ? "Realtime transport failover" : "Realtime full circle";
   const messageModal = document.querySelector("#message-modal");
   const messageRoute = document.querySelector("#message-route");
   const messagePayload = document.querySelector("#message-payload");
-  const durable = new CormierRealtime.RealtimePersistenceClient();
+  const durable = new Realtime.RealtimePersistenceClient();
   let displayedInbox;
   let durableRequests = new AbortController();
   const durableOutput = document.querySelector("#durable-result");
@@ -105,7 +105,7 @@
           ...(document.querySelector("#disable-websocket").checked
             ? { webSocketFactory: () => { throw new Error("WebSockets disabled by the example page."); } } : {}) }
         : {};
-    client = new globalThis.CormierRealtime.RealtimeClient({ url: "/realtime/ws", authentication: { kind: "ticket" },
+    client = new globalThis.Realtime.RealtimeClient({ url: "/realtime/ws", authentication: { kind: "ticket" },
       ...transportOptions,
       heartbeatIntervalMilliseconds: configuration.heartbeatIntervalMilliseconds,
       reconnect: { initialDelayMilliseconds: 50, maximumDelayMilliseconds: 500, jitterRatio: 0, maximumAttempts: 20 } });

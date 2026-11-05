@@ -67,14 +67,14 @@ concurrency:
 
 jobs:
   promote:
-    runs-on: cormier-runners
+    runs-on: ${{ vars.CI_RUNNER_LABEL }}
     environment: ${{ inputs.environment }}
     steps:
       - name: Check out trusted deployment tooling
         uses: actions/checkout@v5
         with:
           ref: refs/heads/main
-      - uses: ./.github/actions/setup-cormier-runner
+      - uses: ./.github/actions/setup-realtime-runner
         with:
           docker: 'true'
       - name: Install pinned PowerShell

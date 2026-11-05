@@ -14,4 +14,4 @@ Release qualification should compare candidate and previous supported commits th
 
 Routes, configuration, dependency/runtime ranges, shared assets, protocol/gateway compatibility, and this example must not disappear silently. Each deprecation names the old behavior/replacement, first warning release, migration and verification, security impact, rollback, and removal version or approved window. The replacement must exist first. Until another window is published, removal requires a documented breaking release and the immediately previous repository version remains the rollback target.
 
-There are no active deprecations. Redis record shape, `cormier_session`, Origin behavior, and ticket/WebSocket routes are coordinated breaking changes.
+There are no active deprecations. Redis record shape, `realtime_session`, Origin behavior, and ticket/WebSocket routes are coordinated breaking changes.

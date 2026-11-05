@@ -1,7 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
-  "name": "cormier/realtime-example-laravel",
-  "description": "Minimal Laravel reference adapter for Cormier.Realtime",
+  "name": "realtime/example-laravel",
+  "description": "Minimal Laravel reference adapter for Realtime",
   "type": "project",
   "license": "MIT",
   "require": {

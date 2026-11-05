@@ -10,7 +10,7 @@ for name, value in {
     "HEARTBEAT_INTERVAL_MILLISECONDS": "5000",
     "INSTANCE_NAME": "python-fastapi-a",
     "TOPOLOGY": "non-ha",
-    "REDIS_INSTANCE_PREFIX": "cormier:test",
+    "REDIS_INSTANCE_PREFIX": "realtime:test",
     "REDIS_SESSION_KEY_PREFIX": "sessions",
     "ALLOWED_TENANTS": "tenant-a",
     "ALLOWED_USERS": "user-a",

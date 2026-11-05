@@ -150,7 +150,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cormier-realtime-example-fastapi"
+name = "realtime-example-fastapi"
 version = "1.1.0b0"
 source = { virtual = "." }
 dependencies = [

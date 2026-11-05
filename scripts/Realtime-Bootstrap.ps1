@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-  Runs the versioned Cormier.Realtime bootstrap and Kubernetes lifecycle contract.
+  Runs the versioned Realtime bootstrap and Kubernetes lifecycle contract.
 .PARAMETER Action
   prerequisites, plan, bootstrap, backup, install, update, validate, rollback, recover, teardown, organize, or restore-layout.
 .PARAMETER Config
-  Path to the versioned JSON configuration. CORMIER_BOOTSTRAP_CONFIG is the shared environment-variable alternative.
+  Path to the versioned JSON configuration. REALTIME_BOOTSTRAP_CONFIG is the shared environment-variable alternative.
 .PARAMETER Topology
   Optional assertion that the configuration selects ha or non-ha. Profile is a compatibility alias.
 .PARAMETER NameSuffix

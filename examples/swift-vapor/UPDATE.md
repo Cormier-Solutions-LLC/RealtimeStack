@@ -19,7 +19,7 @@ This example supports updates only as an atomic repository change; independently
 5. Validate the candidate container and shared smoke scenarios:
 
    ```text
-   docker build --file examples/swift-vapor/Dockerfile --tag cormier-swift-vapor:<candidate> .
+   docker build --file examples/swift-vapor/Dockerfile --tag realtime-swift-vapor:<candidate> .
    cd sdk/typescript
    npx playwright test --config playwright.swift-vapor.config.mjs
    ```
@@ -33,6 +33,6 @@ The release check compares the previous supported commit and the candidate commi
 
 Routes, environment keys, runtime/dependencies, shared assets, protocol/gateway compatibility, and this example must not disappear silently. Announce deprecations in `README.md` and `CHANGELOG.md` before removal with replacement, migration, verification, rollback, and removal release/support window details.
 
-There are no active deprecations. Changes to Redis record shape, the `cormier_session` cookie, Origin behavior, or ticket/WebSocket routes are coordinated breaking changes.
+There are no active deprecations. Changes to Redis record shape, the `realtime_session` cookie, Origin behavior, or ticket/WebSocket routes are coordinated breaking changes.
 
 Implementing pull requests must record the exact validation commands they executed and their outcomes.

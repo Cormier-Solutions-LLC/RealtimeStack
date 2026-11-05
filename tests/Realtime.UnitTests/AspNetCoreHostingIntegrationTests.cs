@@ -1,0 +1,457 @@
+using Realtime.AspNetCore;
+using Realtime.Contracts;
+using Realtime.Gateway;
+using Realtime.HttpFallback;
+using Realtime.Redis;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace Realtime.UnitTests;
+
+public sealed class AspNetCoreHostingIntegrationTests
+{
+    [Fact]
+    public async Task AddRealtimeGatewayPreservesAGlobalProgrammaticLoggingFilter()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(ValidConfiguration());
+        builder.Logging.SetMinimumLevel(LogLevel.Trace);
+        builder.Logging.AddFilter(static (_, level) => level >= LogLevel.Warning);
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+        await using var app = builder.Build();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Realtime.Filtered");
+
+        Assert.False(logger.IsEnabled(LogLevel.Information));
+        Assert.True(logger.IsEnabled(LogLevel.Warning));
+    }
+
+    [Fact]
+    public async Task AddRealtimeGatewayBindsConfigurationAndRegistersPublicIntegrationServices()
+    {
+        await using var provider = CreateServices(new Dictionary<string, string?>
+        {
+            ["Realtime:EndpointPath"] = "/socket",
+            ["Realtime:TicketEndpointPath"] = "/tickets",
+            ["Realtime:AllowedOrigins:0"] = "https://app.example",
+            ["Redis:Endpoint"] = "redis.example:6379",
+        }).BuildServiceProvider();
+
+        var options = provider.GetRequiredService<RealtimeOptions>();
+
+        Assert.Equal("/socket", options.EndpointPath);
+        Assert.Equal("/tickets", options.TicketEndpointPath);
+        Assert.IsType<RealtimeSessionResolver>(provider.GetRequiredService<IRealtimeSessionResolver>());
+        Assert.NotNull(provider.GetRequiredService<RealtimeWebSocketHandler>());
+    }
+
+    [Theory]
+    [InlineData("Realtime:EndpointPath", "relative")]
+    [InlineData("Realtime:EndpointPath", "/socket?query=true")]
+    [InlineData("Realtime:EndpointPath", "/{broken")]
+    [InlineData("Realtime:AllowedOrigins:0", "https://app.example/path")]
+    [InlineData("Realtime:AllowedOrigins:0", "ftp://app.example")]
+    public void AddRealtimeGatewayRejectsInvalidRoutesAndOrigins(string key, string value)
+    {
+        var values = ValidConfiguration();
+        values[key] = value;
+        using var provider = CreateServices(values).BuildServiceProvider();
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<RealtimeOptions>>().Value);
+
+        Assert.NotEmpty(exception.Failures);
+    }
+
+    [Theory]
+    [InlineData("/realtime/ws", false)]
+    [InlineData("/health/live", false)]
+    [InlineData("/diagnostics/v1/snapshot", true)]
+    public void AddRealtimeGatewayRejectsMetricsRouteCollisions(string metricsPath, bool diagnosticsEnabled)
+    {
+        var values = ValidConfiguration();
+        values["Metrics:Enabled"] = "true";
+        values["Metrics:Path"] = metricsPath;
+        values["Diagnostics:Enabled"] = diagnosticsEnabled.ToString();
+        values["Diagnostics:AuthorizationPolicy"] = "diagnostics-operator";
+        using var provider = CreateServices(values).BuildServiceProvider();
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<MetricsOptions>>().Value);
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("collide", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AddRealtimeGatewayRejectsConfiguredCrossRolePolicyCollisions()
+    {
+        var values = ValidConfiguration();
+        values["Diagnostics:Enabled"] = "true";
+        values["Diagnostics:AuthorizationPolicy"] = "operator-access";
+        values["Metrics:Enabled"] = "true";
+        values["Metrics:AuthorizationPolicy"] = "OPERATOR-ACCESS";
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Development,
+        });
+        builder.Configuration.AddInMemoryCollection(values);
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => builder.Build());
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("distinct authorization policies", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BearerHelpersRejectExistingApplicationPolicies()
+    {
+        var services = new ServiceCollection();
+        services.AddAuthorization(options => options.AddPolicy(
+            "application-administrator",
+            policy => policy.RequireClaim("role", "administrator")));
+
+        services.AddRealtimeDiagnosticsBearer(
+            "APPLICATION-ADMINISTRATOR",
+            new string('d', 32));
+        using var provider = services.BuildServiceProvider();
+        var exception = Assert.Throws<OptionsValidationException>(() =>
+            provider.GetRequiredService<IOptions<AuthorizationOptions>>().Value);
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("collides", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BearerHelpersRejectFactoryBackedApplicationPolicies()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfigureOptions<AuthorizationOptions>>(_ =>
+            new ConfigureOptions<AuthorizationOptions>(options => options.AddPolicy(
+                "application-auditor",
+                policy => policy.RequireClaim("role", "auditor"))));
+        services.AddRealtimeMetricsBearer(
+            "APPLICATION-AUDITOR",
+            new string('m', 32));
+        using var provider = services.BuildServiceProvider();
+
+        var exception = Assert.Throws<OptionsValidationException>(() =>
+            provider.GetRequiredService<IOptions<AuthorizationOptions>>().Value);
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("collides", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BearerHelpersDetectPoliciesReplacedAfterRegistration()
+    {
+        var services = new ServiceCollection();
+        services.AddRealtimeMetricsBearer("metrics-scraper", new string('m', 32));
+        services.AddAuthorization(options => options.AddPolicy(
+            "METRICS-SCRAPER",
+            policy => policy.RequireClaim("role", "application-administrator")));
+        using var provider = services.BuildServiceProvider();
+
+        var exception = Assert.Throws<OptionsValidationException>(() =>
+            provider.GetRequiredService<IOptions<AuthorizationOptions>>().Value);
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("collides", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("Realtime:EndpointPath", "/diagnostics/v1/snapshot")]
+    [InlineData("Realtime:TicketEndpointPath", "/diagnostics/v1/logging/overrides")]
+    public void AddRealtimeGatewayRejectsDiagnosticsRouteCollisions(string setting, string route)
+    {
+        var values = ValidConfiguration();
+        values[setting] = route;
+        values["Diagnostics:Enabled"] = "true";
+        using var provider = CreateServices(values).BuildServiceProvider();
+
+        var exception = Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<RealtimeOptions>>().Value);
+
+        Assert.Contains(exception.Failures, failure => failure.Contains("diagnostics", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("/diagnostics/v1/snapshot", false)]
+    [InlineData("/diagnostics/v1/logging/overrides/{id}", true)]
+    [InlineData("/diagnostics/v1/logging/overrides/{overrideId}", true)]
+    public async Task MapRealtimeDiagnosticsRejectsAConflictingApplicationRoute(string route, bool delete)
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Development,
+        });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Diagnostics:Enabled"] = "true",
+            ["Diagnostics:AuthorizationPolicy"] = "diagnostics-operator",
+            ["Realtime:AllowedOrigins:0"] = "https://app.example",
+            ["Redis:Endpoint"] = "redis.example:6379",
+        });
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+        await using var app = builder.Build();
+        if (delete)
+        {
+            app.MapDelete(route, () => Results.Ok());
+        }
+        else
+        {
+            app.MapGet(route, () => Results.Ok());
+        }
+
+        var exception = Assert.Throws<InvalidOperationException>(() => app.MapRealtimeDiagnostics());
+
+        Assert.Contains("already mapped", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task MapRealtimeDiagnosticsAllowsAnEquivalentParameterizedRouteForAnotherMethod()
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Development,
+        });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Diagnostics:Enabled"] = "true",
+            ["Diagnostics:AuthorizationPolicy"] = "diagnostics-operator",
+            ["Realtime:AllowedOrigins:0"] = "https://app.example",
+            ["Redis:Endpoint"] = "redis.example:6379",
+        });
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+        await using var app = builder.Build();
+        app.MapGet("/diagnostics/v1/logging/overrides/{overrideId}", () => Results.Ok());
+
+        app.MapRealtimeDiagnostics();
+    }
+
+    [Fact]
+    public void DiagnosticsNetworkAllowsIpv4MappedAddressesInsideIpv4Cidrs()
+    {
+        Assert.True(DiagnosticsEndpointExtensions.IsNetworkAllowed(
+            System.Net.IPAddress.Parse("::ffff:192.0.2.10"),
+            ["192.0.2.0/24"]));
+        Assert.False(DiagnosticsEndpointExtensions.IsNetworkAllowed(
+            System.Net.IPAddress.Parse("::ffff:198.51.100.10"),
+            ["192.0.2.0/24"]));
+    }
+
+    [Fact]
+    public void AddRealtimeGatewayDoesNotDuplicateHostedInfrastructure()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(ValidConfiguration()).Build();
+        var services = new ServiceCollection();
+
+        services.AddRealtimeGateway(configuration);
+        services.AddRealtimeGateway(configuration);
+
+        Assert.Equal(6, services.Count(descriptor => descriptor.ServiceType == typeof(IHostedService)));
+    }
+
+    [Fact]
+    public async Task CookieSessionResolutionUsesExistingSessionContractAndRejectsRevocation()
+    {
+        var store = new FakeSessionStore();
+        var resolver = new RealtimeSessionResolver(store, new RealtimeOptions());
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Cookie = "realtime_session=valid-session-123456";
+
+        var resolution = await resolver.ResolveAsync(context, CancellationToken.None);
+
+        Assert.Equal("tenant-1", resolution?.Identity.TenantId);
+        Assert.Equal("user-1", resolution?.Identity.UserId);
+        store.Revoked = true;
+        Assert.Null(await resolver.RevalidateAsync("valid-session-123456", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AspNetCoreSessionResolutionUsesConfiguredSessionValueAcrossInstances()
+    {
+        var store = new FakeSessionStore();
+        var options = new RealtimeOptions
+        {
+            SessionSource = RealtimeSessionSource.AspNetCoreSession,
+            AspNetCoreSessionIdKey = "realtime-id",
+        };
+        var firstResolver = new RealtimeSessionResolver(store, options);
+        var secondResolver = new RealtimeSessionResolver(store, options);
+        var context = new DefaultHttpContext();
+        var session = new FakeSession("aspnet-session-id");
+        session.SetString("realtime-id", "valid-session-123456");
+        context.Features.Set<ISessionFeature>(new SessionFeature { Session = session });
+
+        var first = await firstResolver.ResolveAsync(context, CancellationToken.None);
+        var second = await secondResolver.ResolveAsync(context, CancellationToken.None);
+
+        Assert.Equal("valid-session-123456", first?.SessionId);
+        Assert.Equal(first?.SessionId, second?.SessionId);
+        Assert.Equal(first?.Identity.TenantId, second?.Identity.TenantId);
+        Assert.Equal(first?.Identity.UserId, second?.Identity.UserId);
+        Assert.Equal(2, store.ValidationCount);
+    }
+
+    [Fact]
+    public async Task AspNetCoreSessionResolutionExplainsRequiredMiddlewareOrder()
+    {
+        var resolver = new RealtimeSessionResolver(new FakeSessionStore(), new RealtimeOptions
+        {
+            SessionSource = RealtimeSessionSource.AspNetCoreSession,
+        });
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await resolver.ResolveAsync(new DefaultHttpContext(), CancellationToken.None));
+
+        Assert.Contains("AddSession and UseSession", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExpiredOrUnknownSessionIsRejected()
+    {
+        var resolver = new RealtimeSessionResolver(new FakeSessionStore { Expired = true }, new RealtimeOptions());
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Cookie = "realtime_session=valid-session-123456";
+
+        Assert.Null(await resolver.ResolveAsync(context, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task MapRealtimeGatewayRejectsDuplicateRegistrationAndAppliesAuthorizationPolicy()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(ValidConfiguration());
+        builder.Services.AddRealtimeGateway(builder.Configuration, options => options.AuthorizationPolicy = "realtime-user");
+        await using var app = builder.Build();
+
+        app.MapRealtimeGateway();
+
+        var endpoints = ((IEndpointRouteBuilder)app).DataSources
+            .SelectMany(source => source.Endpoints)
+            .OfType<RouteEndpoint>()
+            .ToArray();
+        Assert.Equal(2, endpoints.Count(endpoint => endpoint.RoutePattern.RawText is "/realtime/ws" or "/realtime/tickets"));
+        Assert.All(endpoints.Where(endpoint => endpoint.RoutePattern.RawText is "/realtime/ws" or "/realtime/tickets"), endpoint =>
+            Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(), metadata => metadata.Policy == "realtime-user"));
+        Assert.Throws<InvalidOperationException>(() => app.MapRealtimeGateway());
+    }
+
+    [Fact]
+    public async Task MapRealtimeGatewayRejectsAConflictingApplicationRoute()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(ValidConfiguration());
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+        await using var app = builder.Build();
+        app.MapGet("/realtime/ws", () => "application endpoint");
+
+        var exception = Assert.Throws<InvalidOperationException>(() => app.MapRealtimeGateway());
+
+        Assert.Contains("already mapped", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task MapRealtimeHttpFallbackAppliesTheRealtimeAuthorizationPolicy()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(ValidConfiguration());
+        builder.Services.AddRealtimeGateway(builder.Configuration, options => options.AuthorizationPolicy = "realtime-user");
+        builder.Services.AddRealtimeHttpFallback(builder.Configuration);
+        await using var app = builder.Build();
+
+        app.MapRealtimeHttpFallback();
+
+        var endpoints = ((IEndpointRouteBuilder)app).DataSources
+            .SelectMany(source => source.Endpoints)
+            .OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.RoutePattern.RawText?.StartsWith("/realtime/http", StringComparison.Ordinal) == true)
+            .ToArray();
+        Assert.Equal(5, endpoints.Length);
+        Assert.All(endpoints, endpoint =>
+            Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(), metadata => metadata.Policy == "realtime-user"));
+    }
+
+    [Fact]
+    public async Task MapRealtimeHttpFallbackRejectsAConflictingApplicationRoute()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(ValidConfiguration());
+        builder.Services.AddRealtimeGateway(builder.Configuration);
+        builder.Services.AddRealtimeHttpFallback(builder.Configuration);
+        await using var app = builder.Build();
+        app.MapPost("/realtime/http/connections/{id}/poll", () => "application endpoint");
+
+        var exception = Assert.Throws<InvalidOperationException>(() => app.MapRealtimeHttpFallback());
+
+        Assert.Contains("already mapped", exception.Message, StringComparison.Ordinal);
+    }
+
+    private static ServiceCollection CreateServices(IDictionary<string, string?> values)
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddRealtimeGateway(configuration);
+        return services;
+    }
+
+    private static Dictionary<string, string?> ValidConfiguration() => new()
+    {
+        ["Realtime:EndpointPath"] = "/realtime/ws",
+        ["Realtime:TicketEndpointPath"] = "/realtime/tickets",
+        ["Realtime:AllowedOrigins:0"] = "https://app.example",
+        ["Redis:Endpoint"] = "redis.example:6379",
+    };
+
+    private sealed class FakeSessionStore : IRealtimeSessionStore
+    {
+        public bool Revoked { get; set; }
+
+        public bool Expired { get; set; }
+
+        public int ValidationCount { get; private set; }
+
+        public ValueTask<RealtimeIdentity?> ValidateAsync(string sessionId, CancellationToken cancellationToken)
+        {
+            ValidationCount++;
+            var valid = sessionId == "valid-session-123456" && !Revoked && !Expired;
+            return ValueTask.FromResult<RealtimeIdentity?>(valid
+                ? new RealtimeIdentity("tenant-1", "user-1", ["orders"], DateTimeOffset.UtcNow.AddMinutes(5))
+                : null);
+        }
+    }
+
+    private sealed class SessionFeature : ISessionFeature
+    {
+        public required ISession Session { get; set; }
+    }
+
+    private sealed class FakeSession(string id) : ISession
+    {
+        private readonly Dictionary<string, byte[]> _values = new(StringComparer.Ordinal);
+
+        public bool IsAvailable => true;
+
+        public string Id { get; } = id;
+
+        public IEnumerable<string> Keys => _values.Keys;
+
+        public void Clear() => _values.Clear();
+
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public void Remove(string key) => _values.Remove(key);
+
+        public void Set(string key, byte[] value) => _values[key] = value;
+
+        public bool TryGetValue(string key, out byte[] value) => _values.TryGetValue(key, out value!);
+    }
+}

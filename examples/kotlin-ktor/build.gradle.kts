@@ -7,7 +7,7 @@ plugins {
     application
 }
 
-group = "com.cormier.realtime.examples"
+group = "com.realtime.examples"
 version = "1.1.0-beta"
 
 repositories { mavenCentral() }
@@ -33,7 +33,7 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-application { mainClass.set("com.cormier.realtime.example.ApplicationKt") }
+application { mainClass.set("com.realtime.example.ApplicationKt") }
 
 kotlin {
     jvmToolchain(25)

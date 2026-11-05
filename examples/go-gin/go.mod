@@ -1,4 +1,4 @@
-module github.com/cormier-solutions/cormier-realtime/examples/go-gin
+module github.com/realtime-solutions/realtime/examples/go-gin
 
 go 1.27.2
 

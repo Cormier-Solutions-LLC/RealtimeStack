@@ -519,7 +519,7 @@ function renderManagedRedis(config, profile) {
     chartArchiveSha256: config.redis.managedChartArchiveSha256,
     chartVersion: config.redis.managedChartVersion,
     values: {
-      commonAnnotations: { "cormier.solutions/managed-chart": config.redis.managedChart },
+      commonAnnotations: { "realtime.example/managed-chart": config.redis.managedChart },
       architecture: profile.redis.managedArchitecture,
       global: {
         imagePullSecrets: config.redis.managedImagePullSecrets ?? [],

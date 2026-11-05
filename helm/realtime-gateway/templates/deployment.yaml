@@ -74,7 +74,7 @@ spec:
           env:
             - name: ASPNETCORE_HTTP_PORTS
               value: {{ .Values.service.targetPort | quote }}
-            - name: CORMIER_REALTIME_INSTANCE_ID
+            - name: REALTIME_INSTANCE_ID
               valueFrom:
                 fieldRef: { fieldPath: metadata.name }
             {{- if .Values.persistence.enabled }}

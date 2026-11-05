@@ -4,7 +4,7 @@
     <VersionPrefix>$(ContractsVersion)</VersionPrefix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Cormier.Realtime.Plugins.Sqlite</RootNamespace>
+    <RootNamespace>Realtime.Plugins.Sqlite</RootNamespace>
     <IsPackable>true</IsPackable>
     <PackageId>Realtime.Plugins.Sqlite</PackageId>
     <Description>Sqlite durable realtime messages, notifications, and task status storage.</Description>

@@ -2,7 +2,7 @@
 
 ## Product identity (force update)
 
-- Use `Cormier` for the distributable brand and `Cormier.Realtime` for .NET solution, project, namespace, and assembly identities. Use `Realtime.*` for NuGet package IDs; preserve existing CLR namespaces and assembly names for source compatibility.
+- Use `Realtime` for the distributable brand and `Realtime` for .NET solution, project, namespace, and assembly identities. Use `Realtime.*` for NuGet package IDs; use the same Realtime identity in CLR namespaces, assembly names, browser assets and documentation.
 - Treat customer, tenant, environment, and deployment suffixes as configuration. Never encode a customer-specific or legacy brand in source-controlled identifiers.
 - Derive deployable identities through the shared bootstrap configuration and `-NameSuffix` / `--name-suffix` override. Consume `.bootstrap/naming.json` where automation needs those derived names; its Redis prefix already includes the environment. The generated file is local and must not be committed.
 
@@ -15,12 +15,12 @@
 
 ## Repository boundaries
 
-- Keep protocol envelopes, routes, and serialization contracts in `src/Cormier.Realtime.Contracts`; hosting integration in `src/Cormier.Realtime.AspNetCore`; Redis adapters in `src/Cormier.Realtime.Redis`; and the executable host in `src/Cormier.Realtime.Gateway`. Client libraries and browser asset packaging have separate projects and package READMEs.
+- Keep protocol envelopes, routes, and serialization contracts in `src/Realtime.Contracts`; hosting integration in `src/Realtime.AspNetCore`; Redis adapters in `src/Realtime.Redis`; and the executable host in `src/Realtime.Gateway`. Client libraries and browser asset packaging have separate projects and package READMEs.
 - Preserve declared target frameworks and bounded dependency ranges. Read `global.json`, project files, lockfiles, and `sdk/typescript/package.json` for current toolchain requirements rather than copying version numbers into new guidance. Preserve source-generated serialization and Native AOT compatibility when changing gateway or contract code.
 - Treat `sdk/typescript` as the browser client source and `examples/shared-web` as the shared example UI. Generate browser artifacts with `npm --prefix sdk/typescript ci` followed by `npm --prefix sdk/typescript run build`; do not hand-edit generated bundles. The browser NuGet package packages SDK assets, not the shared example UI.
 - Implement new bootstrap lifecycle behavior in the shared Node.js engine with equivalent PowerShell and Bash wrappers. `Bootstrap-Realtime.ps1` and `Deploy-Realtime.ps1` are legacy compatibility entry points with different parameter contracts. Follow [scripts guidance](scripts/README.md) and the [bootstrap guide](docs/bootstrap.md).
 - Keep session provisioning, ticket issuance/consumption, and route authorization distinct. A sample login or a serialized envelope does not establish a production authentication or authorization policy. Verify security claims against the relevant host, validator, and store implementation.
-- Preserve historical changelog entries and reference snapshots. Explain current differences explicitly; historical material under `refs` is not evidence of current runtime defaults. Use Cormier terminology in current distributable content.
+- Preserve historical changelog entries and reference snapshots. Explain current differences explicitly; historical material under `refs` is not evidence of current runtime defaults. Use Realtime terminology in current distributable content.
 
 ## Validation and completion
 

@@ -9,7 +9,7 @@
     "logDirectory": ".bootstrap/env/{environment}/logs"
   },
   "image": {
-    "repository": "registry.example.com/cormier/realtime-gateway",
+    "repository": "registry.example.com/realtime/realtime-gateway",
     "tag": "1.1.0-beta",
     "digest": "",
     "pullPolicy": "IfNotPresent",
@@ -41,7 +41,7 @@
     "credentialsSecret": "dev-realtime-redis",
     "credentialKey": "realtime",
     "adminCredentialKey": "redis-password",
-    "instancePrefix": "cormier:realtime:dev",
+    "instancePrefix": "realtime:dev",
     "managedChart": "oci://registry-1.docker.io/bitnamicharts/redis",
     "managedChartVersion": "23.1.1",
     "managedChartArchiveSha256": "sha256:05665707e771f9ed843842d3ebacb992ef1c4089f138b9711446b37db76ad60a",

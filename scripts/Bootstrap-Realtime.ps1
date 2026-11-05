@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Validates and bootstraps the standalone Cormier realtime solution.
+    Validates and bootstraps the standalone Realtime solution.
 
 .DESCRIPTION
     Performs prerequisite validation, creates the stable repository layout,
@@ -20,7 +20,7 @@
 
 .PARAMETER ImageRegistry
     Configurable container registry and optional namespace used by publishing
-    and deployment. Defaults to the Cormier GitHub Container Registry namespace.
+    and deployment. Defaults to the Realtime GitHub Container Registry namespace.
 
 .PARAMETER SkipRestore
     Skips NuGet restore.
@@ -36,7 +36,7 @@
 
 .NOTES
     Version: 1.1.0-beta
-    Project: Cormier Realtime Gateway
+    Project: Realtime Gateway
     Requires: PowerShell 7.x, .NET SDK 10.x, Git
     Output: .logs/Bootstrap-Realtime-<timestamp>.log
     Standard: refs/scripts-standard-v4.2.md
@@ -56,7 +56,7 @@ param(
 
     [Parameter()]
     [ValidatePattern('^[a-z0-9.-]+(?::[0-9]+)?(?:/[a-z0-9._-]+)*$')]
-    [string]$ImageRegistry = 'ghcr.io/cormier-solutions-llc',
+    [string]$ImageRegistry = 'ghcr.io/realtime-solutions-llc',
 
     [Parameter()]
     [switch]$SkipRestore,
@@ -75,7 +75,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $resolvedRoot = [System.IO.Path]::GetFullPath($RepositoryRoot)
-$solutionPath = Join-Path $resolvedRoot 'Cormier.Realtime.sln'
+$solutionPath = Join-Path $resolvedRoot 'Realtime.sln'
 $bootstrapDirectory = Join-Path $resolvedRoot '.bootstrap'
 $namingPath = Join-Path $bootstrapDirectory 'naming.json'
 $namingPropsPath = Join-Path $bootstrapDirectory 'naming.props'
@@ -196,7 +196,7 @@ function Ensure-NamingManifest {
     [CmdletBinding(SupportsShouldProcess)]
     param()
 
-    $repositoryName = "cormier-$applicationName-gateway"
+    $repositoryName = "realtime-$applicationName-gateway"
     $containerRepository = if ([string]::IsNullOrWhiteSpace($repositoryNamespace)) {
         $repositoryName
     }
@@ -204,17 +204,17 @@ function Ensure-NamingManifest {
         "$repositoryNamespace/$repositoryName"
     }
     $manifest = [ordered]@{
-        brand = 'Cormier'
+        brand = 'Realtime'
         application = $applicationName
-        serviceName = "cormier-$applicationName-gateway"
+        serviceName = "realtime-$applicationName-gateway"
         containerRegistry = $containerRegistry
         containerRepository = $containerRepository
         imageRepository = "$normalizedImageRegistry/$repositoryName"
         redisInstancePrefix = if ([string]::IsNullOrWhiteSpace($NameSuffix)) {
-            'cormier:realtime'
+            'realtime'
         }
         else {
-            "cormier:realtime:$NameSuffix"
+            "realtime:$NameSuffix"
         }
         kubernetesApplication = $applicationName
     }

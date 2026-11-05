@@ -1,6 +1,6 @@
 # Managed Redis HA installation and recovery
 
-This runbook records the complete supported path for a three-member Redis/Sentinel deployment used by the Cormier.Realtime gateway. It applies to Kubernetes clusters with at least three schedulable, zone-labeled failure domains and a dynamic `ReadWriteOnce` storage class. Commands may run from any secured administrator workstation or controller that has the intended kubeconfig; Kubernetes acts on the selected context, not on the machine where `kubectl` runs.
+This runbook records the complete supported path for a three-member Redis/Sentinel deployment used by the Realtime gateway. It applies to Kubernetes clusters with at least three schedulable, zone-labeled failure domains and a dynamic `ReadWriteOnce` storage class. Commands may run from any secured administrator workstation or controller that has the intended kubeconfig; Kubernetes acts on the selected context, not on the machine where `kubectl` runs.
 
 ## Inputs and safety boundary
 
@@ -157,7 +157,7 @@ kubectl exec --context CONTEXT --namespace NAMESPACE REDIS_RELEASE-node-0 --cont
 
 The Redis command must return `PONG`; the Sentinel command must return `TILT-TRIGGER` followed by `10000` on every member. Verify `SENTINEL CKQUORUM mymaster` reports three usable Sentinels, then force one controlled nonproduction failover and compare the complete hostname returned by `SENTINEL get-master-addr-by-name mymaster`. Sentinel can acknowledge `FAILOVER` before promotion completes, so poll until the hostname changes instead of assuming a fixed sleep is sufficient.
 
-Use `scripts/Test-RealtimeEdge.ps1` with the configured host/path and a fresh single-use ticket to verify HTTPS and authenticated WSS routing. Exercise an HTTP fallback client against the configured fallback base path and confirm the Traefik affinity cookie remains stable across connect, stream/poll, message, and close requests. Without a ticket, `POST /realtime/tickets` and a syntactically valid WebSocket upgrade should return `401`; a plain GET to the WebSocket route commonly returns `400`. Those responses prove routing reached Kestrel but do not prove authenticated transport. `X-Cormier-Origin-Validated: true` on the unauthenticated upgrade confirms the Origin passed validation.
+Use `scripts/Test-RealtimeEdge.ps1` with the configured host/path and a fresh single-use ticket to verify HTTPS and authenticated WSS routing. Exercise an HTTP fallback client against the configured fallback base path and confirm the Traefik affinity cookie remains stable across connect, stream/poll, message, and close requests. Without a ticket, `POST /realtime/tickets` and a syntactically valid WebSocket upgrade should return `401`; a plain GET to the WebSocket route commonly returns `400`. Those responses prove routing reached Kestrel but do not prove authenticated transport. `X-Realtime-Origin-Validated: true` on the unauthenticated upgrade confirms the Origin passed validation.
 
 ## Failure signatures and recovery
 

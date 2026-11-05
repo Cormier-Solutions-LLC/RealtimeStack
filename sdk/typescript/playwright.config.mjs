@@ -19,7 +19,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "dotnet run --project ../../src/Cormier.Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
+      command: "dotnet run --project ../../src/Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
       url: `http://127.0.0.1:${gatewayPort}/health/live`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
@@ -27,7 +27,7 @@ export default defineConfig({
         ASPNETCORE_URLS: `http://127.0.0.1:${gatewayPort}`,
         Gateway__ShutdownDrainSeconds: "1",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "cormier:browser-tests",
+        Redis__InstancePrefix: "realtime:browser-tests",
         Redis__RequiredForReadiness: "true",
         Realtime__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
         Realtime__AllowedOrigins__1: `http://127.0.0.1:${gatewayPort}`,
@@ -36,16 +36,16 @@ export default defineConfig({
       },
     },
     {
-      command: "dotnet run --project ../../src/Cormier.Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
+      command: "dotnet run --project ../../src/Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
       url: `http://127.0.0.1:${secondGatewayPort}/health/live`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
       env: {
         ASPNETCORE_URLS: `http://127.0.0.1:${secondGatewayPort}`,
-        Gateway__ServiceName: "cormier-realtime-browser-b",
+        Gateway__ServiceName: "realtime-browser-b",
         Gateway__ShutdownDrainSeconds: "1",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "cormier:browser-tests",
+        Redis__InstancePrefix: "realtime:browser-tests",
         Redis__RequiredForReadiness: "true",
         Realtime__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
         Realtime__AllowedOrigins__1: `http://127.0.0.1:${secondGatewayPort}`,

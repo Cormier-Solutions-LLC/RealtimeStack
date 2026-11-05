@@ -7,7 +7,7 @@ Enable the gateway's persistence and API settings, register the selected driver,
 ## Browser and TypeScript
 
 ```javascript
-const saved = new CormierRealtime.RealtimePersistenceClient();
+const saved = new Realtime.RealtimePersistenceClient();
 const records = await saved.read("inbox", "notification", lastProcessedSequence, 100);
 // Process and deduplicate records, then acknowledge only successfully processed data.
 if (records.length) await saved.acknowledge("inbox", "notification", records.at(-1).sequence);
@@ -21,7 +21,7 @@ The ESM/TypeScript export has the same class name. Browser operations use same-o
 `Realtime.Client` includes `RealtimePersistenceClient`, `RealtimeInboxKind`, `RealtimeSavedRecord`, and `RealtimeTaskStatus`, independently of ASP.NET or the database plugins. Supply a host-owned `HttpClient` with the correct BaseAddress, cookies, Origin and TLS policy; disable automatic redirects for credential-bearing traffic.
 
 ```csharp
-var saved = new Cormier.Realtime.Client.RealtimePersistenceClient(http);
+var saved = new Realtime.Client.RealtimePersistenceClient(http);
 var notifications = await saved.ReadAsync("inbox", RealtimeInboxKind.Notification, cancellationToken: token);
 var status = await saved.GetTaskStatusAsync(taskId, token);
 ```

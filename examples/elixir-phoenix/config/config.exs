@@ -11,8 +11,8 @@ config :logger, :default_handler,
 
 config :phoenix, :json_library, Jason
 
-config :cormier_realtime_example, CormierRealtimeExample.Endpoint,
+config :realtime_example, RealtimeExample.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   server: true,
-  render_errors: [formats: [json: CormierRealtimeExample.ErrorJSON], layout: false],
-  pubsub_server: CormierRealtimeExample.PubSub
+  render_errors: [formats: [json: RealtimeExample.ErrorJSON], layout: false],
+  pubsub_server: RealtimeExample.PubSub

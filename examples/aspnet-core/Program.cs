@@ -1,8 +1,8 @@
-using Cormier.Realtime.Config;
+using Realtime.Config;
 using Microsoft.Data.Sqlite;
 using Npgsql;
-using Cormier.Realtime.AspNetCore;
-using Cormier.Realtime.HttpFallback;
+using Realtime.AspNetCore;
+using Realtime.HttpFallback;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDistributedMemoryCache();
@@ -24,5 +24,5 @@ app.MapRealtimeGateway();
 if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
 app.MapRealtimePersistence(builder.Configuration);
 app.MapRealtimeDiagnostics();
-app.MapGet("/", () => Results.Text("Cormier.Realtime ASP.NET Core integration example"));
+app.MapGet("/", () => Results.Text("Realtime ASP.NET Core integration example"));
 app.Run();

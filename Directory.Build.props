@@ -11,8 +11,8 @@
     <HelmChartVersion Condition="'$(HelmChartVersion)' == ''">1.1.0-beta</HelmChartVersion>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
-    <Authors>Cormier</Authors>
-    <Company>Cormier Solutions LLC</Company>
+    <Authors>Realtime Contributors</Authors>
+    <Company>Realtime</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(PackageRepositoryUrl)' != ''">$(PackageRepositoryUrl)</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

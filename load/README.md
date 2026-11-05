@@ -1,6 +1,6 @@
 # Production-readiness load testing
 
-`scripts/Invoke-RealtimeLoad.ps1` runs `tools/Cormier.Realtime.LoadRunner/Cormier.Realtime.LoadRunner.csproj` with caller-supplied endpoint, origin, session ID, session-cookie name, subprotocol, topic, concurrency, duration, and output path. Supported scenarios are `connection`, `fanout`, `burst`, `large-message`, `slow-client`, and `soak` (matching `profiles/production-readiness.json`). The harness sets `CORMIER_LOAD_SESSION_ID` from `-SessionId`, so no production address, credential, or secret is stored in this repository.
+`scripts/Invoke-RealtimeLoad.ps1` runs `tools/Realtime.LoadRunner/Realtime.LoadRunner.csproj` with caller-supplied endpoint, origin, session ID, session-cookie name, subprotocol, topic, concurrency, duration, and output path. Supported scenarios are `connection`, `fanout`, `burst`, `large-message`, `slow-client`, and `soak` (matching `profiles/production-readiness.json`). The harness sets `REALTIME_LOAD_SESSION_ID` from `-SessionId`, so no production address, credential, or secret is stored in this repository.
 
 Each connection uses an asynchronous receive loop and workload task. The result JSON reports connection latency and acknowledged publish latency separately, and the `connection` scenario sends periodic `ping` commands for the full configured duration.
 

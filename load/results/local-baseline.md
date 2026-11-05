@@ -1,6 +1,6 @@
 # Local development baseline
 
-Captured 2026-08-30 with the repository load harness (`scripts/Invoke-RealtimeLoad.ps1` -> `tools/Cormier.Realtime.LoadRunner`, `schemaVersion: 2`). This validates local harness behavior and provides a regression reference; it is not a production-capacity claim.
+Captured 2026-08-30 with the repository load harness (`scripts/Invoke-RealtimeLoad.ps1` -> `tools/Realtime.LoadRunner`, `schemaVersion: 2`). This validates local harness behavior and provides a regression reference; it is not a production-capacity claim.
 
 | Scenario | Connections | Messages | Payload | Duration | Operations/s | Connection p50/p95/p99 | Acknowledged publish p50/p95/p99 | Errors |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | --- |

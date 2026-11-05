@@ -1,4 +1,4 @@
-# Cormier Realtime gateway observability
+# Realtime gateway observability
 
 The `helm/realtime-gateway` chart can emit observability resources from values under `observability`:
 

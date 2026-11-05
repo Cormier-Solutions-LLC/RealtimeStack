@@ -22,14 +22,14 @@ jobs:
       github.event.workflow_run.conclusion == 'failure'
       && github.event.workflow_run.event == 'pull_request'
       && github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: cormier-runners
+    runs-on: ${{ vars.CI_RUNNER_LABEL }}
     timeout-minutes: 15
     steps:
       # Trusted default-branch code only; the failed PR code is never checked out or executed.
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup-cormier-runner
+      - uses: ./.github/actions/setup-realtime-runner
       - name: Analyze ci-failed aggregate failure
         id: analyze
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
