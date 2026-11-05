@@ -22,6 +22,7 @@ FROM ${SWIFT_RUNTIME_IMAGE}
 RUN apt-get update \
     && apt-get upgrade --yes \
     && apt-get install --yes --no-install-recommends curl tini=0.19.0-1 \
+    && apt-get purge --yes --allow-remove-essential apt libapt-pkg6.0t64 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=caddy /out/caddy /usr/local/bin/caddy
 WORKDIR /app

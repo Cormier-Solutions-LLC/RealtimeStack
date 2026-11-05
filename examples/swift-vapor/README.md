@@ -68,3 +68,5 @@ Open a repository issue for non-sensitive defects with Swift, Vapor, Vapor Redis
 ## Saved messages and background tasks
 
 See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+
+The final runtime image removes APT after installing its runtime dependencies. Package updates are applied by rebuilding the image; runtime package installation is unavailable.
