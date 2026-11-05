@@ -66,6 +66,211 @@
     }
   ],
   "properties": {
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "provider",
+        "connectionSecret",
+        "api",
+        "storage",
+        "setupJob",
+        "egress",
+        "tableName",
+        "commandTimeoutSeconds",
+        "customProviderImage"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "provider": {
+          "enum": [
+            "PostgreSql",
+            "MySql",
+            "MariaDb",
+            "SqlServer",
+            "AzureSql",
+            "Oracle",
+            "Sqlite",
+            "Db2",
+            "CockroachDb",
+            "Snowflake"
+          ]
+        },
+        "customProviderImage": {
+          "type": "boolean"
+        },
+        "tableName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,29}$"
+        },
+        "commandTimeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "connectionSecret": {
+          "type": "object",
+          "required": [
+            "name",
+            "key"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^(?:|(?=.{1,253}$)[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "api": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "basePath",
+            "workerTokenSecret"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "basePath": {
+              "type": "string",
+              "pattern": "^/[A-Za-z0-9_/-]*[A-Za-z0-9_-]$"
+            },
+            "workerTokenSecret": {
+              "type": "object",
+              "required": [
+                "name",
+                "key"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^(?:|(?=.{1,253}$)[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$"
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9._-]+$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "workerNamespaceSelector": {
+              "type": "object"
+            },
+            "workerPodSelector": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "setupJob": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "backoffLimit",
+            "activeDeadlineSeconds"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "backoffLimit": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "activeDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 3600
+            }
+          },
+          "additionalProperties": false
+        },
+        "storage": {
+          "type": "object",
+          "required": [
+            "existingClaim",
+            "mountPath"
+          ],
+          "properties": {
+            "existingClaim": {
+              "type": "string"
+            },
+            "mountPath": {
+              "type": "string",
+              "pattern": "^/[^.].*"
+            }
+          },
+          "additionalProperties": false
+        },
+        "egress": {
+          "type": "object",
+          "required": [
+            "namespaceSelector",
+            "podSelector",
+            "cidrs",
+            "ports"
+          ],
+          "properties": {
+            "namespaceSelector": {
+              "type": "object"
+            },
+            "podSelector": {
+              "type": "object"
+            },
+            "cidrs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "connectionSecret": {
+                "properties": {
+                  "name": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "schemaVersion": { "const": 2 },
     "environment": {
       "type": "object",
