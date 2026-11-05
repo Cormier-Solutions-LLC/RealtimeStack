@@ -1,14 +1,14 @@
 <Project>
   <PropertyGroup>
-    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1.0.6-beta</ApplicationVersion>
-    <ContainerVersion Condition="'$(ContainerVersion)' == ''">1.0.6-beta</ContainerVersion>
-    <ContractsVersion Condition="'$(ContractsVersion)' == ''">1.0.6-beta</ContractsVersion>
-    <RedisAdapterVersion Condition="'$(RedisAdapterVersion)' == ''">1.0.6-beta</RedisAdapterVersion>
-    <AspNetCoreIntegrationVersion Condition="'$(AspNetCoreIntegrationVersion)' == ''">1.0.6-beta</AspNetCoreIntegrationVersion>
-    <DotNetClientVersion Condition="'$(DotNetClientVersion)' == ''">1.0.6-beta</DotNetClientVersion>
-    <BrowserPackageVersion Condition="'$(BrowserPackageVersion)' == ''">1.0.6-beta</BrowserPackageVersion>
-    <HttpFallbackVersion Condition="'$(HttpFallbackVersion)' == ''">1.0.6-beta</HttpFallbackVersion>
-    <HelmChartVersion Condition="'$(HelmChartVersion)' == ''">1.0.6-beta</HelmChartVersion>
+    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1.1.0-beta</ApplicationVersion>
+    <ContainerVersion Condition="'$(ContainerVersion)' == ''">1.1.0-beta</ContainerVersion>
+    <ContractsVersion Condition="'$(ContractsVersion)' == ''">1.1.0-beta</ContractsVersion>
+    <RedisAdapterVersion Condition="'$(RedisAdapterVersion)' == ''">1.1.0-beta</RedisAdapterVersion>
+    <AspNetCoreIntegrationVersion Condition="'$(AspNetCoreIntegrationVersion)' == ''">1.1.0-beta</AspNetCoreIntegrationVersion>
+    <DotNetClientVersion Condition="'$(DotNetClientVersion)' == ''">1.1.0-beta</DotNetClientVersion>
+    <BrowserPackageVersion Condition="'$(BrowserPackageVersion)' == ''">1.1.0-beta</BrowserPackageVersion>
+    <HttpFallbackVersion Condition="'$(HttpFallbackVersion)' == ''">1.1.0-beta</HttpFallbackVersion>
+    <HelmChartVersion Condition="'$(HelmChartVersion)' == ''">1.1.0-beta</HelmChartVersion>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
     <Authors>Cormier</Authors>
@@ -28,6 +28,12 @@
     <RedisAdapterCompatibilityUpperBound Condition="'$(RedisAdapterCompatibilityUpperBound)' == ''">$([System.Version]::Parse('$(RedisAdapterVersionCore)').Major).$([MSBuild]::Add($([System.Version]::Parse('$(RedisAdapterVersionCore)').Minor), 1)).0</RedisAdapterCompatibilityUpperBound>
     <AspNetCoreIntegrationVersionCore>$([System.Text.RegularExpressions.Regex]::Replace('$(AspNetCoreIntegrationVersion)', '[-+].*$', ''))</AspNetCoreIntegrationVersionCore>
     <AspNetCoreIntegrationCompatibilityUpperBound Condition="'$(AspNetCoreIntegrationCompatibilityUpperBound)' == ''">$([System.Version]::Parse('$(AspNetCoreIntegrationVersionCore)').Major).$([MSBuild]::Add($([System.Version]::Parse('$(AspNetCoreIntegrationVersionCore)').Minor), 1)).0</AspNetCoreIntegrationCompatibilityUpperBound>
+    <DotNetClientVersionCore>$([System.Text.RegularExpressions.Regex]::Replace('$(DotNetClientVersion)', '[-+].*$', ''))</DotNetClientVersionCore>
+    <DotNetClientCompatibilityUpperBound>$([System.Version]::Parse('$(DotNetClientVersionCore)').Major).$([MSBuild]::Add($([System.Version]::Parse('$(DotNetClientVersionCore)').Minor), 1)).0</DotNetClientCompatibilityUpperBound>
+    <BrowserPackageVersionCore>$([System.Text.RegularExpressions.Regex]::Replace('$(BrowserPackageVersion)', '[-+].*$', ''))</BrowserPackageVersionCore>
+    <BrowserPackageCompatibilityUpperBound>$([System.Version]::Parse('$(BrowserPackageVersionCore)').Major).$([MSBuild]::Add($([System.Version]::Parse('$(BrowserPackageVersionCore)').Minor), 1)).0</BrowserPackageCompatibilityUpperBound>
+    <HttpFallbackVersionCore>$([System.Text.RegularExpressions.Regex]::Replace('$(HttpFallbackVersion)', '[-+].*$', ''))</HttpFallbackVersionCore>
+    <HttpFallbackCompatibilityUpperBound>$([System.Version]::Parse('$(HttpFallbackVersionCore)').Major).$([MSBuild]::Add($([System.Version]::Parse('$(HttpFallbackVersionCore)').Minor), 1)).0</HttpFallbackCompatibilityUpperBound>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

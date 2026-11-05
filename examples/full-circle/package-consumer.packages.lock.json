@@ -2,45 +2,81 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "Cormier.Realtime.AspNetCore": {
+      "Microsoft.Data.Sqlite": {
         "type": "Direct",
-        "requested": "[1.0.6-beta, )",
-        "resolved": "1.0.6-beta",
-        "contentHash": "ibex/A9i8mfv+vFN9Fhramu3aW0w+0NF/WlGB/egm+/QcNTxVQCBjAzcJtHi9CIQqCHKQFDXbiyous/w33zmuw==",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "muyroan6rKrf0omZL8UF7Kw5uOGp/yBg1L/XWvkFN3WhKaNtK2IWqRZw93nIwVqjhTVDO0l4CEGhHIh+mb+sKg==",
         "dependencies": {
-          "Cormier.Realtime.Contracts": "[1.0.6-beta, 1.1.0)",
-          "Cormier.Realtime.Redis": "[1.0.6-beta, 1.1.0)",
+          "Microsoft.Data.Sqlite.Core": "10.0.14",
+          "SQLitePCLRaw.bundle_e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.core": "2.1.13"
+        }
+      },
+      "Npgsql": {
+        "type": "Direct",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w=="
+      },
+      "Realtime.AspNetCore": {
+        "type": "Direct",
+        "requested": "[1.1.0-beta, )",
+        "resolved": "1.1.0-beta",
+        "contentHash": "OPJblg7V/ICMr621FxkPUeoD+Ddc4YyJ6YgrpOoilBYRvTHGqRNqQ6iVQcDgHZh+PGtEAbwl08Qzi4vHS/f73w==",
+        "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "1.18.0",
-          "OpenTelemetry.Extensions.Hosting": "1.18.0"
+          "OpenTelemetry.Extensions.Hosting": "1.18.0",
+          "Realtime.Contracts": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Redis": "[1.1.0-beta, 1.2.0)"
         }
       },
-      "Cormier.Realtime.Browser": {
+      "Realtime.Browser": {
         "type": "Direct",
-        "requested": "[1.0.6-beta, )",
-        "resolved": "1.0.6-beta",
-        "contentHash": "/AM3qfRktVLb20H2SoghvLjnkgw5Djo5DG4Z1tBqggRqcgeHdBTra/W5BQf4o33vTcSx9Si2IvHXoZwnEM1Q7w=="
+        "requested": "[1.1.0-beta, )",
+        "resolved": "1.1.0-beta",
+        "contentHash": "OjQo3gfZjQNdks4EBYHtoQENXxTDiMuJiHslW59VFNbsdcTokXjHEfltILKJJo6vcs08w/Wh4LMVOJx8DrHWZg=="
       },
-      "Cormier.Realtime.Contracts": {
-        "type": "Transitive",
-        "resolved": "1.0.6-beta",
-        "contentHash": "iCgXeSVPndIu2jxJWcY2TapX7bLA/V1PA6CZH0bJXvBNH09vuzyMjgSBpn93yTntEa1/QDWd9Q7aWIFg1btuJg=="
-      },
-      "Cormier.Realtime.HttpFallback": {
+      "Realtime.Config": {
         "type": "Direct",
-        "requested": "[1.0.6-beta, )",
-        "resolved": "1.0.6-beta",
-        "contentHash": "placeholder",
+        "requested": "[1.1.0-beta, )",
+        "resolved": "1.1.0-beta",
+        "contentHash": "Q3NCfaOijeil6iOpIFduOAwKAtl460pHfZTNmeTEP8mNd9oRASDTV0WxBnErmiA0xhOH/jEwQyO3OiitQ0zdbw==",
         "dependencies": {
-          "Cormier.Realtime.AspNetCore": "[1.0.6-beta, 1.1.0)"
+          "Realtime.AspNetCore": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Browser": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Client": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Contracts": "[1.1.0-beta, 1.2.0)",
+          "Realtime.HttpFallback": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.AzureSql": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.CockroachDb": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.Db2": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.MariaDb": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.MySql": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.Oracle": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.PostgreSql": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.Snowflake": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.SqlServer": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Plugins.Sqlite": "[1.1.0-beta, 1.2.0)",
+          "Realtime.Redis": "[1.1.0-beta, 1.2.0)"
         }
       },
-      "Cormier.Realtime.Redis": {
-        "type": "Transitive",
-        "resolved": "1.0.6-beta",
-        "contentHash": "boKoiQ326EZlCKLJfqjd9W9QMejn/U+FB2dPUsydO2S1GBrSa7E8fbnsdQbG5V1pALig/NLhnnl6B6/vCNkGYw==",
+      "Realtime.HttpFallback": {
+        "type": "Direct",
+        "requested": "[1.1.0-beta, )",
+        "resolved": "1.1.0-beta",
+        "contentHash": "GOJTTUFbWd+y/fniYGuSFX01MCJcqx5GL92sfFVJm8tVqcvyra9vohd9J87S114Ift1+Rc3iWvvywAiNWS1CMw==",
         "dependencies": {
-          "Cormier.Realtime.Contracts": "[1.0.6-beta, 1.1.0)",
-          "StackExchange.Redis": "3.1.31"
+          "Realtime.AspNetCore": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Microsoft.Data.Sqlite.Core": {
+        "type": "Transitive",
+        "resolved": "10.0.14",
+        "contentHash": "1p9rO3Q2X/L/9YrYog3vaDzi8u+WZfJCOkDYoHqmofqYP0DLPLPyZcS2Rnh/79JXAodgbs1AgsaNwLpIvC3Xew==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "2.1.13"
         }
       },
       "OpenTelemetry": {
@@ -80,10 +116,144 @@
           "OpenTelemetry": "1.18.0"
         }
       },
+      "Realtime.Client": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "8EAPmBsNeloKPVrPePAys5s/k5fqFpKkyow1sq5yjOiG3TVDgx9lTsniq3+ITqW92ddqOMlU+1qG2bpOfDLB/A==",
+        "dependencies": {
+          "Realtime.Contracts": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Contracts": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "O0feyY3aYvFwrd+I2/l8q7IJIvsIrUQo7WnwE3lUnPcxfwuKer+HgBEoAFAr1/CwbydMU4vCgCFUq87bKUttRw=="
+      },
+      "Realtime.Plugins.AzureSql": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "PSMKJRtv5ez4KuND+oJ7F+hI3wceBM2gHxegqz7u2jkj1VTOuyhtrEsZ1yIT+P3xokokqrehZF4nTg0t/bSP+g==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.CockroachDb": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "iRk47sVTZ9TdKJuwEzVeAZCmupmqAFVeDByTd4BSNONBxoIvXSkhs0J9/ZwytivO1IvdJovNaX3xDcL4JWXyDA==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.Db2": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "3IuHGDNzwZHNx93jbm6WL+E0j2/K6VI5UEjgpKUgJ1u2OdOe6OG22nfeeCWglAyGjU3DnJrbuhFb7UJTwNewTg==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.MariaDb": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "Wdnfi/FyQBtSiksNzkhCw9LPtZo+O/7e6xXUIL9LfyjOgA/8T4pVMChrjpkWhMKJfRXRVozsx5Ta3sX3Tz1e6Q==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.MySql": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "o3DAeGR4TNlIeLeS4ym4MdCVODVg0H4PEBbqfDFkWBpPcl3PxRpONkzY7Ae8OA7ftEB6IDbQhuWPk+eAUBrycA==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.Oracle": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "3zkrMSdss9hKYrureXP8q/Y8pCpKN7YjAayeM8dkXHIH78FzruJjDcyHI8PEbGqeFcFSCxaT83rJQal1DoxhHg==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.Persistence": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "LOjrhGz+CTWsfk/vBhHbURPOTbr6L6JbauSvM/ZX+kICTZB6NfNQb+v2EJRXgOQL1IcKQQ8B7AObq7AUdUUNgg=="
+      },
+      "Realtime.Plugins.PostgreSql": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "RB57D7cEqgH4XlrNjifzXYA8gQejCSRZBy4GV/56aj1rH1AUniohkzE6WPlNF/dVngleMsB9HZNnICuMHiR2qQ==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.Snowflake": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "C9wLip01pSF2oeDmEA6G1nBlL2J+DjSjVxu59TbIHjtaDRGRbKAFIEDngA4SLlccrAXEc8P2TvImwOXznMSupw==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.Sqlite": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "wyxNIK3NiCL52XQcrEllhZluATf04YkAaSnnFFx6F8TqUOQY+G4AxjHPc5qmcu3wwvgLvk0+itHxrZjgbM4nyw==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Plugins.SqlServer": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "gs7Yu6mWMvZJuHcikIZR0M8nOKJqRYf5z9fdjF54uxP1q/a1Ig7hJYBZkIwMUVMgMsb5C1OXkkoaL6hRHfYiUg==",
+        "dependencies": {
+          "Realtime.Plugins.Persistence": "[1.1.0-beta, 1.2.0)"
+        }
+      },
+      "Realtime.Redis": {
+        "type": "Transitive",
+        "resolved": "1.1.0-beta",
+        "contentHash": "vlF542WUEDOH+AQI/Y7NOTmgoe5Maw/YszR+EOTAXnBYJa/17R9jxbE+JJumurNlF3JCLJ1B5AiX7S8RcO8bKQ==",
+        "dependencies": {
+          "Realtime.Contracts": "[1.1.0-beta, 1.2.0)",
+          "StackExchange.Redis": "3.1.31"
+        }
+      },
       "RESPite": {
         "type": "Transitive",
         "resolved": "3.1.31",
         "contentHash": "u+MFK6FzGWngKaY3wJ/V9vQSVe/NSqpk0IYYw6ACwmlPq5eTnsyZGlzEa3YMifJGVs3omrl5MkgigB1jZYNnGg=="
+      },
+      "SQLitePCLRaw.bundle_e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "NlDixlC7uHmo+ojXRgkNvN0tQtVGpLDZ3x2OpgNj+G07VHh5cXSszFDrAiC4BpUiPwkcaeuQkMV9WQ123xVtmQ==",
+        "dependencies": {
+          "SQLitePCLRaw.lib.e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.provider.e_sqlite3": "2.1.13"
+        }
+      },
+      "SQLitePCLRaw.core": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "2joofoinuHBFs0nMX3nKuXgxpXryRkCOdM2Ua6HBqQLLy6IW+5f28ZI+HAvMyF8vG7XfNz/lwfBfE6V4juru8Q=="
+      },
+      "SQLitePCLRaw.lib.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A=="
+      },
+      "SQLitePCLRaw.provider.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "ZU60dSqoSNRe49KcQDUmOVgdRtjITOssVXFtiISs+zJXDI4D2Sndwpn2NOtzDQNPu0ZAvpoLPQ+GLKv6iEZn8Q==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "2.1.13"
+        }
       },
       "StackExchange.Redis": {
         "type": "Transitive",
@@ -100,6 +270,12 @@
         "contentHash": "8IBJWcCT9+e4Bmevm4T7+fQEiAh133KGiz4oiVTgJckd3Q76OFdR1falgn9lpz7+C4HJvogCDJeAa2QmvbeVtg=="
       }
     },
-    "net10.0/linux-x64": {}
+    "net10.0/linux-x64": {
+      "SQLitePCLRaw.lib.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "2.1.13",
+        "contentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A=="
+      }
+    }
   }
 }

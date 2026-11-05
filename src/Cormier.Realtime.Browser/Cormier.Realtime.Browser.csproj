@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <VersionPrefix>$(BrowserPackageVersion)</VersionPrefix>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.Browser</PackageId>
+    <PackageId>Realtime.Browser</PackageId>
     <Description>Static web assets for the Cormier.Realtime browser and TypeScript client.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>websocket;realtime;browser;typescript;static-web-assets</PackageTags>

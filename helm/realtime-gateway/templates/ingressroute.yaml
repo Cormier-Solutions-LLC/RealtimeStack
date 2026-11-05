@@ -9,7 +9,7 @@ spec:
   entryPoints:
     - {{ .Values.ingressRoute.entryPoint | quote }}
   routes:
-    - match: Host(`{{ .Values.ingressRoute.host }}`) && (Path(`{{ .Values.ingressRoute.path }}`) || PathPrefix(`{{ .Values.ingressRoute.fallbackPath }}/`))
+    - match: Host(`{{ .Values.ingressRoute.host }}`) && (Path(`{{ .Values.ingressRoute.path }}`) || PathPrefix(`{{ .Values.ingressRoute.fallbackPath }}/`){{ if and .Values.persistence.enabled .Values.persistence.api.enabled }} || Path(`{{ .Values.persistence.api.basePath }}/records/read`) || Path(`{{ .Values.persistence.api.basePath }}/records/ack`) || Path(`{{ .Values.persistence.api.basePath }}/tasks/read`){{ end }})
       kind: Rule
       services:
         - name: {{ include "realtime-gateway.fullname" . }}

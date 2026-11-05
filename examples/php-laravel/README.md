@@ -54,7 +54,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Laravel / Predis | 13.31.0 / 3.6.0 | Exact locked application dependencies |
 | Composer / dependency graph | 2.10.3 / `composer.lock` | Locked; audit required |
 | FrankenPHP | 1.12.7 | Digest-pinned amd64/arm64-capable image |
-| Cormier.Realtime SDK / protocol / gateway | 1.0.6-beta / 1.0 / 1.0.6-beta | Canonical assets and external gateway |
+| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has 15 stack-specific PHP/configuration/test files and 756 nonblank lines. Generated dependencies, shared assets/fixtures, lock/build metadata, and documentation are excluded. Recalculate after changes.
@@ -66,3 +66,7 @@ Open a repository issue for non-sensitive defects with PHP, Laravel, Composer, P
 `/health` returns 200 on successful Redis PING and 503 on failure. `/api/diagnostics` includes Redis state, instance and topology; `TOPOLOGY` does not provision replicas. Gateway identity uses the plaintext, HttpOnly `cormier_session` identifier backed by Redis; Laravel's separate session driver is `array`. Login, logout and ticket routes are exempt from Laravel CSRF-token middleware and rely on exact Origin checks here; WebSocket Origin/authentication enforcement belongs to the gateway.
 
 Containers default to `/app/shared-web/optimized`; choose `SHARED_ASSET_ROOT=/app/shared-web/readable` for the readable UI. Direct runs use shared repository asset paths. Both profiles need a matching generated SDK.
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

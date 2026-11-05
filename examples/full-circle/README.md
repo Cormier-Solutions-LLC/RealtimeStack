@@ -63,3 +63,7 @@ The suite covers anonymous login rejection, configured tenant/user login, ticket
 - A non-HA run cannot prove replica failover. HA is a local process topology, not a production availability claim.
 
 Configuration changes are confined to ignored artifacts, so there is no data backup step. Before changing the shared plan, preserve its prior committed version; `git diff examples/full-circle/full-circle.plan.json` is the topology-change preview and reverting that file is the rollback. Support follows the repository release policy. Deprecated plan fields require a schema-version change and a documented migration.
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

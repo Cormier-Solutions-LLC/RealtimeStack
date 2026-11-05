@@ -53,7 +53,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Axum | 0.8.9 | Supported framework |
 | Redis crate | 1.7.0 | Supported async session client |
 | Cargo graph | 219 locked packages | `Cargo.lock` required on every build |
-| Cormier.Realtime SDK / protocol / gateway | 1.0.6-beta / 1.0 / 1.0.6-beta | Canonical assets and external gateway |
+| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 | Container bases | Rust 1.98.1 Alpine / Alpine 3.24 | Digest-pinned |
 
@@ -62,3 +62,7 @@ The adapter has three stack-specific Rust files and 942 nonblank lines, includin
 ## Support
 
 Open a repository issue for non-sensitive defects with Rust/Axum/Cargo, SDK/protocol/gateway, Redis, and container versions; topology; scenario; health response; reproduction; and redacted structural logs. Never include credentials, URLs, cookies, session IDs, tickets, identities, private origins, or addresses. Use the security policy for vulnerabilities. See [UPDATE.md](UPDATE.md) and [CHANGELOG.md](CHANGELOG.md).
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

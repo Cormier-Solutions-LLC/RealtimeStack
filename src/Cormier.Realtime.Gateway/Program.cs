@@ -1,3 +1,6 @@
+using Cormier.Realtime.Config;
+using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.Reflection;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Options;
@@ -7,7 +10,9 @@ using Cormier.Realtime.Gateway;
 using Cormier.Realtime.HttpFallback;
 using Cormier.Realtime.Redis;
 
-var builder = WebApplication.CreateSlimBuilder(args);
+var setupOnly = args.Contains("--realtime-setup", StringComparer.Ordinal);
+var hostArgs = args.Where(argument => argument != "--realtime-setup").ToArray();
+var builder = WebApplication.CreateSlimBuilder(hostArgs);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>
@@ -17,9 +22,14 @@ builder.Logging.AddJsonConsole(options =>
 });
 
 builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddCommandLine(args);
-builder.Services.AddRealtimeGateway(builder.Configuration);
-builder.Services.AddRealtimeHttpFallback(builder.Configuration);
+builder.Configuration.AddCommandLine(hostArgs);
+// Preserve standalone gateway defaults when a host replaces the shipped settings file.
+builder.Configuration["RealtimeSetup:GatewayEnabled"] ??= "true";
+builder.Configuration["RealtimeSetup:HttpFallbackEnabled"] ??= builder.Configuration["RealtimeSetup:GatewayEnabled"];
+builder.Services.AddRealtimeConfiguration(builder.Configuration, registration => registration
+    .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
+    .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
+    .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
 var diagnosticsEnabled = builder.Configuration.GetValue<bool>("Diagnostics:Enabled");
 var diagnosticsPolicy = builder.Configuration["Diagnostics:AuthorizationPolicy"];
 var metricsPolicy = builder.Configuration["Metrics:AuthorizationPolicy"];
@@ -59,6 +69,12 @@ if (protectedMetricsEnabled)
 }
 
 var app = builder.Build();
+if (setupOnly)
+{
+    await app.Services.GetRequiredService<RealtimeSetupManager>().InitializeAsync();
+    await app.DisposeAsync();
+    return;
+}
 var state = app.Services.GetRequiredService<GatewayState>();
 var metrics = app.Services.GetRequiredService<GatewayMetrics>();
 var gatewayOptions = app.Services.GetRequiredService<IOptions<GatewayOptions>>().Value;
@@ -90,7 +106,8 @@ if (diagnosticsEnabled || protectedMetricsEnabled)
     app.UseAuthorization();
 }
 app.MapRealtimeGateway();
-app.MapRealtimeHttpFallback();
+if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
+app.MapRealtimePersistence(builder.Configuration);
 app.MapRealtimeDiagnostics();
 
 app.MapGet("/health/startup", Results<Ok<HealthStatusResponse>, JsonHttpResult<HealthStatusResponse>> () =>
@@ -116,6 +133,11 @@ app.MapGet("/health/ready", async Task<Results<Ok<HealthStatusResponse>, JsonHtt
 {
     metrics.RecordHealthRequest("ready");
     var ready = await state.IsReadyAsync(cancellationToken);
+    if (ready && app.Services.GetRequiredService<RealtimeSetupOptions>().PersistenceEnabled)
+    {
+        var checks = await app.Services.GetRequiredService<RealtimeSetupManager>().InspectAsync(cancellationToken);
+        ready = checks.All(check => check.State != RealtimeSetupState.Unavailable);
+    }
     var response = CreateHealthResponse(ready ? "healthy" : "unavailable");
     return ready
         ? TypedResults.Ok(response)

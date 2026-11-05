@@ -9,3 +9,7 @@ dotnet run --project .\examples\aspnet-core -- --urls http://127.0.0.1:5080
 ```
 
 Override Redis, origin, route, and session settings through normal ASP.NET Core configuration for each environment.
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

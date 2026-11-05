@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "pipelineVersion": "1.1.0",
   "package": "@cormier/realtime",
-  "version": "1.0.6-beta",
+  "version": "1.1.0-beta",
   "defaults": {
     "development": "readable",
     "support": "readable",
@@ -31,37 +31,37 @@
         },
         {
           "path": "readable/app.js",
-          "bytes": 5654,
-          "gzipBytes": 1796,
-          "sha256": "b55a5909319788e855229897d7fb3696f08175a58491433de5cc84fbe8007230",
-          "integrity": "sha384-/I2KveMUGVks6tQwdUTKhSf9ngizXZpJ5O4IZ9h5Ml1ySd9zCdIY9utLKgdmPjE9"
+          "bytes": 7786,
+          "gzipBytes": 2298,
+          "sha256": "eaeb61c9641cb4713311c967263c61feeb2bbe40a789e5c1e4bb3839a70c30c3",
+          "integrity": "sha384-P5oXb5GbJHS/JyDKlp6eQcaq/nkEw6mGNf2RwFhJiS+EQNGh3b/2LypKqj5qu+op"
         },
         {
           "path": "readable/index.html",
-          "bytes": 2466,
-          "gzipBytes": 1113,
-          "sha256": "8b791de4fec808743130717d5c4dcd132e5e39401b4562212ce5eb4d5377261f",
-          "integrity": "sha384-9kS21CHDmR0NSB6exWfUm5Rp3nIsjUg8BgQ883ipYfDacmNFPxIKeutWaG+hMXNX"
+          "bytes": 3191,
+          "gzipBytes": 1366,
+          "sha256": "2d9007e9bd7ef84507d2fd5c41cbbb9f48dff4d2e70dea8482161ced72d4701f",
+          "integrity": "sha384-y+1kTfUK6xYyWDRcY74TRMCcdWTiM5Hgbu3zizpTpVJFG7SD/hl5beXWYe8HAeRD"
         },
         {
           "path": "readable/fallback.html",
-          "bytes": 2466,
-          "gzipBytes": 1113,
-          "sha256": "8b791de4fec808743130717d5c4dcd132e5e39401b4562212ce5eb4d5377261f",
-          "integrity": "sha384-9kS21CHDmR0NSB6exWfUm5Rp3nIsjUg8BgQ883ipYfDacmNFPxIKeutWaG+hMXNX"
+          "bytes": 3191,
+          "gzipBytes": 1366,
+          "sha256": "2d9007e9bd7ef84507d2fd5c41cbbb9f48dff4d2e70dea8482161ced72d4701f",
+          "integrity": "sha384-y+1kTfUK6xYyWDRcY74TRMCcdWTiM5Hgbu3zizpTpVJFG7SD/hl5beXWYe8HAeRD"
         },
         {
           "path": "readable/failover.html",
-          "bytes": 2466,
-          "gzipBytes": 1113,
-          "sha256": "8b791de4fec808743130717d5c4dcd132e5e39401b4562212ce5eb4d5377261f",
-          "integrity": "sha384-9kS21CHDmR0NSB6exWfUm5Rp3nIsjUg8BgQ883ipYfDacmNFPxIKeutWaG+hMXNX"
+          "bytes": 3191,
+          "gzipBytes": 1366,
+          "sha256": "2d9007e9bd7ef84507d2fd5c41cbbb9f48dff4d2e70dea8482161ced72d4701f",
+          "integrity": "sha384-y+1kTfUK6xYyWDRcY74TRMCcdWTiM5Hgbu3zizpTpVJFG7SD/hl5beXWYe8HAeRD"
         }
       ],
       "sdk": {
         "path": "cormier-realtime.iife.js",
-        "sha256": "c32401cf468ab6b703c0cdb02ccfcb954e1c6231d6c20778a1b498ba523ab767",
-        "integrity": "sha384-T5NMasHwzL6doMN3h2994AEXzXIY/F3eV5irvf+mM+OpwiYhTH1tXkhLkqkL9pwX"
+        "sha256": "b04ad555aea92dca9cd4143215b4005c340cd67f65a27473ee7a5e3a8aced724",
+        "integrity": "sha384-+KS6ydupJV0+1xNtLvRBaqIdCEIDoJi1n+RiWwDQIUV2YAAB1gfzMDvUHFEhK7+N"
       }
     },
     "optimized": {
@@ -75,31 +75,31 @@
         },
         {
           "path": "optimized/app.js",
-          "bytes": 3891,
-          "gzipBytes": 1472,
-          "sha256": "21be17fd8ff0e31d65fd23a0cd7f55a943a6fd5e0b66b1bde696664721a9dee5",
-          "integrity": "sha384-Nn43oHOWwSdHBcpsM+xzelkhNvfvfOy/lFTrcoN82B8YocZkuujEsnEzlLPd1U69"
+          "bytes": 5134,
+          "gzipBytes": 1873,
+          "sha256": "031fb4c0dec0d446c78d642b2b46756759c2247d50b3bfbc18626cc7ac16b783",
+          "integrity": "sha384-+FZTgYR1SdDxiR+qAFreW+88kfPkQL1hip18G/WlO3va7bMpDufTLY8MGwNMTCId"
         },
         {
           "path": "optimized/index.html",
-          "bytes": 2305,
-          "gzipBytes": 1089,
-          "sha256": "c74c730368f7315e57e740b65105e5b7a0eff1e587d767205193a939bb9599ac",
-          "integrity": "sha384-D179QyZRAQC5LxgYwnNOrwlt8xlF2lMonia5xFN6oiC0b0N58kprJmMQjnb/e4YU"
+          "bytes": 2991,
+          "gzipBytes": 1345,
+          "sha256": "9a523b71a2807cba3d0085a17d79296eed84d7f04be93813a2cd6b8e61f16250",
+          "integrity": "sha384-1kj/fyjy/JxTbd9h52nCqKv+goKRijnjynilQirdRRRaHdgERQmHCocXHQT584lY"
         },
         {
           "path": "optimized/fallback.html",
-          "bytes": 2305,
-          "gzipBytes": 1089,
-          "sha256": "c74c730368f7315e57e740b65105e5b7a0eff1e587d767205193a939bb9599ac",
-          "integrity": "sha384-D179QyZRAQC5LxgYwnNOrwlt8xlF2lMonia5xFN6oiC0b0N58kprJmMQjnb/e4YU"
+          "bytes": 2991,
+          "gzipBytes": 1345,
+          "sha256": "9a523b71a2807cba3d0085a17d79296eed84d7f04be93813a2cd6b8e61f16250",
+          "integrity": "sha384-1kj/fyjy/JxTbd9h52nCqKv+goKRijnjynilQirdRRRaHdgERQmHCocXHQT584lY"
         },
         {
           "path": "optimized/failover.html",
-          "bytes": 2305,
-          "gzipBytes": 1089,
-          "sha256": "c74c730368f7315e57e740b65105e5b7a0eff1e587d767205193a939bb9599ac",
-          "integrity": "sha384-D179QyZRAQC5LxgYwnNOrwlt8xlF2lMonia5xFN6oiC0b0N58kprJmMQjnb/e4YU"
+          "bytes": 2991,
+          "gzipBytes": 1345,
+          "sha256": "9a523b71a2807cba3d0085a17d79296eed84d7f04be93813a2cd6b8e61f16250",
+          "integrity": "sha384-1kj/fyjy/JxTbd9h52nCqKv+goKRijnjynilQirdRRRaHdgERQmHCocXHQT584lY"
         },
         {
           "path": "source-maps/optimized/app.css.map",
@@ -110,16 +110,16 @@
         },
         {
           "path": "source-maps/optimized/app.js.map",
-          "bytes": 10022,
-          "gzipBytes": 3314,
-          "sha256": "424438498cdb5f7b5df581a5057a30c4a8570cff0d7cb07ed8eb6b51f75a6b40",
-          "integrity": "sha384-5/d83bQZwPZ/j1UqyEkNi/KvwpBJ0ZJo9bWmbikZ8my+vndv8mnV1hqwcVzUjtu9"
+          "bytes": 13570,
+          "gzipBytes": 4227,
+          "sha256": "647fcc42e15bcd572f0ccd15052eec3584bfee840bfff575104d009ba83113e0",
+          "integrity": "sha384-eTFfNTYm9/qxd9yverHGuHhbn27e4bLaC0+xy540wFNonaMrPRGeszV9WsNnpol6"
         }
       ],
       "sdk": {
         "path": "cormier-realtime.iife.min.js",
-        "sha256": "d020030eef9f5a75f1d52f3d2e5f418fcff604283c6163d9aaa571a53147b282",
-        "integrity": "sha384-XHm8jiMt4tYbgr6TwUUT5OZsisTkrsWMmSa3/bozMkKpl/aXRxGyvorAKWUip6eB"
+        "sha256": "1fe71bfd92078decb05058e191b4960380185542554a2501b309f743da292546",
+        "integrity": "sha384-pOw9/6tSjMFnysWKst4BB7CntEM2pbH2AwHFTQB+ZBbgVLEWkdSKVaQsJn2uewpq"
       }
     }
   },

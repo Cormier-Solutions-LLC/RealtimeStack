@@ -2,7 +2,7 @@
 .SYNOPSIS
     Validates the coordinated package version and detects a release change.
 .DESCRIPTION
-    Reads the application, container, Helm, six NuGet, and npm versions and requires one semantic version,
+    Reads the application, container, Helm, eighteen NuGet, and npm versions and requires one semantic version,
     and optionally reads the candidate from and compares it with Git revisions. A release change is valid only when every package
     version changed together. The script returns one object and performs no registry or repository mutation.
 #>

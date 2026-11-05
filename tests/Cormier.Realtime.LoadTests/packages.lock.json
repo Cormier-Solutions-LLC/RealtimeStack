@@ -99,7 +99,7 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "cormier.realtime.contracts": {
+      "Realtime.Contracts": {
         "type": "Project"
       }
     },

@@ -117,3 +117,7 @@ kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/instance="$RELEASE_NAME"
 kubectl -n "$NAMESPACE" get networkpolicy
 helm status "$RELEASE_NAME" -n "$NAMESPACE"
 ```
+
+## Durable storage and first-run setup
+
+The chart now exposes opt-in persistence, existing connection/worker Secrets, bounded database egress, private worker access, and an explicit schema setup Job. See [configuration and Helm deployment](../docs/configuration.md#helm). SQLite requires a preinitialized existing PVC, one non-HA replica, and Recreate rollout; use an external database for HA. All ten plugin provider values are supported; providers outside the shipped SQLite/PostgreSQL/CockroachDB factories require an explicitly acknowledged custom image.

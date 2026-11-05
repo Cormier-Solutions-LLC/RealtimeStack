@@ -298,3 +298,14 @@ test("destroys trickling ticket requests at the total deadline", async () => {
   assert.equal(response.body.code, "service_unavailable");
   assert.match(upstream.destroyedWith.message, /timed out/);
 });
+
+test("proxies only browser persistence operations and leaves worker routes private", async () => {
+  const current = fixture();
+  for (const path of ["records/read", "records/ack", "tasks/read"]) {
+    await request(current.app).post(`/realtime/persistence/${path}`).send({ streamId: "inbox" }).expect(202);
+    assert.equal(current.proxyCalls.at(-1).path, `/realtime/persistence/${path}`);
+  }
+  await request(current.app).post("/realtime/persistence/worker/tasks").send({}).expect(404);
+  await request(current.app).get("/realtime/persistence/records/read").expect(404);
+  assert.equal(current.proxyCalls.length, 3);
+});

@@ -188,11 +188,16 @@ defmodule CormierRealtimeExample.Web do
     end
   end
 
+  defp route("POST", ["realtime", "persistence", category, operation], conn, config)
+       when {category, operation} in [{"records", "read"}, {"records", "ack"}, {"tasks", "read"}] do
+    route("POST", ["realtime", "tickets"], conn, config)
+  end
+
   defp route("POST", ["realtime", "tickets"], conn, config) do
     with :ok <- origin(conn, config),
          {:ok, body, conn} <- read_bounded_body(conn),
          {:ok, response} <-
-           Req.post(config.gateway_url <> "/realtime/tickets",
+           Req.post(config.gateway_url <> conn.request_path,
              body: body,
              headers: forward_headers(conn, config),
              connect_options: [timeout: 5_000],

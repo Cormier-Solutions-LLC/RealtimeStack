@@ -53,7 +53,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Phoenix / Bandit | 1.8.13 / 1.12.5 | Supported endpoint stack |
 | Redix / Req / Mint.WebSocket | 1.9.1 / 0.7.4 / 1.0.6 | Locked dependency clients |
 | Hex graph | `mix.lock` | Locked; `mix hex.audit` required |
-| Cormier.Realtime SDK / protocol / gateway | 1.0.6-beta / 1.0 / 1.0.6-beta | Canonical assets and external gateway |
+| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 | Container base | Hex Elixir 1.20.4, OTP 29.0.6, Alpine 3.24.1 | Digest-pinned amd64/arm64 index |
 
@@ -62,3 +62,7 @@ The adapter has nine stack-specific Elixir/config files and 828 nonblank lines, 
 ## Support
 
 Open a repository issue for non-sensitive defects with Elixir/OTP/Phoenix/Hex, SDK/protocol/gateway, Redis, and container versions; topology; scenario; health response; reproduction; and redacted structural logs. Never include credentials, URLs, cookies, session IDs, tickets, identities, private origins, or addresses. Use the security policy for vulnerabilities. See [UPDATE.md](UPDATE.md) and [CHANGELOG.md](CHANGELOG.md).
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

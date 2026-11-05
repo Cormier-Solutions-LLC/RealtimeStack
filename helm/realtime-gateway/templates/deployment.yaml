@@ -8,10 +8,14 @@ spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   strategy:
+    {{- if and .Values.persistence.enabled (eq .Values.persistence.provider "Sqlite") }}
+    type: Recreate
+    {{- else }}
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: {{ .Values.deploymentStrategy.maxUnavailable }}
       maxSurge: {{ .Values.deploymentStrategy.maxSurge }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "realtime-gateway.selectorLabels" . | nindent 6 }}
@@ -73,6 +77,16 @@ spec:
             - name: CORMIER_REALTIME_INSTANCE_ID
               valueFrom:
                 fieldRef: { fieldPath: metadata.name }
+            {{- if .Values.persistence.enabled }}
+            - name: ConnectionStrings__RealtimePersistence
+              valueFrom:
+                secretKeyRef: { name: {{ required "persistence.connectionSecret.name is required" .Values.persistence.connectionSecret.name }}, key: {{ .Values.persistence.connectionSecret.key }} }
+            {{- if and .Values.persistence.api.enabled .Values.persistence.api.workerTokenSecret.name }}
+            - name: RealtimeSetup__Persistence__WorkerToken
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.persistence.api.workerTokenSecret.name }}, key: {{ .Values.persistence.api.workerTokenSecret.key }} }
+            {{- end }}
+            {{- end }}
             - name: Redis__Password
               valueFrom:
                 secretKeyRef: { name: {{ .Values.redis.credentialsSecret.name }}, key: {{ .Values.redis.credentialsSecret.passwordKey }} }
@@ -116,7 +130,14 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - { name: tmp, mountPath: /tmp }
+            {{- if and .Values.persistence.enabled (eq .Values.persistence.provider "Sqlite") }}
+            - { name: persistence, mountPath: {{ .Values.persistence.storage.mountPath | quote }} }
+            {{- end }}
       volumes:
+        {{- if and .Values.persistence.enabled (eq .Values.persistence.provider "Sqlite") }}
+        - name: persistence
+          persistentVolumeClaim: { claimName: {{ .Values.persistence.storage.existingClaim | quote }} }
+        {{- end }}
         - name: tmp
           emptyDir: { sizeLimit: 16Mi }
       {{- with .Values.nodeSelector }}

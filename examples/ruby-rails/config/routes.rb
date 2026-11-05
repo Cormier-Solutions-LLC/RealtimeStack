@@ -11,4 +11,7 @@ Rails.application.routes.draw do
   get "/api/session", to: "reference#session_status"
   post "/api/logout", to: "reference#logout"
   post "/realtime/tickets", to: "reference#ticket"
+  post "/realtime/persistence/records/read", to: "reference#ticket"
+  post "/realtime/persistence/records/ack", to: "reference#ticket"
+  post "/realtime/persistence/tasks/read", to: "reference#ticket"
 end

@@ -55,7 +55,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | FastAPI / Uvicorn | 0.141.1 / 0.52.4 | Exact locked application dependencies |
 | Redis / HTTPX / WebSockets / Pydantic Settings | 8.1.0 / 0.28.1 / 17.1 / 2.15.0 | Exact locked clients/configuration |
 | Python graph | `uv.lock` | Locked; local audit required |
-| Cormier.Realtime SDK / protocol / gateway | 1.0.6-beta / 1.0 / 1.0.6-beta | Canonical assets and external gateway |
+| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has seven stack-specific Python/test files and 819 nonblank lines. Generated environments, shared assets/fixtures, lock/build metadata, browser harness configuration, and documentation are excluded. Recalculate after changes.
@@ -63,3 +63,7 @@ The adapter has seven stack-specific Python/test files and 819 nonblank lines. G
 ## Support
 
 Open a repository issue for non-sensitive defects with Python, FastAPI, Uvicorn, uv/lock, client-library, SDK/protocol/gateway, Redis, and container versions; topology; scenario; health response; reproduction; and redacted structural logs. Never include credentials, URLs, cookies, session IDs, tickets, identities, private origins, or addresses. Use the repository security policy for vulnerabilities. See [UPDATE.md](UPDATE.md) and [CHANGELOG.md](CHANGELOG.md).
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

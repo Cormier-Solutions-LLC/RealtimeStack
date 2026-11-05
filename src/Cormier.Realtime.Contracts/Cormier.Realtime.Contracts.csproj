@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.Contracts</PackageId>
+    <PackageId>Realtime.Contracts</PackageId>
     <Authors>Cormier</Authors>
     <Description>Runtime-neutral protocol contracts for Cormier.Realtime clients and gateways.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

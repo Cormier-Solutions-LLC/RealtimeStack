@@ -13,6 +13,45 @@
   const messageModal = document.querySelector("#message-modal");
   const messageRoute = document.querySelector("#message-route");
   const messagePayload = document.querySelector("#message-payload");
+  const durable = new CormierRealtime.RealtimePersistenceClient();
+  let displayedInbox;
+  let durableRequests = new AbortController();
+  const durableOutput = document.querySelector("#durable-result");
+  const acknowledgeButton = document.querySelector("#durable-ack");
+  const durableAction = async (operation) => {
+    try { await operation(); }
+    catch (error) { if (error.name === "AbortError") return; durableOutput.textContent = error.status === 404 ? "Persistence is unavailable or not enabled for this host." : error.message; }
+  };
+  document.querySelector("#durable-read").onclick = () => durableAction(async () => {
+    displayedInbox = null;
+    acknowledgeButton.disabled = true;
+    const stream = document.querySelector("#durable-stream").value;
+    const kind = document.querySelector("#durable-kind").value;
+    const records = await durable.read(stream, kind, 0, 100, durableRequests.signal);
+    durableOutput.textContent = JSON.stringify(records, null, 2);
+    if (records.length > 0) {
+      displayedInbox = { stream, kind, sequence: records.at(-1).sequence };
+      acknowledgeButton.disabled = false;
+    }
+  });
+  acknowledgeButton.onclick = () => durableAction(async () => {
+    if (!displayedInbox) return;
+    await durable.acknowledge(displayedInbox.stream, displayedInbox.kind, displayedInbox.sequence, durableRequests.signal);
+    displayedInbox = null;
+    acknowledgeButton.disabled = true;
+    durableOutput.textContent = "Displayed items acknowledged.";
+  });
+  document.querySelector("#durable-task-read").onclick = () => durableAction(async () => {
+    const status = await durable.getTaskStatus(document.querySelector("#durable-task").value, durableRequests.signal);
+    durableOutput.textContent = status ? JSON.stringify(status, null, 2) : "No task found for this account.";
+  });
+  for (const id of ["login", "logout"]) document.querySelector(`#${id}`).addEventListener("click", () => {
+    durableRequests.abort();
+    durableRequests = new AbortController();
+    displayedInbox = null;
+    acknowledgeButton.disabled = true;
+    durableOutput.textContent = "";
+  }, { capture: true });
   let client;
   let unsubscribe;
   const write = (kind, value) => {

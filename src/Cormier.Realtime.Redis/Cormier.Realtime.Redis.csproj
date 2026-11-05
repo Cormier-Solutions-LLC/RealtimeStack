@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <PackageId>Cormier.Realtime.Redis</PackageId>
+    <PackageId>Realtime.Redis</PackageId>
     <Description>Redis messaging and session infrastructure for Cormier.Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>websocket;realtime;redis;messaging</PackageTags>

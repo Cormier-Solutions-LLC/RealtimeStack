@@ -1,3 +1,14 @@
+{{- if .Values.persistence.enabled }}
+{{- if and (not (has .Values.persistence.provider (list "PostgreSql" "CockroachDb" "Sqlite"))) (not .Values.persistence.customProviderImage) }}
+{{- fail "This persistence provider requires a custom gateway image registering its ADO.NET driver; set persistence.customProviderImage explicitly" }}
+{{- end }}
+{{- if and (eq .Values.persistence.provider "Sqlite") (or (ne .Values.topology "non-ha") (ne (int .Values.replicaCount) 1) .Values.autoscaling.enabled (empty .Values.persistence.storage.existingClaim) .Values.persistence.setupJob.enabled) }}
+{{- fail "SQLite requires non-ha, one replica, disabled autoscaling, an existing PVC, and a schema initialized before rollout (setupJob disabled)" }}
+{{- end }}
+{{- if and .Values.networkPolicy.enabled (ne .Values.persistence.provider "Sqlite") (or (empty .Values.persistence.egress.ports) (and (empty .Values.persistence.egress.namespaceSelector) (empty .Values.persistence.egress.cidrs))) }}
+{{- fail "Persistence requires explicit database egress selectors or CIDRs and ports when NetworkPolicy is enabled" }}
+{{- end }}
+{{- end }}
 {{- if and .Values.diagnostics.enabled .Values.metrics.enabled .Values.metrics.authorizationPolicy (eq (lower .Values.diagnostics.authorizationPolicy) (lower .Values.metrics.authorizationPolicy)) }}
 {{- fail "diagnostics.authorizationPolicy and metrics.authorizationPolicy must be distinct" }}
 {{- end }}
@@ -10,6 +21,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  RealtimeSetup__GatewayEnabled: "true"
+  RealtimeSetup__HttpFallbackEnabled: "true"
+  RealtimeSetup__Persistence__Enabled: {{ .Values.persistence.enabled | quote }}
+  RealtimeSetup__Persistence__Provider: {{ .Values.persistence.provider | quote }}
+  RealtimeSetup__Persistence__TableName: {{ .Values.persistence.tableName | quote }}
+  RealtimeSetup__Persistence__ConnectionStringName: "RealtimePersistence"
+  RealtimeSetup__Persistence__CommandTimeoutSeconds: {{ .Values.persistence.commandTimeoutSeconds | quote }}
+  RealtimeSetup__Persistence__ApiEnabled: {{ and .Values.persistence.enabled .Values.persistence.api.enabled | quote }}
+  RealtimeSetup__Persistence__ApiBasePath: {{ .Values.persistence.api.basePath | quote }}
   name: {{ include "realtime-gateway.fullname" . }}
   labels:
     {{- include "realtime-gateway.labels" . | nindent 4 }}

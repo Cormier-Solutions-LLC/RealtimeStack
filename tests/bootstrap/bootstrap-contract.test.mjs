@@ -1415,3 +1415,47 @@ test("cluster, permission, credential, Redis, and rollout failures stop safely a
 test("timeouts are bounded by the versioned CLI contract", async () => {
   await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--timeout-seconds", "59"], { cwd: repositoryRoot }), error => error.code === 2 && /60 through 1800/.test(error.stdout));
 });
+
+
+test("persistence survives shared rendering for both topologies without inline credentials", () => {
+  for (const topology of ["ha", "non-ha"]) {
+    const config = configuration(topology);
+    config.persistence.enabled = true;
+    config.persistence.connectionSecret.name = "database-credentials";
+    config.persistence.egress.cidrs = ["192.0.2.0/24"];
+    config.persistence.egress.ports = [5432];
+    config.persistence.api.enabled = true;
+    config.persistence.api.workerTokenSecret.name = "worker-credentials";
+    config.persistence.api.workerNamespaceSelector = { matchLabels: { "kubernetes.io/metadata.name": "workers" } };
+    assert.deepEqual(validateConfiguration(config), []);
+    assert.deepEqual(inlineSecretPaths(config), []);
+    const rendered = renderValues(config, profiles[topology]);
+    assert.deepEqual(rendered.persistence, config.persistence);
+    rendered.persistence.enabled = false;
+    assert.equal(config.persistence.enabled, true);
+    config.persistence.connectionString = "forbidden";
+    assert(validateConfiguration(config).some(error => error.path === "$.persistence.connectionString"));
+  }
+});
+
+test("persistence rejects invalid provider, credentials, egress and SQLite HA before execution", () => {
+  const config = configuration();
+  config.persistence.enabled = true;
+  assert(validateConfiguration(config).some(error => error.path === "$.persistence.connectionSecret.name"));
+  config.persistence.connectionSecret.name = "database-credentials";
+  config.persistence.provider = "SqlServer";
+  assert(validateConfiguration(config).some(error => error.path === "$.persistence.customProviderImage"));
+  config.persistence.customProviderImage = true;
+  assert(validateConfiguration(config).some(error => error.path === "$.persistence.egress"));
+  config.persistence.provider = "Sqlite";
+  config.persistence.storage.existingClaim = "database";
+  assert.deepEqual(validateConfiguration(config), []);
+  config.topology = "ha";
+  assert(validateConfiguration(config).some(error => error.path === "$.persistence.storage"));
+  config.persistence.api.workerToken = "forbidden";
+  assert(validateConfiguration(config).some(error => error.path === "$.persistence.api.workerToken"));
+  const legacy = configuration();
+  delete legacy.persistence;
+  assert.deepEqual(validateConfiguration(legacy), []);
+  assert.equal(renderValues(legacy, profiles["non-ha"]).persistence, undefined);
+});

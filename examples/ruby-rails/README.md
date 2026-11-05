@@ -54,7 +54,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Redis / JSON | 6.0.0 / 2.21.2 | Exact locked client and Rails-compatible JSON line |
 | Ruby graph | `Gemfile.lock` | Locked; Brakeman and bundler-audit required |
 | Caddy | 2.11.4 | Digest-pinned WebSocket edge |
-| Cormier.Realtime SDK / protocol / gateway | 1.0.6-beta / 1.0 / 1.0.6-beta | Canonical assets and external gateway |
+| Cormier.Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has 12 stack-specific Ruby/test files and 563 nonblank lines. Vendored gems, shared assets/fixtures, lock/build metadata, browser harness configuration, and documentation are excluded. Recalculate after changes.
@@ -62,3 +62,7 @@ The adapter has 12 stack-specific Ruby/test files and 563 nonblank lines. Vendor
 ## Support
 
 Open a repository issue for non-sensitive defects with Ruby, Rails, Puma, Bundler/lock, client-library, SDK/protocol/gateway, Redis, Caddy, and container versions; topology; scenario; health response; reproduction; and redacted structural logs. Never include credentials, URLs, cookies, session IDs, tickets, identities, private origins, or addresses. Use the repository security policy for vulnerabilities. See [UPDATE.md](UPDATE.md) and [CHANGELOG.md](CHANGELOG.md).
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

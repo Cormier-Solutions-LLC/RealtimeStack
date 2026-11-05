@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0-beta - 2026-11-04
+
+- See the coordinated release notes in `docs/release-notes/1.1.0-beta.md`.
+
 ## 1.0.6-beta - 2026-09-29
 
 - Updated the example to the coordinated `1.0.6-beta` gateway and browser assets and refreshed the locked Mint HTTP client to `1.11.0`; see `docs/release-notes/1.0.6-beta.md`.

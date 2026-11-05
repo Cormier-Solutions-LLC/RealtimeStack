@@ -21,6 +21,27 @@
                                       Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Redis'">
         <ProjectVersion>[$(RedisAdapterVersion),$(RedisAdapterCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Plugins.Persistence'">
+        <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
+                                      Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_ProjectReferencesWithVersions.Filename)', '^Realtime[.]Plugins[.]'))">
+        <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Config'">
+        <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Client'">
+        <ProjectVersion>[$(DotNetClientVersion),$(DotNetClientCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.Browser'">
+        <ProjectVersion>[$(BrowserPackageVersion),$(BrowserPackageCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Cormier.Realtime.HttpFallback'">
+        <ProjectVersion>[$(HttpFallbackVersion),$(HttpFallbackCompatibilityUpperBound))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
     </ItemGroup>
   </Target>
 </Project>

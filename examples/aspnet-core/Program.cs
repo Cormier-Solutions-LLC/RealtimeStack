@@ -1,3 +1,6 @@
+using Cormier.Realtime.Config;
+using Microsoft.Data.Sqlite;
+using Npgsql;
 using Cormier.Realtime.AspNetCore;
 using Cormier.Realtime.HttpFallback;
 
@@ -9,14 +12,17 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromMinutes(20);
 });
-builder.Services.AddRealtimeGateway(builder.Configuration);
-builder.Services.AddRealtimeHttpFallback(builder.Configuration);
+builder.Services.AddRealtimeConfiguration(builder.Configuration, registration => registration
+    .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
+    .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
+    .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
 
 var app = builder.Build();
 app.UseRealtimeGateway();
 app.UseSession();
 app.MapRealtimeGateway();
-app.MapRealtimeHttpFallback();
+if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
+app.MapRealtimePersistence(builder.Configuration);
 app.MapRealtimeDiagnostics();
 app.MapGet("/", () => Results.Text("Cormier.Realtime ASP.NET Core integration example"));
 app.Run();

@@ -24,6 +24,15 @@ spec:
       ports:
         - { protocol: TCP, port: {{ .Values.service.targetPort }} }
     {{- end }}
+    {{- if and .Values.persistence.enabled .Values.persistence.api.enabled (not (empty .Values.persistence.api.workerNamespaceSelector)) }}
+    - from:
+        - namespaceSelector: {{ toYaml .Values.persistence.api.workerNamespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.persistence.api.workerPodSelector) }}
+          podSelector: {{ toYaml .Values.persistence.api.workerPodSelector | nindent 12 }}
+          {{- end }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.service.targetPort }} }
+    {{- end }}
   egress:
     - to:
         - namespaceSelector: {}
@@ -52,6 +61,22 @@ spec:
         {{- end }}
       ports:
         - { protocol: TCP, port: {{ .Values.redis.port }} }
+    {{- end }}
+    {{- if and .Values.persistence.enabled (ne .Values.persistence.provider "Sqlite") }}
+    - to:
+        {{- if not (empty .Values.persistence.egress.namespaceSelector) }}
+        - namespaceSelector: {{ toYaml .Values.persistence.egress.namespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.persistence.egress.podSelector) }}
+          podSelector: {{ toYaml .Values.persistence.egress.podSelector | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- range .Values.persistence.egress.cidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports:
+        {{- range .Values.persistence.egress.ports }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
     {{- end }}
     {{- if .Values.observability.otlp.enabled }}
     - to:

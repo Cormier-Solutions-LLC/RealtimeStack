@@ -10,7 +10,7 @@
   },
   "image": {
     "repository": "ghcr.io/example-org/cormier-realtime-gateway",
-    "tag": "1.0.6-beta",
+    "tag": "1.1.0-beta",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""
@@ -93,5 +93,41 @@
     "otlpEgressPorts": [4317, 4318, 443]
   },
   "resources": { "gatewayCpu": "250m", "gatewayMemory": "256Mi", "redisStorage": "8Gi" },
-  "topology": "ha"
+  "topology": "ha",
+  "persistence": {
+    "enabled": false,
+    "provider": "PostgreSql",
+    "customProviderImage": false,
+    "tableName": "realtime_records",
+    "commandTimeoutSeconds": 30,
+    "connectionSecret": {
+      "name": "",
+      "key": "connection-string"
+    },
+    "api": {
+      "enabled": false,
+      "basePath": "/realtime/persistence",
+      "workerTokenSecret": {
+        "name": "",
+        "key": "token"
+      },
+      "workerNamespaceSelector": {},
+      "workerPodSelector": {}
+    },
+    "setupJob": {
+      "enabled": false,
+      "backoffLimit": 2,
+      "activeDeadlineSeconds": 300
+    },
+    "storage": {
+      "existingClaim": "",
+      "mountPath": "/var/lib/realtime"
+    },
+    "egress": {
+      "namespaceSelector": {},
+      "podSelector": {},
+      "cidrs": [],
+      "ports": []
+    }
+  }
 }

@@ -235,6 +235,201 @@
         "prometheusRule": { "type": "object", "required": ["enabled", "ingressEnabled", "routingLabels"], "properties": { "enabled": { "type": "boolean" }, "ingressEnabled": { "type": "boolean" }, "routingLabels": { "type": "object", "required": ["service"], "properties": { "service": { "type": "string" } }, "additionalProperties": { "type": "string", "minLength": 1 } } } },
         "alertmanagerConfig": { "type": "object", "required": ["enabled", "receiverName", "webhookSecret"], "properties": { "enabled": { "type": "boolean" }, "receiverName": { "type": "string", "minLength": 1 }, "webhookSecret": { "type": "object", "required": ["name", "key"], "properties": { "name": { "type": "string" }, "key": { "type": "string", "minLength": 1 } } } } }
       }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "provider",
+        "connectionSecret",
+        "api",
+        "storage",
+        "setupJob",
+        "egress",
+        "tableName",
+        "commandTimeoutSeconds",
+        "customProviderImage"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "provider": {
+          "enum": [
+            "PostgreSql",
+            "MySql",
+            "MariaDb",
+            "SqlServer",
+            "AzureSql",
+            "Oracle",
+            "Sqlite",
+            "Db2",
+            "CockroachDb",
+            "Snowflake"
+          ]
+        },
+        "customProviderImage": {
+          "type": "boolean"
+        },
+        "tableName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,29}$"
+        },
+        "commandTimeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "connectionSecret": {
+          "type": "object",
+          "required": [
+            "name",
+            "key"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "api": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "basePath",
+            "workerTokenSecret"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "basePath": {
+              "type": "string",
+              "pattern": "^/[A-Za-z0-9_/-]*[A-Za-z0-9_-]$"
+            },
+            "workerTokenSecret": {
+              "type": "object",
+              "required": [
+                "name",
+                "key"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "workerNamespaceSelector": {
+              "type": "object"
+            },
+            "workerPodSelector": {
+              "type": "object"
+            }
+          }
+        },
+        "setupJob": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "backoffLimit",
+            "activeDeadlineSeconds"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "backoffLimit": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "activeDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 3600
+            }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "required": [
+            "existingClaim",
+            "mountPath"
+          ],
+          "properties": {
+            "existingClaim": {
+              "type": "string"
+            },
+            "mountPath": {
+              "type": "string",
+              "pattern": "^/[^.].*"
+            }
+          }
+        },
+        "egress": {
+          "type": "object",
+          "required": [
+            "namespaceSelector",
+            "podSelector",
+            "cidrs",
+            "ports"
+          ],
+          "properties": {
+            "namespaceSelector": {
+              "type": "object"
+            },
+            "podSelector": {
+              "type": "object"
+            },
+            "cidrs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "connectionSecret": {
+                "properties": {
+                  "name": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

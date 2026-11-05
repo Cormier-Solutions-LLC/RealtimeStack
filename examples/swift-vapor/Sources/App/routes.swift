@@ -172,7 +172,8 @@ func routes(_ application: Application, settings: ReferenceSettings) {
     }
   }
 
-  application.post("realtime", "tickets") { request async -> Response in
+  for endpoint in [["realtime", "tickets"], ["realtime", "persistence", "records", "read"], ["realtime", "persistence", "records", "ack"], ["realtime", "persistence", "tasks", "read"]] {
+  application.on(.POST, endpoint.map { PathComponent.constant($0) }) { request async -> Response in
     guard validOrigin(request, settings: settings) else {
       return try! await errorResponse(
         .forbidden, "origin_rejected", "The request Origin is not allowed.", request)
@@ -205,13 +206,14 @@ func routes(_ application: Application, settings: ReferenceSettings) {
       return await dependencyUnavailable(request, caught: error)
     }
   }
+  }
 }
 private func boundedTicketRequest(
   _ request: Request, settings: ReferenceSettings, headers: HTTPHeaders
 ) async throws -> HTTPClient.Response {
   let body = request.body.data.map { HTTPClient.Body.byteBuffer($0) }
   let outbound = try HTTPClient.Request(
-    url: "\(settings.gatewayURL)/realtime/tickets", method: .POST, headers: headers, body: body)
+    url: "\(settings.gatewayURL)\(request.url.path)", method: .POST, headers: headers, body: body)
   let accumulator = ResponseAccumulator(request: outbound, maxBodySize: maximumBodyBytes)
   let deadline: NIODeadline = .now() + .seconds(15)
   let task: HTTPClient.Task<HTTPClient.Response> =

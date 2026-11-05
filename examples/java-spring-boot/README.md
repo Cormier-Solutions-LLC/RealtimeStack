@@ -66,7 +66,7 @@ This is a teaching adapter, not a production identity system or general-purpose 
 | Maven wrapper | 3.9.12 | Pinned build tool with distribution checksum |
 | Spring Boot | 4.1.1 | Supported example framework |
 | Spring Cloud / Gateway | BOM 2025.1.3 / BOM-managed Gateway | Resolve the effective dependency tree for the exact Gateway version |
-| Cormier.Realtime browser SDK | 1.0.6-beta | Canonical generated shared JavaScript |
+| Cormier.Realtime browser SDK | 1.1.0-beta | Canonical generated shared JavaScript |
 | Cormier.Realtime protocol | 1.0 | Supported wire protocol |
 | Cormier.Realtime gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |
@@ -81,3 +81,7 @@ For a non-sensitive defect, open a repository issue with Java, Maven, Spring Boo
 See [UPDATE.md](UPDATE.md) for the update, deprecation, verification, and rollback procedure and [CHANGELOG.md](CHANGELOG.md) for operator-visible changes.
 
 Local asset paths are relative to the example directory. Containers select /app/shared-web/optimized; set `SHARED_ASSET_ROOT=/app/shared-web/readable` for the readable UI profile. `TOPOLOGY` is diagnostic metadata and does not create replicas or provision Redis.
+
+## Saved messages and background tasks
+
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

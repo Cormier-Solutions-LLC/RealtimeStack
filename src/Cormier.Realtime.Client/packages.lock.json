@@ -135,7 +135,7 @@
           "System.Runtime.CompilerServices.Unsafe": "6.1.2"
         }
       },
-      "cormier.realtime.contracts": {
+      "Realtime.Contracts": {
         "type": "Project",
         "dependencies": {
           "System.Text.Json": "[10.0.12, 11.0.0)"

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { isIP } from "node:net";
@@ -36,7 +37,7 @@ function pathIsWithin(parent, child) {
 }
 
 function isSecretReferenceField(key, parentPath = "") {
-  return /^(?:existingSecret|userSecret|credentialsSecret|otlpHeadersSecret|headersSecret|scrapeTokenSecret|operatorTokenSecret|webhookSecret|tlsSecretName|secretName|managedImagePullSecrets|imagePullSecrets)$/i.test(key)
+  return /^(?:existingSecret|userSecret|credentialsSecret|otlpHeadersSecret|headersSecret|scrapeTokenSecret|operatorTokenSecret|connectionSecret|workerTokenSecret|webhookSecret|tlsSecretName|secretName|managedImagePullSecrets|imagePullSecrets)$/i.test(key)
     || /(?:password|token|credential|secret)Key$/i.test(key)
     || (key === "key" && /secret/i.test(parentPath.split(".").at(-1) ?? ""));
 }
@@ -124,11 +125,62 @@ function validateContainerImage(value, path, errors) {
   requireString(image.digest, `${path}.digest`, errors, sha256Digest);
 }
 
+// Validate the optional block against the same published bootstrap schema used by editors.
+// This intentionally supports only the schema vocabulary used by this block.
+function validatePersistence(value, topology, errors) {
+  const schema = JSON.parse(readFileSync(new URL("../../bootstrap/config.schema.json", import.meta.url), "utf8")).properties.persistence;
+  function visit(item, rule, path) {
+    if (rule.type === "object") {
+      if (!isRecord(item)) { errors.push(problem(path, "must be an object")); return; }
+      if (rule.properties) requireKeys(item, path, rule.required ?? [], errors, Object.keys(rule.properties));
+      for (const [key, child] of Object.entries(item)) if (rule.properties?.[key]) visit(child, rule.properties[key], `${path}.${key}`);
+    } else if (rule.type === "array") {
+      if (!Array.isArray(item)) { errors.push(problem(path, "must be an array")); return; }
+      item.forEach((child, index) => visit(child, rule.items, `${path}[${index}]`));
+    } else if (rule.type === "string") {
+      requireString(item, path, errors, undefined, !rule.minLength);
+      if (typeof item === "string" && rule.pattern && !new RegExp(rule.pattern).test(item)) errors.push(problem(path, "has an invalid format"));
+    } else if (rule.type === "boolean" && typeof item !== "boolean") {
+      errors.push(problem(path, "must be a boolean"));
+    } else if (rule.type === "integer" && (!Number.isInteger(item) || item < rule.minimum || item > rule.maximum)) {
+      errors.push(problem(path, `must be an integer between ${rule.minimum} and ${rule.maximum}`));
+    }
+    if (rule.enum && !rule.enum.includes(item)) errors.push(problem(path, "must be a supported persistence provider"));
+  }
+  visit(value, schema, "$.persistence");
+  if (!isRecord(value)) return;
+  for (const [path, selector] of [
+    ["api.workerNamespaceSelector", value.api?.workerNamespaceSelector], ["api.workerPodSelector", value.api?.workerPodSelector],
+    ["egress.namespaceSelector", value.egress?.namespaceSelector], ["egress.podSelector", value.egress?.podSelector],
+  ]) {
+    if (!isRecord(selector)) continue;
+    // Selectors are ordinary Kubernetes LabelSelectors, validated by the API server.
+    if (selector.matchLabels !== undefined) {
+      if (isRecord(selector.matchLabels)) validateLabels(selector.matchLabels, `$.persistence.${path}.matchLabels`, errors);
+      else errors.push(problem(`$.persistence.${path}.matchLabels`, "must be an object"));
+    }
+  }
+  if (Array.isArray(value.egress?.cidrs)) for (const cidr of value.egress.cidrs) {
+    if (!isCidr(cidr)) errors.push(problem("$.persistence.egress.cidrs", "must contain valid CIDRs"));
+  }
+  if (!value.enabled) return;
+  if (!value.connectionSecret?.name) errors.push(problem("$.persistence.connectionSecret.name", "an existing connection Secret is required"));
+  if (!["PostgreSql", "CockroachDb", "Sqlite"].includes(value.provider) && !value.customProviderImage) {
+    errors.push(problem("$.persistence.customProviderImage", "this provider requires an image registering its database driver"));
+  }
+  if (value.provider === "Sqlite") {
+    if (topology !== "non-ha" || !value.storage?.existingClaim || value.setupJob?.enabled) errors.push(problem("$.persistence.storage", "SQLite requires non-ha, an existing preinitialized PVC, and setupJob disabled"));
+  } else if (!value.egress?.ports?.length || (!value.egress?.cidrs?.length && !Object.keys(value.egress?.namespaceSelector ?? {}).length)) {
+    errors.push(problem("$.persistence.egress", "explicit database ports and CIDRs or a namespace selector are required"));
+  }
+}
+
 export function validateConfiguration(input) {
   const errors = [];
   const config = requireRecord(input, "$", errors);
   const topKeys = ["schemaVersion", "environment", "naming", "paths", "image", "kubernetes", "networking", "redis", "ingress", "observability", "resources", "topology"];
-  requireKeys(config, "$", topKeys, errors);
+  requireKeys(config, "$", topKeys, errors, ["persistence"]);
+  if (config.persistence !== undefined) validatePersistence(config.persistence, config.topology, errors);
   if (config.schemaVersion !== contractVersion) errors.push(problem("$.schemaVersion", `must equal ${contractVersion}`));
 
   const environment = requireRecord(config.environment, "$.environment", errors);
@@ -400,6 +452,7 @@ export function renderValues(config, profile) {
     deploymentStrategy: { maxSurge: profile.gateway.maxSurge, maxUnavailable: profile.gateway.maxUnavailable },
     fullnameOverride: names.release,
     gateway: { allowedOrigins: config.ingress.allowedOrigins, trustedNetworks: config.networking.trustedProxyCidrs, shutdownDrainSeconds: 25 },
+    ...(config.persistence === undefined ? {} : { persistence: structuredClone(config.persistence) }),
     image: config.image,
     ingressRoute: { enabled: config.ingress.enabled, entryPoint: config.ingress.entryPoint, host: config.ingress.host, path: config.ingress.webSocketPath, fallbackPath: config.ingress.httpFallbackPath, tlsSecretName: config.ingress.tlsSecretName },
     observability: {

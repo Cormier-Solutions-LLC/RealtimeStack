@@ -2,7 +2,7 @@
 
 ## Product identity (force update)
 
-- Use `Cormier` for the distributable brand and `Cormier.Realtime` for .NET solution, project, namespace, assembly, and package identities.
+- Use `Cormier` for the distributable brand and `Cormier.Realtime` for .NET solution, project, namespace, and assembly identities. Use `Realtime.*` for NuGet package IDs; preserve existing CLR namespaces and assembly names for source compatibility.
 - Treat customer, tenant, environment, and deployment suffixes as configuration. Never encode a customer-specific or legacy brand in source-controlled identifiers.
 - Derive deployable identities through the shared bootstrap configuration and `-NameSuffix` / `--name-suffix` override. Consume `.bootstrap/naming.json` where automation needs those derived names; its Redis prefix already includes the environment. The generated file is local and must not be committed.
 

@@ -7,9 +7,9 @@
     Historical release notes, changelog entries, and files beneath refs are preserved.
     Use -WhatIf to inspect the complete file plan without writing anything.
 .EXAMPLE
-    ./scripts/Update-RealtimeVersion.ps1 -Version 1.0.6-beta -WhatIf
+    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.0-beta -WhatIf
 .EXAMPLE
-    ./scripts/Update-RealtimeVersion.ps1 -Version 1.0.6-beta
+    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.0-beta
 #>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
 param(
