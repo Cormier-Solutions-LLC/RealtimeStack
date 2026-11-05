@@ -7,7 +7,7 @@ This non-production adapter demonstrates a minimal Laravel front end for Realtim
 - PHP 8.5 and Composer 2.10.3
 - Laravel 13.31.0 and Predis 3.6.0 from `composer.lock`
 - Redis 7.4 and a Realtime 0.1.x gateway using the same Redis prefixes and trusted `PUBLIC_ORIGIN`
-- FrankenPHP 1.12.7 for the documented direct or container run
+- FrankenPHP 1.13.4 for the documented direct or container run
 - Node.js 26.10.0 and npm 12.1.0 to generate both `sdk/typescript/dist` and `examples/shared-web/dist`: run `npm ci` then `npm run build` in `sdk/typescript`.
 
 Supply every `.env.example` value externally, replace `SESSION_SECRET`, and adjust all endpoints and ports for the target environment; the application does not load `.env.example` automatically. Laravel may load a local `.env`, so keep any real values outside source control. `PUBLIC_ROOT=public` supports this documented working-directory launch and can be replaced with an absolute deployment path. From this directory run `composer install` and then `php artisan app:preflight`. Before direct startup, export `PUBLIC_SCHEME` as the validated origin scheme (`http` or `https`); in PowerShell use `$env:PUBLIC_SCHEME = ([uri]$env:PUBLIC_ORIGIN).Scheme`. Then run `frankenphp run --config Caddyfile --adapter caddyfile`. Unlike the container startup script, this direct command does not run preflight or derive the scheme for you. The repeatable gate is:
@@ -53,7 +53,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | PHP | `8.5.*` Composer constraint; PHP 8.5 base image | Inspect `php --version` in the built image for its exact patch |
 | Laravel / Predis | 13.31.0 / 3.6.0 | Exact locked application dependencies |
 | Composer / dependency graph | 2.10.3 / `composer.lock` | Locked; audit required |
-| FrankenPHP | 1.12.7 | Digest-pinned amd64/arm64-capable image |
+| FrankenPHP | 1.13.4 | Digest-pinned amd64/arm64-capable image |
 | Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 

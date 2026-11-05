@@ -13,8 +13,8 @@ RUN bundle _4.0.20_ config set deployment true \
 FROM ${GO_IMAGE} AS caddy
 WORKDIR /source
 RUN go mod init caddy-build \
-    && go get github.com/caddyserver/caddy/v2/cmd/caddy@v2.11.4 \
-    && go get golang.org/x/crypto@v0.57.0 golang.org/x/net@v0.60.0 golang.org/x/text@v0.42.0 google.golang.org/grpc@v1.83.2 \
+    && go get github.com/caddyserver/caddy/v2/cmd/caddy@v2.11.9 \
+    && go get github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 \
     && CGO_ENABLED=0 go build -o /out/caddy github.com/caddyserver/caddy/v2/cmd/caddy
 FROM ${RUBY_IMAGE}
 RUN apk upgrade --no-cache && apk add --no-cache tini=0.19.0-r3 tzdata yaml libstdc++

@@ -79,7 +79,7 @@ if sys.argv[1] == 'java':
     action('java', {'distribution': 'temurin', 'java-version': '25', 'java-package': 'jdk', 'architecture': 'x64', 'check-latest': 'false'})
 
 if sys.argv[1] == 'go':
-    action('go', {'go-version': '1.27.1', 'cache': 'false'})
+    action('go', {'go-version': '1.27.3', 'cache': 'false'})
 
 if sys.argv[1] == 'beam':
     action('beam', {'otp-version': '29.0.6', 'elixir-version': '1.20.4'})

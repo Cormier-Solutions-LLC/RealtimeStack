@@ -50,7 +50,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Component | Tested version | Status |
 | --- | --- | --- |
 | Elixir / Erlang | 1.20.4 / OTP 29.0.6 | Current pinned releases |
-| Phoenix / Bandit | 1.8.13 / 1.12.5 | Supported endpoint stack |
+| Phoenix / Bandit | 1.8.13 / 1.14.1 | Supported endpoint stack |
 | Redix / Req / Mint.WebSocket | 1.9.1 / 0.7.4 / 1.0.6 | Locked dependency clients |
 | Hex graph | `mix.lock` | Locked; `mix hex.audit` required |
 | Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |

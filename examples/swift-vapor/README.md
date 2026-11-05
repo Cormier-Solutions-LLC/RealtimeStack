@@ -51,7 +51,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Swift | 6.3.3 | Exact build/runtime image pin |
 | Vapor / Vapor Redis | 4.121.4 / 4.14.0 | Exact direct dependency pins |
 | Swift dependency graph | `Package.resolved` | Fully resolved transitive graph; locked-resolution and tests required |
-| Caddy | 2.11.4 | Digest-pinned WebSocket edge |
+| Caddy | 2.11.9 | Digest-pinned WebSocket edge |
 | Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 

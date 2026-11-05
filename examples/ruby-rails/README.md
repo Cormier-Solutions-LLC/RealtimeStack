@@ -5,7 +5,7 @@ This non-production adapter demonstrates a compact Rails front end for Realtime.
 ## Prerequisites and local run
 
 - Ruby 4.0.6 and Bundler 4.0.20
-- Rails 8.1.3.1, Puma 8.0.2, Redis 6.0.0, and JSON 2.21.2 from `Gemfile.lock`
+- Rails 8.1.4.1, Puma 8.0.2, Redis 6.0.0, and JSON 2.21.2 from `Gemfile.lock`
 - Redis 7.4 and a Realtime 0.1.x gateway sharing the configured prefixes and trusted `PUBLIC_ORIGIN`
 - Canonical browser assets (`sdk/typescript/dist` plus shared UI assets from `examples/shared-web/wwwroot` for local runs and `examples/shared-web/dist/optimized` in the container image)
 
@@ -50,10 +50,10 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Component | Tested version | Status |
 | --- | --- | --- |
 | Ruby / Bundler | 4.0.6 / 4.0.20 | Exact runtime/tool pins |
-| Rails / Puma | 8.1.3.1 / 8.0.2 | Exact locked framework/server dependencies |
+| Rails / Puma | 8.1.4.1 / 8.0.2 | Exact locked framework/server dependencies |
 | Redis / JSON | 6.0.0 / 2.21.2 | Exact locked client and Rails-compatible JSON line |
 | Ruby graph | `Gemfile.lock` | Locked; Brakeman and bundler-audit required |
-| Caddy | 2.11.4 | Digest-pinned WebSocket edge |
+| Caddy | 2.11.9 | Digest-pinned WebSocket edge |
 | Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 

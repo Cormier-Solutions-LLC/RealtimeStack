@@ -829,7 +829,7 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - uses: actions/setup-go@v7
         with:
-          go-version: 1.27.2
+          go-version-file: examples/go-gin/go.mod
           cache-dependency-path: examples/go-gin/go.sum
       - name: Build the gateway fixture
         run: |

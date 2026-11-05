@@ -1,6 +1,6 @@
 ARG COMPOSER_IMAGE=composer:2.10.3@sha256:d8f6343d3fae98107426bc49163ccad46ef85aabd4a27d80a74401fab4aba332
-ARG FRANKENPHP_BUILDER_IMAGE=dunglas/frankenphp:1.12.7-builder-php8.5-alpine@sha256:862bce4c7efe77337d8f8170a262b639e1787141ffe70ae0edd9ec6ef96c6a99
-ARG FRANKENPHP_IMAGE=dunglas/frankenphp:1.12.7-php8.5-alpine@sha256:214b541fe30aeed2717d54f74149b71b2bdb0089718f1fbb8b43bc170ab00939
+ARG FRANKENPHP_BUILDER_IMAGE=dunglas/frankenphp:1.13.4-builder-php8.5-alpine@sha256:b3406473a82344fb413660af339a5177148f8594176562ebd8416c69a7af3620
+ARG FRANKENPHP_IMAGE=dunglas/frankenphp:1.13.4-php8.5-alpine@sha256:974e767f7694964fdb23ead3172dd0a12cedefbd929fbe0db7f69a680663295d
 ARG GO_IMAGE=golang:1.26.10-alpine3.24@sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b1dd80b4e6ee4338db547050308
 
 FROM ${GO_IMAGE} AS go-toolchain
@@ -12,13 +12,11 @@ RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --opt
 FROM ${FRANKENPHP_BUILDER_IMAGE} AS frankenphp
 COPY --from=go-toolchain /usr/local/go /usr/local/go
 WORKDIR /go/src/app/caddy
-RUN go get github.com/getkin/kin-openapi@v0.144.0 \
-    golang.org/x/crypto@v0.57.0 \
-    golang.org/x/net@v0.60.0 \
-    golang.org/x/text@v0.42.0 \
-    google.golang.org/grpc@v1.83.2 \
+RUN go get github.com/caddyserver/caddy/v2@v2.11.9 \
+    github.com/getkin/kin-openapi@v0.149.0 \
+    github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 \
     && cd frankenphp \
-    && GOBIN=/usr/local/bin ../../go.sh install -buildvcs=false -ldflags "-w -s -X 'github.com/caddyserver/caddy/v2.CustomVersion=FrankenPHP v1.12.7 PHP $PHP_VERSION Caddy' -X 'github.com/caddyserver/caddy/v2.CustomBinaryName=frankenphp' -X 'github.com/caddyserver/caddy/v2/modules/caddyhttp.ServerHeader=FrankenPHP Caddy'"
+    && GOBIN=/usr/local/bin ../../go.sh install -buildvcs=false -ldflags "-w -s -X 'github.com/caddyserver/caddy/v2.CustomVersion=FrankenPHP v1.13.4 PHP $PHP_VERSION Caddy' -X 'github.com/caddyserver/caddy/v2.CustomBinaryName=frankenphp' -X 'github.com/caddyserver/caddy/v2/modules/caddyhttp.ServerHeader=FrankenPHP Caddy'"
 
 FROM ${FRANKENPHP_IMAGE}
 RUN apk upgrade --no-cache && apk add --no-cache tini=0.19.0-r3
