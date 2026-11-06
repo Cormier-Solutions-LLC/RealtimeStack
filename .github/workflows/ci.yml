@@ -11,6 +11,11 @@ permissions:
   contents: read
   security-events: write
 
+# Superseded pull-request runs are cancelled; every main and manual run completes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   DOTNET_INSTALL_DIR: ${{ vars.CI_DOTNET_INSTALL_DIR || '/home/runner/.dotnet' }}
   NPM_VERSION: 12.1.0
@@ -43,6 +48,7 @@ env:
 jobs:
   changes:
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 10
     outputs:
       selected: ${{ steps.impact.outputs.selected }}
     steps:
@@ -70,6 +76,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'helm-and-automation')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -215,6 +222,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'bootstrap-powershell-windows')
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - name: Install Node runtime prerequisites
@@ -242,6 +250,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'bootstrap-lifecycle-parity')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -270,6 +279,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'build-test-aot')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -487,6 +497,7 @@ jobs:
     needs: changes
     if: github.event_name == 'pull_request' && contains(fromJSON(needs.changes.outputs.selected), 'dependency-review')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write
@@ -501,6 +512,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'node-express')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -574,6 +586,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'java-spring-boot')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -648,6 +661,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'kotlin-ktor')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -721,6 +735,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'rust-axum')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -797,6 +812,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'go-gin')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -872,6 +888,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'elixir-phoenix')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -949,6 +966,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'php-laravel')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     concurrency:
       group: php-laravel-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: false
@@ -1030,6 +1048,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'python-fastapi')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -1102,6 +1121,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'ruby-rails')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -1174,6 +1194,13 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'swift-vapor')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 30
+    # The locked adapter test and the container build each compile the Vapor
+    # dependency graph; run them on separate runners so they overlap.
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [adapter, container]
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -1186,43 +1213,67 @@ jobs:
           registry: ${{ vars.CI_IMAGE_REGISTRY }}
           username: ${{ secrets.HARBOR_USERNAME }}
           password: ${{ secrets.HARBOR_PASSWORD }}
+      - name: Check the locked Vapor reference adapter
+        if: matrix.part == 'adapter'
+        run: >-
+          docker run --rm --volume "$PWD:/repo" --workdir /repo/examples/swift-vapor
+          "$CI_SWIFT_IMAGE"
+          sh -lc 'cp Package.resolved /tmp/Package.resolved && swift package resolve --disable-sandbox && diff -u /tmp/Package.resolved Package.resolved && swift format lint --recursive --strict Sources Tests Package.swift && swift test --disable-sandbox'
       - name: Start configured Redis fixture
+        if: matrix.part == 'container'
         id: redis_fixture
         run: bash scripts/start-ci-redis.sh
       - uses: actions/setup-dotnet@v6
+        if: matrix.part == 'container'
         with:
           dotnet-version: 10.0.x
           cache: true
           cache-dependency-path: '**/packages.lock.json'
       - name: Install Node runtime prerequisites
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.part == 'container'
         run: bash scripts/setup-ci-node-prerequisites.sh
       - uses: actions/setup-node@v7
+        if: matrix.part == 'container'
         with:
           node-version: 26.10.0
           cache: npm
           cache-dependency-path: sdk/typescript/package-lock.json
       - name: Install pinned npm
+        if: matrix.part == 'container'
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
+        if: matrix.part == 'container'
         run: |
           dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
           dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
+        if: matrix.part == 'container'
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
-      - name: Check the locked Vapor reference adapter
-        run: >-
-          docker run --rm --volume "$PWD:/repo" --workdir /repo/examples/swift-vapor
-          "$CI_SWIFT_IMAGE"
-          sh -lc 'cp Package.resolved /tmp/Package.resolved && swift package resolve --disable-sandbox && diff -u /tmp/Package.resolved Package.resolved && swift format lint --recursive --strict Sources Tests Package.swift && swift test --disable-sandbox'
+      - name: Set up Buildx with a layer cache
+        if: matrix.part == 'container'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build the Vapor reference container
-        run: >-
-          docker build --build-arg SWIFT_BUILD_IMAGE="$CI_SWIFT_IMAGE"
-          --build-arg GO_IMAGE="$CI_GO_CADDY_IMAGE"
-          --build-arg SWIFT_RUNTIME_IMAGE="$CI_SWIFT_RUNTIME_IMAGE"
-          --file examples/swift-vapor/Dockerfile --tag realtime-swift-vapor:${{ github.sha }} .
+        if: matrix.part == 'container'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          DOCKER_BUILD_SUMMARY: 'false'
+          DOCKER_BUILD_RECORD_UPLOAD: 'false'
+        with:
+          context: .
+          file: examples/swift-vapor/Dockerfile
+          build-args: |
+            SWIFT_BUILD_IMAGE=${{ env.CI_SWIFT_IMAGE }}
+            GO_IMAGE=${{ env.CI_GO_CADDY_IMAGE }}
+            SWIFT_RUNTIME_IMAGE=${{ env.CI_SWIFT_RUNTIME_IMAGE }}
+          tags: realtime-swift-vapor:${{ github.sha }}
+          load: true
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=swift-vapor
+          cache-to: type=gha,scope=swift-vapor,mode=max
       - name: Scan the Vapor reference container
+        if: matrix.part == 'container'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: realtime-swift-vapor:${{ github.sha }}
@@ -1230,9 +1281,11 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: '1'
       - name: Install Chromium
+        if: matrix.part == 'container'
         working-directory: sdk/typescript
         run: bash ../../scripts/setup-ci-playwright.sh chromium
       - name: Run the shared browser smoke scenarios
+        if: matrix.part == 'container'
         working-directory: sdk/typescript
         env:
           SWIFT_VAPOR_IMAGE: realtime-swift-vapor:${{ github.sha }}
@@ -1241,13 +1294,14 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: swift-vapor-${{ github.sha }}
+          name: swift-vapor-${{ matrix.part }}-${{ github.sha }}
           path: artifacts/swift-vapor
 
   full-circle:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'full-circle')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 25
     env:
       REDIS_TEST_ENDPOINT: 127.0.0.1:6379
     strategy:
@@ -1322,6 +1376,7 @@ jobs:
   ci-failed:
     if: ${{ always() }}
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    timeout-minutes: 10
     needs:
       - changes
       - helm-and-automation
