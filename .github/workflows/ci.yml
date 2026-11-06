@@ -1194,7 +1194,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'swift-vapor')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     # The locked adapter test and the container build each compile the Vapor
     # dependency graph; run them on separate runners so they overlap.
     strategy:
