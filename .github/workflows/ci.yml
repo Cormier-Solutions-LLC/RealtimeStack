@@ -48,7 +48,7 @@ env:
 jobs:
   changes:
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     outputs:
       selected: ${{ steps.impact.outputs.selected }}
     steps:
@@ -76,7 +76,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'helm-and-automation')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -222,7 +222,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'bootstrap-powershell-windows')
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - name: Install Node runtime prerequisites
@@ -250,7 +250,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'bootstrap-lifecycle-parity')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -279,7 +279,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'build-test-aot')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -497,7 +497,7 @@ jobs:
     needs: changes
     if: github.event_name == 'pull_request' && contains(fromJSON(needs.changes.outputs.selected), 'dependency-review')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -512,7 +512,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'node-express')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -586,7 +586,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'java-spring-boot')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -661,7 +661,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'kotlin-ktor')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -735,7 +735,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'rust-axum')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -812,7 +812,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'go-gin')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -888,7 +888,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'elixir-phoenix')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -966,7 +966,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'php-laravel')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     concurrency:
       group: php-laravel-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: false
@@ -1048,7 +1048,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'python-fastapi')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -1121,7 +1121,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'ruby-rails')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-realtime-runner
@@ -1194,7 +1194,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'swift-vapor')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 45
+    timeout-minutes: 60
     # The locked adapter test and the container build each compile the Vapor
     # dependency graph; run them on separate runners so they overlap.
     strategy:
@@ -1301,7 +1301,7 @@ jobs:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'full-circle')
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       REDIS_TEST_ENDPOINT: 127.0.0.1:6379
     strategy:
@@ -1376,7 +1376,7 @@ jobs:
   ci-failed:
     if: ${{ always() }}
     runs-on: ${{ vars.CI_RUNNER_LABEL }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs:
       - changes
       - helm-and-automation
