@@ -1,6 +1,6 @@
-# Realtime full-circle application
+# RealtimeStack full-circle application
 
-This application is an external-consumer proof for the supported ASP.NET Core integration and generated browser SDK. It creates an ASP.NET Core session, stores the authoritative tenant/user identity in Redis, issues a single-use connection ticket, maps the realtime endpoints, and exposes direct-script and ESM browser workflows.
+This application is an external-consumer proof for the supported ASP.NET Core integration and generated browser SDK. It creates an ASP.NET Core session, stores the authoritative tenant/user identity in Redis, issues a single-use connection ticket, maps the realtimestack endpoints, and exposes direct-script and ESM browser workflows.
 
 The `/operator.html` page demonstrates the operator-only diagnostics workflow against a diagnostics API that has been explicitly enabled and protected. Supply the configured base path and a short-lived operator bearer token at runtime; the page keeps it only in memory and never writes it to output or storage. Snapshot, operational-event, live-log, and temporary log-level control calls remain subject to the server's policy, Origin, network, duration, buffer, and rate limits. The ordinary application page does not expose these controls.
 
@@ -58,7 +58,7 @@ The suite covers anonymous login rejection, configured tenant/user login, ticket
 
 - `Redis unavailable`: verify Docker is running, or verify `REDIS_TEST_ENDPOINT`, network access, and configured Redis authentication when using an external endpoint, then run `recover`.
 - `browser executable missing`: install Chromium from `sdk/typescript`.
-- `invalid Origin`: make `Realtime__AllowedOrigins__0` exactly match the configured entry origin; do not use wildcards.
+- `invalid Origin`: make `RealtimeStack__AllowedOrigins__0` exactly match the configured entry origin; do not use wildcards.
 - Port conflict: change the versioned plan before bootstrap so both shells use the same topology.
 - A non-HA run cannot prove replica failover. HA is a local process topology, not a production availability claim.
 
@@ -66,4 +66,4 @@ Configuration changes are confined to ignored artifacts, so there is no data bac
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

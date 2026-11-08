@@ -1,12 +1,12 @@
 # Java and Spring Boot reference application
 
-This small, non-production adapter demonstrates a Spring Boot front end for Realtime. It creates a gateway-compatible Redis session, forwards connection-ticket and WebSocket traffic through Spring Cloud Gateway with the original Host header, and serves the repository's canonical browser SDK and shared UI without copying them.
+This small, non-production adapter demonstrates a Spring Boot front end for RealtimeStack. It creates a gateway-compatible Redis session, forwards connection-ticket and WebSocket traffic through Spring Cloud Gateway with the original Host header, and serves the repository's canonical browser SDK and shared UI without copying them.
 
 ## Prerequisites and local run
 
 - Java 25 (the Maven compiler release is configured in `pom.xml`)
 - Redis 7.4 or a compatible configured service
-- A Realtime 0.1.x gateway that trusts `PUBLIC_ORIGIN` and uses the same Redis instance/session prefixes
+- A RealtimeStack 0.1.x gateway that trusts `PUBLIC_ORIGIN` and uses the same Redis instance/session prefixes
 - Node.js 26.10.0 and npm 12.1.0; generate `sdk/typescript/dist` and `examples/shared-web/dist` with `npm ci` followed by `npm run build` in `sdk/typescript`, before Maven tests or container builds.
 
 Ticket and WebSocket routes forward the scheme from validated `PUBLIC_ORIGIN` in `X-Forwarded-Proto`. Configure the gateway's `Proxy:TrustedNetworks` with only the adapter network CIDR so it accepts that single trusted forwarding hop; never trust a public or broader network range.
@@ -23,20 +23,20 @@ $env:SESSION_LIFETIME_SECONDS = "1200"
 $env:HEARTBEAT_INTERVAL_MILLISECONDS = "15000"
 $env:INSTANCE_NAME = "java-spring-a"
 $env:TOPOLOGY = "non-ha"
-$env:REDIS_INSTANCE_PREFIX = "realtime:reference-java"
+$env:REDIS_INSTANCE_PREFIX = "realtimestack:reference-java"
 $env:REDIS_SESSION_KEY_PREFIX = "sessions"
 $env:ALLOWED_TENANTS = "tenant-a,tenant-b"
 $env:ALLOWED_USERS = "user-a,user-b"
 ./mvnw.cmd spring-boot:run
 ```
 
-Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `Realtime:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
+Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
 
 The Maven wrapper pins Maven 3.9.12 and verifies its distribution checksum. Run repeatable checks with `./mvnw verify` (`mvnw.cmd` on Windows). From the repository root, build and run the digest-pinned multi-stage container:
 
 ```text
-docker build -f examples/java-spring-boot/Dockerfile -t realtime-java-spring:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15200:15200 --env-file examples/java-spring-boot/.env.example --env GATEWAY_URL=http://host.docker.internal:15201 --env REDIS_URL=redis://host.docker.internal:16379 realtime-java-spring:local
+docker build -f examples/java-spring-boot/Dockerfile -t realtimestack-java-spring:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15200:15200 --env-file examples/java-spring-boot/.env.example --env GATEWAY_URL=http://host.docker.internal:15201 --env REDIS_URL=redis://host.docker.internal:16379 realtimestack-java-spring:local
 ```
 
 Configuration-property validation fails startup with a nonzero exit when an origin, topology, identifier, TTL, or allowlist is unsafe. The ticket route has a 15-second response timeout without imposing that deadline on long-lived WebSockets, and Spring Boot graceful shutdown has a 15-second timeout per shutdown phase. The custom `/health` returns 200 when its Redis key-existence command succeeds, regardless of whether the probe key exists, and 503 on failure. It does not probe the gateway; `/actuator/health` is a separate endpoint. The controller exception handler exposes generic dependency errors and logs exception class names. This does not guarantee redaction of all framework/startup logging; keep debug and request logging disabled and inspect deployment logs before sharing.
@@ -66,9 +66,9 @@ This is a teaching adapter, not a production identity system or general-purpose 
 | Maven wrapper | 3.9.12 | Pinned build tool with distribution checksum |
 | Spring Boot | 4.1.1 | Supported example framework |
 | Spring Cloud / Gateway | BOM 2025.1.3 / BOM-managed Gateway | Resolve the effective dependency tree for the exact Gateway version |
-| Realtime browser SDK | 1.1.2-beta | Canonical generated shared JavaScript |
-| Realtime protocol | 1.0 | Supported wire protocol |
-| Realtime gateway | 0.1.x repository build | Required external dependency |
+| RealtimeStack browser SDK | 2.0.0-beta | Canonical generated shared JavaScript |
+| RealtimeStack protocol | 1.0 | Supported wire protocol |
+| RealtimeStack gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |
 | Container bases | Maven 3.9.12 + Temurin 25; Temurin 25 JRE Alpine | Both OCI indexes are digest-pinned |
 
@@ -84,4 +84,4 @@ Local asset paths are relative to the example directory. Containers select /app/
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

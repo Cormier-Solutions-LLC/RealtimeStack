@@ -1,4 +1,4 @@
-namespace Realtime.Example.FullCircle;
+namespace RealtimeStack.Example.FullCircle;
 
 public sealed class FullCircleOptions
 {

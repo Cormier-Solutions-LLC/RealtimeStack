@@ -1,6 +1,6 @@
 # Local development baseline
 
-Captured 2026-08-30 with the repository load harness (`scripts/Invoke-RealtimeLoad.ps1` -> `tools/Realtime.LoadRunner`, `schemaVersion: 2`). This validates local harness behavior and provides a regression reference; it is not a production-capacity claim.
+Captured 2026-08-30 with the repository load harness (`scripts/Invoke-RealtimeStackLoad.ps1` -> `tools/RealtimeStack.LoadRunner`, `schemaVersion: 2`). This validates local harness behavior and provides a regression reference; it is not a production-capacity claim.
 
 | Scenario | Connections | Messages | Payload | Duration | Operations/s | Connection p50/p95/p99 | Acknowledged publish p50/p95/p99 | Errors |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | --- |
@@ -18,9 +18,9 @@ Interpretation from the retained results:
 Reproduction notes (all environment values are caller supplied and must stay configurable):
 
 ```powershell
-./scripts/Invoke-RealtimeLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario burst -Connections 25 -MessagesPerConnection 100 -PayloadBytes 512 -DurationSeconds 60 -OutputPath artifacts/load/local-burst.json
-./scripts/Invoke-RealtimeLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario connection -Connections 5 -MessagesPerConnection 0 -PayloadBytes 64 -DurationSeconds 3 -OutputPath artifacts/load/local-connection.json
-./scripts/Invoke-RealtimeLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario fanout -Connections 3 -MessagesPerConnection 5 -PayloadBytes 128 -DurationSeconds 60 -OutputPath artifacts/load/local-fanout.json
+./scripts/Invoke-RealtimeStackLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario burst -Connections 25 -MessagesPerConnection 100 -PayloadBytes 512 -DurationSeconds 60 -OutputPath artifacts/load/local-burst.json
+./scripts/Invoke-RealtimeStackLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario connection -Connections 5 -MessagesPerConnection 0 -PayloadBytes 64 -DurationSeconds 3 -OutputPath artifacts/load/local-connection.json
+./scripts/Invoke-RealtimeStackLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario fanout -Connections 3 -MessagesPerConnection 5 -PayloadBytes 128 -DurationSeconds 60 -OutputPath artifacts/load/local-fanout.json
 ```
 
 Production thresholds and HPA decisions still require the six source-controlled scenarios in [`load/profiles/production-readiness.json`](../profiles/production-readiness.json) (`connection`, `fanout`, `burst`, `large-message`, `slow-client`, `soak`) against a production-equivalent nonproduction cluster, plus saved platform dashboard evidence as described in [`load/README.md`](../README.md).

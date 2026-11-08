@@ -1,12 +1,12 @@
 # Kotlin and Ktor reference application
 
-This small, non-production adapter demonstrates a coroutine-native Ktor front end for Realtime. It creates a gateway-compatible Redis session, forwards connection-ticket and WebSocket traffic while preserving the browser Host, and serves the repository's canonical browser SDK and shared UI without copying them.
+This small, non-production adapter demonstrates a coroutine-native Ktor front end for RealtimeStack. It creates a gateway-compatible Redis session, forwards connection-ticket and WebSocket traffic while preserving the browser Host, and serves the repository's canonical browser SDK and shared UI without copying them.
 
 ## Prerequisites and local run
 
 - Java 25; Kotlin/JVM output targets Java 25
 - Redis 7.4 or a compatible configured service
-- A Realtime 0.1.x gateway that trusts `PUBLIC_ORIGIN` and uses the same Redis prefixes
+- A RealtimeStack 0.1.x gateway that trusts `PUBLIC_ORIGIN` and uses the same Redis prefixes
 
 For ticket and WebSocket relays, the adapter forwards the scheme from validated `PUBLIC_ORIGIN` in `X-Forwarded-Proto`. Configure the gateway's `Proxy:TrustedNetworks` with only the adapter network CIDR so it accepts that single forwarding hop; never trust public or broader ranges.
 Generate `sdk/typescript/dist` and `examples/shared-web/dist` before tests or container builds: with Node.js 26.10.0 and npm 12.1.0, run `npm ci` then `npm run build` in `sdk/typescript`.
@@ -23,20 +23,20 @@ $env:SESSION_LIFETIME_SECONDS = "1200"
 $env:HEARTBEAT_INTERVAL_MILLISECONDS = "15000"
 $env:INSTANCE_NAME = "kotlin-ktor-a"
 $env:TOPOLOGY = "non-ha"
-$env:REDIS_INSTANCE_PREFIX = "realtime:reference-kotlin"
+$env:REDIS_INSTANCE_PREFIX = "realtimestack:reference-kotlin"
 $env:REDIS_SESSION_KEY_PREFIX = "sessions"
 $env:ALLOWED_TENANTS = "tenant-a,tenant-b"
 $env:ALLOWED_USERS = "user-a,user-b"
 ./gradlew.bat run
 ```
 
-Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `Realtime:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
+Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
 
 The wrapper pins Gradle 9.7.1 and verifies its distribution checksum; `gradle.lockfile` pins all application and test modules. Run `./gradlew test` (`gradlew.bat` on Windows) for locked checks. Build and run the digest-pinned container from the repository root:
 
 ```text
-docker build -f examples/kotlin-ktor/Dockerfile -t realtime-kotlin-ktor:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15300:15300 --env-file examples/kotlin-ktor/.env.example --env GATEWAY_URL=http://host.docker.internal:15301 --env REDIS_URL=redis://host.docker.internal:16379 realtime-kotlin-ktor:local
+docker build -f examples/kotlin-ktor/Dockerfile -t realtimestack-kotlin-ktor:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15300:15300 --env-file examples/kotlin-ktor/.env.example --env GATEWAY_URL=http://host.docker.internal:15301 --env REDIS_URL=redis://host.docker.internal:16379 realtimestack-kotlin-ktor:local
 ```
 
 Typed configuration validation rejects unsafe origins, Redis schemes, identifiers, topology, TTL, ports, or allowlists before binding the server. Lettuce is configured with a five-second timeout. `/health` reports Redis availability (200 or 503), not gateway reachability. Shutdown calls Ktor server stop with one second of grace and a 15-second timeout, then closes the HTTP client and Redis store; Redis client shutdown has its own five-second bound. Request failures return generic codes, and application logging records exception classes while Redis/Netty internals are disabled to limit dependency detail in normal logs; inspect framework and deployment logs before sharing and do not enable sensitive request/debug logging.
@@ -67,8 +67,8 @@ This is a teaching adapter, not a production identity system or general-purpose 
 | Ktor | 3.5.2 | Pinned server/client/WebSocket framework |
 | Gradle wrapper | 9.7.1 | Checksum-pinned; dependency locking enabled |
 | Lettuce | 7.6.0 | Pinned Redis client |
-| Realtime browser SDK / protocol | 1.1.2-beta / 1.0 | Canonical generated SDK and wire contract |
-| Realtime gateway | 0.1.x repository build | Required external dependency |
+| RealtimeStack browser SDK / protocol | 2.0.0-beta / 1.0 | Canonical generated SDK and wire contract |
+| RealtimeStack gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |
 | Container bases | Gradle 9.7.1 JDK 25; Temurin 25 JRE Alpine | Both OCI indexes are digest-pinned |
 
@@ -86,4 +86,4 @@ Local assets resolve relative to the example directory. Containers use `/app/sha
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

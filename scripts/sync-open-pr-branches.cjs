@@ -39,7 +39,7 @@ function eligibleBranch(pr, repository) {
 }
 
 async function syncOpenBranches({ github, context, core }) {
-  const directory = mkdtempSync(join(tmpdir(), 'realtime-branch-sync-'));
+  const directory = mkdtempSync(join(tmpdir(), 'realtimestack-branch-sync-'));
   const repository = `${context.repo.owner}/${context.repo.repo}`;
   const git = createGit(directory, process.env.BRANCH_SYNC_TOKEN, process.env.BRANCH_SYNC_SERVER_URL);
   const results = [];

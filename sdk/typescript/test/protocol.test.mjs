@@ -9,7 +9,7 @@ import {
   createEnvelope,
   validateClientEnvelope,
   validateServerEnvelope,
-} from "../dist/realtime.js";
+} from "../dist/realtimestack.js";
 
 const fixturePath = resolve(import.meta.dirname, "../../../protocol/fixtures/v1/envelopes.json");
 const fixtures = JSON.parse(await readFile(fixturePath, "utf8"));
@@ -18,7 +18,7 @@ const fixtureNow = new Date("2026-08-30T17:00:30.000Z");
 test("language-neutral fixtures match the exported protocol identity", () => {
   assert.equal(fixtures.protocolVersion, PROTOCOL_VERSION);
   assert.equal(fixtures.subprotocol, WEBSOCKET_SUBPROTOCOL);
-  assert.equal(SDK_VERSION, "1.1.2-beta");
+  assert.equal(SDK_VERSION, "2.0.0-beta");
 });
 
 test("all golden client and server envelopes validate", () => {

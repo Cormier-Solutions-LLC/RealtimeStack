@@ -10,36 +10,36 @@
   <Target Name="BoundInternalPackageDependencies" AfterTargets="_GetProjectReferenceVersions">
     <ItemGroup>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Contracts'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Contracts'">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.AspNetCore'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.AspNetCore'">
         <ProjectVersion>[$(AspNetCoreIntegrationVersion),$(AspNetCoreIntegrationCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Redis'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Redis'">
         <ProjectVersion>[$(RedisAdapterVersion),$(RedisAdapterCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Plugins.Persistence'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Plugins.Persistence'">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_ProjectReferencesWithVersions.Filename)', '^Realtime[.]Plugins[.]'))">
+                                      Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_ProjectReferencesWithVersions.Filename)', '^RealtimeStack[.]Plugins[.]'))">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
       <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)"
-                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Config'">
+                                      Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Config'">
         <ProjectVersion>[$(ContractsVersion),$(ContractsCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Client'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Client'">
         <ProjectVersion>[$(DotNetClientVersion),$(DotNetClientCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.Browser'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.Browser'">
         <ProjectVersion>[$(BrowserPackageVersion),$(BrowserPackageCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
-      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'Realtime.HttpFallback'">
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(_ProjectReferencesWithVersions.Filename)' == 'RealtimeStack.HttpFallback'">
         <ProjectVersion>[$(HttpFallbackVersion),$(HttpFallbackCompatibilityUpperBound))</ProjectVersion>
       </_ProjectReferencesWithVersions>
     </ItemGroup>

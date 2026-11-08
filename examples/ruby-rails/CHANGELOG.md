@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta - 2026-11-07
+
+- See the coordinated release notes in `docs/release-notes/2.0.0-beta.md`.
+
 ## 1.1.2-beta - 2026-11-07
 
 - See the coordinated release notes in `docs/release-notes/1.1.2-beta.md`.
@@ -35,7 +39,7 @@
 
 ## 0.1.0
 
-- Added the Ruby 4.0.6 / Rails 8.1.3.1 reference adapter for Realtime with strict settings, allowlisted login, encrypted Rails session state, Redis-backed gateway-compatible sessions, logout, and redacted health/diagnostics.
+- Added the Ruby 4.0.6 / Rails 8.1.3.1 reference adapter for RealtimeStack with strict settings, allowlisted login, encrypted Rails session state, Redis-backed gateway-compatible sessions, logout, and redacted health/diagnostics.
 - Added bounded HTTP ticket forwarding and Caddy WebSocket relay while preserving browser authority, Origin, cookie, and protocol.
 - Reused canonical generated browser assets, UI/CSS, configuration schema, protocol fixtures, and browser smoke scenarios without source copies.
 - Added exact locked gems, RuboCop/Minitest/Brakeman/bundler-audit gates, digest-pinned non-root image, supervised lifecycle behavior, update/rollback instructions, and non-production limitations.

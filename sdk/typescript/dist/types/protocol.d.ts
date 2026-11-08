@@ -1,6 +1,6 @@
-export declare const SDK_VERSION: "1.1.2-beta";
+export declare const SDK_VERSION: "2.0.0-beta";
 export declare const PROTOCOL_VERSION: "1.0";
-export declare const WEBSOCKET_SUBPROTOCOL: "realtime.v1";
+export declare const WEBSOCKET_SUBPROTOCOL: "realtimestack.v1";
 export declare const messageTypes: {
     readonly ping: "ping";
     readonly subscribe: "subscribe";

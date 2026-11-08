@@ -1,7 +1,7 @@
 import { type JsonValue, type ServerMessageEnvelope } from "./protocol.js";
-import { RealtimeError } from "./errors.js";
-import { type HttpStreamingOptions, type RealtimeTransport, type WebSocketLike } from "./transport.js";
-export type RealtimeClientState = "idle" | "connecting" | "open" | "reconnecting" | "closing" | "closed";
+import { RealtimeStackError } from "./errors.js";
+import { type HttpStreamingOptions, type RealtimeStackTransport, type WebSocketLike } from "./transport.js";
+export type RealtimeStackClientState = "idle" | "connecting" | "open" | "reconnecting" | "closing" | "closed";
 export interface SessionAuthentication {
     readonly kind: "session";
 }
@@ -10,7 +10,7 @@ export interface TicketAuthentication {
     readonly endpoint?: string | URL;
     readonly fetch?: typeof globalThis.fetch;
 }
-export type RealtimeAuthentication = SessionAuthentication | TicketAuthentication;
+export type RealtimeStackAuthentication = SessionAuthentication | TicketAuthentication;
 export interface ReconnectOptions {
     readonly enabled?: boolean;
     readonly initialDelayMilliseconds?: number;
@@ -18,33 +18,33 @@ export interface ReconnectOptions {
     readonly jitterRatio?: number;
     readonly maximumAttempts?: number;
 }
-export interface RealtimeClientOptions {
+export interface RealtimeStackClientOptions {
     readonly url: string | URL;
-    readonly authentication?: RealtimeAuthentication;
+    readonly authentication?: RealtimeStackAuthentication;
     readonly maximumQueuedCommands?: number;
     readonly maximumPendingCommands?: number;
     readonly commandTimeoutMilliseconds?: number;
     readonly maximumMessageBytes?: number;
     readonly heartbeatIntervalMilliseconds?: number;
     readonly reconnect?: ReconnectOptions;
-    readonly transports?: readonly RealtimeTransport[];
+    readonly transports?: readonly RealtimeStackTransport[];
     readonly httpStreaming?: HttpStreamingOptions;
     readonly webSocketFactory?: (url: string, protocol: string) => WebSocketLike;
     readonly random?: () => number;
 }
-export interface RealtimeCloseDetails {
+export interface RealtimeStackCloseDetails {
     readonly code: number;
     readonly reason: string;
     readonly expected: boolean;
 }
-export interface RealtimeClientEvents {
-    readonly state: RealtimeClientState;
-    readonly close: RealtimeCloseDetails;
+export interface RealtimeStackClientEvents {
+    readonly state: RealtimeStackClientState;
+    readonly close: RealtimeStackCloseDetails;
     readonly event: ServerMessageEnvelope;
-    readonly error: RealtimeError;
+    readonly error: RealtimeStackError;
 }
-type Listener<TKey extends keyof RealtimeClientEvents> = (event: RealtimeClientEvents[TKey]) => void;
-export declare class RealtimeClient {
+type Listener<TKey extends keyof RealtimeStackClientEvents> = (event: RealtimeStackClientEvents[TKey]) => void;
+export declare class RealtimeStackClient {
     private readonly options;
     private readonly reconnectOptions;
     private readonly listeners;
@@ -62,11 +62,11 @@ export declare class RealtimeClient {
     private generation;
     private intentionalClose;
     private serverReconnectAdvice;
-    constructor(options: RealtimeClientOptions);
-    get state(): RealtimeClientState;
+    constructor(options: RealtimeStackClientOptions);
+    get state(): RealtimeStackClientState;
     get desiredSubscriptions(): readonly string[];
-    get activeTransport(): RealtimeTransport | undefined;
-    on<TKey extends keyof RealtimeClientEvents>(type: TKey, listener: Listener<TKey>): () => void;
+    get activeTransport(): RealtimeStackTransport | undefined;
+    on<TKey extends keyof RealtimeStackClientEvents>(type: TKey, listener: Listener<TKey>): () => void;
     connect(signal?: AbortSignal): Promise<void>;
     disconnect(code?: number, reason?: string): Promise<void>;
     publish<TPayload extends JsonValue>(route: string, payload: TPayload, signal?: AbortSignal): Promise<ServerMessageEnvelope>;

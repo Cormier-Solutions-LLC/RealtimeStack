@@ -4,9 +4,9 @@ redis:
   port: 6380
   tls: true
   credentialsSecret:
-    name: prod-realtime-redis
-    passwordKey: realtime
-  username: realtime
-  instancePrefix: prod:realtime
+    name: prod-realtimestack-redis
+    passwordKey: realtimestack
+  username: realtimestack
+  instancePrefix: prod:realtimestack
 networkPolicy:
   externalRedisCidrs: [10.40.0.0/16]

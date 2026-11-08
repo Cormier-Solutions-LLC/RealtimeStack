@@ -23,8 +23,8 @@ logger = logging.getLogger("reference")
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("uvicorn").setLevel(logging.CRITICAL)
 logging.getLogger("websockets").setLevel(logging.CRITICAL)
-SESSION_COOKIE = "realtime_session"
-PROTOCOL = "realtime.v1"
+SESSION_COOKIE = "realtimestack_session"
+PROTOCOL = "realtimestack.v1"
 TICKET_DEADLINE_SECONDS = 15
 
 
@@ -111,8 +111,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 configured.SHARED_ASSET_ROOT / "failover.html",
                 configured.SHARED_ASSET_ROOT / "app.css",
                 configured.SHARED_ASSET_ROOT / "app.js",
-                configured.SDK_ASSET_ROOT / "realtime.iife.js",
-                configured.SDK_ASSET_ROOT / "realtime.iife.min.js",
+                configured.SDK_ASSET_ROOT / "realtimestack.iife.js",
+                configured.SDK_ASSET_ROOT / "realtimestack.iife.min.js",
             ):
                 if not path.is_file():
                     raise RuntimeError("required asset is unavailable")
@@ -177,7 +177,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def javascript() -> FileResponse:
         return asset(configured.SHARED_ASSET_ROOT, "app.js", "text/javascript")
 
-    @app.get("/_content/Realtime.Browser/{name}")
+    @app.get("/_content/RealtimeStack.Browser/{name}")
     async def sdk_asset(name: str) -> FileResponse:
         if not name or any(
             character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for character in name
@@ -281,7 +281,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.delete_cookie(SESSION_COOKIE)
         return response
 
-    @app.post("/realtime/tickets")
+    @app.post("/realtimestack/tickets")
     async def ticket(request: Request) -> Response:
         require_origin(request.headers.get("origin"))
         body = bytearray()
@@ -298,7 +298,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             async with asyncio.timeout(TICKET_DEADLINE_SECONDS):
                 async with request.app.state.http.stream(
-                    "POST", f"{configured.GATEWAY_URL}/realtime/tickets", content=bytes(body), headers=headers
+                    "POST", f"{configured.GATEWAY_URL}/realtimestack/tickets", content=bytes(body), headers=headers
                 ) as upstream:
                     response_body = bytearray()
                     async for chunk in upstream.aiter_bytes():
@@ -319,10 +319,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         return Response(bytes(response_body), status_code, media_type=content_type)
 
-    @app.api_route("/realtime/persistence/{path:path}", methods=["POST"])
-    @app.api_route("/realtime/http/{path:path}", methods=["GET", "POST", "DELETE"])
+    @app.api_route("/realtimestack/persistence/{path:path}", methods=["POST"])
+    @app.api_route("/realtimestack/http/{path:path}", methods=["GET", "POST", "DELETE"])
     async def http_fallback(path: str, request: Request) -> StreamingResponse:
-        if request.url.path.startswith("/realtime/persistence/") and path not in {
+        if request.url.path.startswith("/realtimestack/persistence/") and path not in {
             "records/read",
             "records/ack",
             "tasks/read",
@@ -335,7 +335,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             body.extend(chunk)
         headers = {
             name: request.headers[name]
-            for name in ("host", "origin", "cookie", "content-type", "x-realtime-connection")
+            for name in ("host", "origin", "cookie", "content-type", "x-realtimestack-connection")
             if name in request.headers
         }
         headers.update(public_forwarding_headers(configured))
@@ -373,7 +373,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         return response
 
-    @app.websocket("/realtime/ws")
+    @app.websocket("/realtimestack/ws")
     async def websocket_proxy(browser: WebSocket) -> None:
         if browser.headers.get("origin") != configured.PUBLIC_ORIGIN:
             await browser.close(code=1008, reason="origin rejected")
@@ -384,7 +384,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         gateway = urlsplit(configured.GATEWAY_URL)
         browser_authority = browser.headers.get("host", "")
         uri = urlunsplit(
-            ("wss" if gateway.scheme == "https" else "ws", browser_authority, "/realtime/ws", browser.url.query, "")
+            ("wss" if gateway.scheme == "https" else "ws", browser_authority, "/realtimestack/ws", browser.url.query, "")
         )
         headers = {"Cookie": browser.headers.get("cookie", ""), **public_forwarding_headers(configured)}
         try:

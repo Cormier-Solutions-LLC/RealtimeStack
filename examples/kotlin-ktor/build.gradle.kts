@@ -7,8 +7,8 @@ plugins {
     application
 }
 
-group = "com.realtime.examples"
-version = "1.1.2-beta"
+group = "com.realtimestack.examples"
+version = "2.0.0-beta"
 
 repositories { mavenCentral() }
 
@@ -33,7 +33,7 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-application { mainClass.set("com.realtime.example.ApplicationKt") }
+application { mainClass.set("com.realtimestack.example.ApplicationKt") }
 
 kotlin {
     jvmToolchain(25)

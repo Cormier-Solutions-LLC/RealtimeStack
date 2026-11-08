@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 
-namespace Realtime.Example.FullCircle;
+namespace RealtimeStack.Example.FullCircle;
 
 internal sealed class RedisDistributedCache(
-    Realtime.Redis.RedisConnectionProvider connections,
-    Realtime.Redis.RedisOptions redisOptions) : IDistributedCache
+    RealtimeStack.Redis.RedisConnectionProvider connections,
+    RealtimeStack.Redis.RedisOptions redisOptions) : IDistributedCache
 {
     private string Key(string key) => $"{redisOptions.InstancePrefix}:aspnet-session:{key}";
 

@@ -2,7 +2,7 @@ name: Repair failed CI
 
 on:
   workflow_run:
-    workflows: [Realtime gateway CI]
+    workflows: [RealtimeStack gateway CI]
     types: [completed]
 
 permissions:
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
       - name: Analyze ci-failed aggregate failure
         id: analyze
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8

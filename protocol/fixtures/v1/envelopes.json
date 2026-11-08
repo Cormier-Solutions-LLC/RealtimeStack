@@ -1,6 +1,6 @@
 {
   "protocolVersion": "1.0",
-  "subprotocol": "realtime.v1",
+  "subprotocol": "realtimestack.v1",
   "validClientEnvelopes": [
     {
       "version": "1.0",

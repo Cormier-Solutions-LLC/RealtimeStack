@@ -158,48 +158,50 @@ async function buildPackageConsumer() {
   await rm(consumerOutputRoot, { recursive: true, force: true });
   await mkdir(feed, { recursive: true });
   for (const project of [
-    "src/Realtime.Contracts/Realtime.Contracts.csproj",
-    "src/Realtime.Redis/Realtime.Redis.csproj",
-    "src/Realtime.AspNetCore/Realtime.AspNetCore.csproj",
-    "src/Realtime.HttpFallback/Realtime.HttpFallback.csproj",
-    "src/Realtime.Browser/Realtime.Browser.csproj",
-    "src/Realtime.Client/Realtime.Client.csproj",
-    "src/Realtime.Config/Realtime.Config.csproj",
-    "src/Realtime.Plugins.Persistence/Realtime.Plugins.Persistence.csproj",
-    "src/Realtime.Plugins.PostgreSql/Realtime.Plugins.PostgreSql.csproj",
-    "src/Realtime.Plugins.MySql/Realtime.Plugins.MySql.csproj",
-    "src/Realtime.Plugins.MariaDb/Realtime.Plugins.MariaDb.csproj",
-    "src/Realtime.Plugins.SqlServer/Realtime.Plugins.SqlServer.csproj",
-    "src/Realtime.Plugins.AzureSql/Realtime.Plugins.AzureSql.csproj",
-    "src/Realtime.Plugins.Oracle/Realtime.Plugins.Oracle.csproj",
-    "src/Realtime.Plugins.Sqlite/Realtime.Plugins.Sqlite.csproj",
-    "src/Realtime.Plugins.Db2/Realtime.Plugins.Db2.csproj",
-    "src/Realtime.Plugins.CockroachDb/Realtime.Plugins.CockroachDb.csproj",
-    "src/Realtime.Plugins.Snowflake/Realtime.Plugins.Snowflake.csproj",
+    "src/RealtimeStack.Contracts/RealtimeStack.Contracts.csproj",
+    "src/RealtimeStack.Plugins.Logging/RealtimeStack.Plugins.Logging.csproj",
+    "src/RealtimeStack.Redis/RealtimeStack.Redis.csproj",
+    "src/RealtimeStack.AspNetCore/RealtimeStack.AspNetCore.csproj",
+    "src/RealtimeStack.HttpFallback/RealtimeStack.HttpFallback.csproj",
+    "src/RealtimeStack.Browser/RealtimeStack.Browser.csproj",
+    "src/RealtimeStack.Client/RealtimeStack.Client.csproj",
+    "src/RealtimeStack.Config/RealtimeStack.Config.csproj",
+    "src/RealtimeStack.Plugins.Persistence/RealtimeStack.Plugins.Persistence.csproj",
+    "src/RealtimeStack.Plugins.PostgreSql/RealtimeStack.Plugins.PostgreSql.csproj",
+    "src/RealtimeStack.Plugins.MySql/RealtimeStack.Plugins.MySql.csproj",
+    "src/RealtimeStack.Plugins.MariaDb/RealtimeStack.Plugins.MariaDb.csproj",
+    "src/RealtimeStack.Plugins.SqlServer/RealtimeStack.Plugins.SqlServer.csproj",
+    "src/RealtimeStack.Plugins.AzureSql/RealtimeStack.Plugins.AzureSql.csproj",
+    "src/RealtimeStack.Plugins.Oracle/RealtimeStack.Plugins.Oracle.csproj",
+    "src/RealtimeStack.Plugins.Sqlite/RealtimeStack.Plugins.Sqlite.csproj",
+    "src/RealtimeStack.Plugins.Db2/RealtimeStack.Plugins.Db2.csproj",
+    "src/RealtimeStack.Plugins.CockroachDb/RealtimeStack.Plugins.CockroachDb.csproj",
+    "src/RealtimeStack.Plugins.Snowflake/RealtimeStack.Plugins.Snowflake.csproj",
   ]) {
     await command("dotnet", ["pack", project, "--configuration", "Release", "--no-build", "--output", feed]);
   }
   const consumerLockGraph = JSON.parse(await readFile(consumerLockTemplate, "utf8"));
   const targetGraph = consumerLockGraph.dependencies?.["net10.0"];
   for (const [packageId, packageFile] of [
-    ["RealtimeStack.AspNetCore", "RealtimeStack.AspNetCore.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Browser", "RealtimeStack.Browser.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Contracts", "RealtimeStack.Contracts.1.1.2-beta.nupkg"],
-    ["RealtimeStack.HttpFallback", "RealtimeStack.HttpFallback.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Redis", "RealtimeStack.Redis.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Client", "RealtimeStack.Client.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Config", "RealtimeStack.Config.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.Persistence", "RealtimeStack.Plugins.Persistence.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.PostgreSql", "RealtimeStack.Plugins.PostgreSql.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.MySql", "RealtimeStack.Plugins.MySql.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.MariaDb", "RealtimeStack.Plugins.MariaDb.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.SqlServer", "RealtimeStack.Plugins.SqlServer.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.AzureSql", "RealtimeStack.Plugins.AzureSql.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.Oracle", "RealtimeStack.Plugins.Oracle.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.Sqlite", "RealtimeStack.Plugins.Sqlite.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.Db2", "RealtimeStack.Plugins.Db2.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.CockroachDb", "RealtimeStack.Plugins.CockroachDb.1.1.2-beta.nupkg"],
-    ["RealtimeStack.Plugins.Snowflake", "RealtimeStack.Plugins.Snowflake.1.1.2-beta.nupkg"],
+    ["RealtimeStack.AspNetCore", "RealtimeStack.AspNetCore.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Browser", "RealtimeStack.Browser.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Contracts", "RealtimeStack.Contracts.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Logging", "RealtimeStack.Plugins.Logging.2.0.0-beta.nupkg"],
+    ["RealtimeStack.HttpFallback", "RealtimeStack.HttpFallback.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Redis", "RealtimeStack.Redis.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Client", "RealtimeStack.Client.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Config", "RealtimeStack.Config.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Persistence", "RealtimeStack.Plugins.Persistence.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.PostgreSql", "RealtimeStack.Plugins.PostgreSql.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.MySql", "RealtimeStack.Plugins.MySql.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.MariaDb", "RealtimeStack.Plugins.MariaDb.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.SqlServer", "RealtimeStack.Plugins.SqlServer.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.AzureSql", "RealtimeStack.Plugins.AzureSql.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Oracle", "RealtimeStack.Plugins.Oracle.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Sqlite", "RealtimeStack.Plugins.Sqlite.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Db2", "RealtimeStack.Plugins.Db2.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.CockroachDb", "RealtimeStack.Plugins.CockroachDb.2.0.0-beta.nupkg"],
+    ["RealtimeStack.Plugins.Snowflake", "RealtimeStack.Plugins.Snowflake.2.0.0-beta.nupkg"],
   ]) {
     if (targetGraph?.[packageId] === undefined) {
       throw new Error(`The committed consumer lock is missing ${packageId}.`);
@@ -208,7 +210,7 @@ async function buildPackageConsumer() {
   }
   await writeFile(consumerLock, `${JSON.stringify(consumerLockGraph, null, 2)}\n`);
   await writeFile(config, `<configuration><config><add key="globalPackagesFolder" value="${xml(packages)}" /></config><packageSources><clear /><add key="local" value="${xml(feed)}" /><add key="upstream" value="%NUGET_UPSTREAM_SOURCE%" /></packageSources><packageSourceMapping><packageSource key="local"><package pattern="RealtimeStack.*" /></packageSource><packageSource key="upstream"><package pattern="Microsoft.*" /><package pattern="OpenTelemetry" /><package pattern="OpenTelemetry.*" /><package pattern="StackExchange.Redis" /><package pattern="RESPite" /><package pattern="System.*" /><package pattern="Npgsql" /><package pattern="SQLitePCLRaw.*" /></packageSource></packageSourceMapping></configuration>\n`);
-  const project = "examples/full-circle/Realtime.Example.FullCircle.csproj";
+  const project = "examples/full-circle/RealtimeStack.Example.FullCircle.csproj";
   const properties = [
     "-p:UseProjectReferences=false",
     `-p:NuGetLockFilePath=${consumerLock}`,
@@ -216,9 +218,9 @@ async function buildPackageConsumer() {
   ];
   await command("dotnet", ["restore", project, "--locked-mode", "--configfile", config, ...properties], { env: upstreamPackageEnvironment });
   await command("dotnet", ["build", project, "--configuration", "Release", "--no-restore", ...properties]);
-  const endpointsPath = resolve(consumerOutput, "Release/net10.0/Realtime.Example.FullCircle.staticwebassets.endpoints.json");
+  const endpointsPath = resolve(consumerOutput, "Release/net10.0/RealtimeStack.Example.FullCircle.staticwebassets.endpoints.json");
   const endpoints = await readFile(endpointsPath, "utf8");
-  if (!endpoints.includes("_content/Realtime.Browser/realtime.iife.js")) {
+  if (!endpoints.includes("_content/RealtimeStack.Browser/realtimestack.iife.js")) {
     throw new Error("The package consumer did not expose the generated browser static asset route.");
   }
   const projectConfig = await writeProjectReferenceConfig();
@@ -235,11 +237,11 @@ try {
     await ensureDependencies();
     await command(executable("npm"), ["run", "build", "--silent"], { cwd: resolve(repositoryRoot, "sdk/typescript") });
     const projectConfig = await writeProjectReferenceConfig();
-    await command("dotnet", ["restore", "examples/full-circle/Realtime.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
+    await command("dotnet", ["restore", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
     // The application selects net10.0 from the multi-targeted contracts project. Build that package
     // explicitly so its netstandard2.0 asset also exists before the clean local-feed pack.
-    await command("dotnet", ["build", "src/Realtime.Contracts/Realtime.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
-    await command("dotnet", ["build", "examples/full-circle/Realtime.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    await command("dotnet", ["build", "src/RealtimeStack.Contracts/RealtimeStack.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    await command("dotnet", ["build", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
     await buildPackageConsumer();
   } else if (action === "validate") {
     await ensureDependencies();
@@ -255,7 +257,7 @@ try {
   } else if (action === "run") {
     await ensureDependencies();
     const instance = profile.instances[0];
-    const application = resolve(repositoryRoot, "examples/full-circle/bin/Release/net10.0/Realtime.Example.FullCircle.dll");
+    const application = resolve(repositoryRoot, "examples/full-circle/bin/Release/net10.0/RealtimeStack.Example.FullCircle.dll");
     await command("dotnet", [application], {
       cwd: resolve(repositoryRoot, "examples/full-circle"),
       env: {
@@ -266,7 +268,7 @@ try {
         FullCircle__InstanceName: instance.name,
         Redis__Endpoint: redisEndpoint,
         Redis__InstancePrefix: plan.redis.instancePrefix,
-        Realtime__AllowedOrigins__0: `http://127.0.0.1:${instance.port}`,
+        RealtimeStack__AllowedOrigins__0: `http://127.0.0.1:${instance.port}`,
         Diagnostics__AllowedOrigins__0: `http://127.0.0.1:${instance.port}`,
       },
       timeout: false,

@@ -23,7 +23,7 @@ proxy.on("error", (error, _request, response) => {
   console.error(JSON.stringify({ event: "gateway_proxy_error", error: error.name }));
   if (response && "writeHead" in response && !response.headersSent) {
     response.writeHead(502, { "content-type": "application/json", "cache-control": "no-store" });
-    response.end(JSON.stringify({ code: "gateway_unavailable", message: "The realtime gateway is unavailable." }));
+    response.end(JSON.stringify({ code: "gateway_unavailable", message: "The realtimestack gateway is unavailable." }));
   } else {
     response?.destroy?.();
   }

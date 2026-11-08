@@ -10,7 +10,7 @@ class ReferenceController < ApplicationController
   MAXIMUM_BODY_BYTES = 64 * 1_024
   MAXIMUM_UPSTREAM_BYTES = 64 * 1_024
   TICKET_DEADLINE_SECONDS = 15
-  SESSION_COOKIE = "realtime_session"
+  SESSION_COOKIE = "realtimestack_session"
   RFC3339_TIMESTAMP = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})\z/
 
   def self.valid_future_expiration?(value, now = Time.now.utc)
@@ -173,7 +173,7 @@ class ReferenceController < ApplicationController
 
   def forward_ticket(body)
     uri = settings.gateway_uri.dup
-    uri.path = [ "/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read" ].include?(request.path) ? request.path : "/realtime/tickets"
+    uri.path = [ "/realtimestack/persistence/records/read", "/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read" ].include?(request.path) ? request.path : "/realtimestack/tickets"
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == "https"
     http.open_timeout = 5

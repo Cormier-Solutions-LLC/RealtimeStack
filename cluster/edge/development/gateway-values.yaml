@@ -1,6 +1,6 @@
 gateway:
   allowedOrigins:
-    - https://realtime.example.test
+    - https://realtimestack.example.test
   shutdownDrainSeconds: 25
 
 networkPolicy:
@@ -13,6 +13,6 @@ networkPolicy:
 
 ingressRoute:
   enabled: true
-  host: realtime.example.test
-  path: /realtime/ws
-  tlsSecretName: realtime-local-tls
+  host: realtimestack.example.test
+  path: /realtimestack/ws
+  tlsSecretName: realtimestack-local-tls

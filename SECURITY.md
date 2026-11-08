@@ -1,7 +1,7 @@
 # Security policy
 
 
-Security is part of the Realtime Gateway contract. This policy covers the gateway, reusable .NET packages, TypeScript/browser client, protocol, lifecycle automation, deployment assets, and reference applications maintained in this repository.
+Security is part of the RealtimeStack Gateway contract. This policy covers the gateway, reusable .NET packages, TypeScript/browser client, protocol, lifecycle automation, deployment assets, and reference applications maintained in this repository.
 
 ## Supported versions
 
@@ -10,7 +10,7 @@ The project is currently pre-release. The repository has no published GitHub rel
 | Version or branch | Security support |
 | --- | --- |
 | `main` | Active development; accepted fixes are applied here |
-| `1.1.2-beta` prerelease artifacts | Security fixes during the beta support window |
+| `2.0.0-beta` prerelease artifacts | Security fixes during the beta support window |
 | Any other build, branch, fork, or modified artifact | Not supported by this repository |
 
 This table will be replaced with explicit release ranges when the first supported release is published. A commit, package, container image, npm artifact, or Helm chart built from `main` is not a supported release unless it is identified by the repository's release process.
@@ -19,7 +19,7 @@ This table will be replaced with explicit release ranges when the first supporte
 
 Do not disclose a suspected vulnerability in a GitHub issue, discussion, pull request, commit message, CI log, or other public or broadly visible channel. Do not include credentials, tokens, cookies, private keys, production configuration, customer data, or exploit material in ordinary project tickets.
 
-Because this is an internal repository and GitHub private vulnerability reporting is not currently enabled, contact the Realtime Solutions security team or a repository administrator through an organization-approved private channel. Repository administrators can create a private draft security advisory under the repository's **Security** tab and add the reporter as a collaborator when coordinated investigation is needed.
+Because this is an internal repository and GitHub private vulnerability reporting is not currently enabled, contact the RealtimeStack Solutions security team or a repository administrator through an organization-approved private channel. Repository administrators can create a private draft security advisory under the repository's **Security** tab and add the reporter as a collaborator when coordinated investigation is needed.
 
 Include the following when available:
 

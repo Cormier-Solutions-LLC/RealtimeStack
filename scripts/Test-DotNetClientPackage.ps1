@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$DotNetClientVersion = '1.1.2-beta',
+    [string]$DotNetClientVersion = '2.0.0-beta',
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$ContractsVersion = '1.1.2-beta',
+    [string]$ContractsVersion = '2.0.0-beta',
     [string]$PackageSource,
     [string]$UpstreamPackageSource = $env:NUGET_UPSTREAM_SOURCE
 )
@@ -14,7 +14,7 @@ if ([string]::IsNullOrWhiteSpace($UpstreamPackageSource)) {
     throw 'UpstreamPackageSource or NUGET_UPSTREAM_SOURCE must identify the configured upstream NuGet feed.'
 }
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-client-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtimestack-client-" + [guid]::NewGuid().ToString('N'))
 $feedPath = Join-Path $scratchRoot 'feed'
 $packagesPath = Join-Path $scratchRoot 'packages'
 $nugetConfigPath = Join-Path $scratchRoot 'NuGet.Config'
@@ -41,8 +41,8 @@ try {
 "@ | Set-Content -LiteralPath $nugetConfigPath -Encoding utf8NoBOM
     if ([string]::IsNullOrWhiteSpace($PackageSource)) {
         foreach ($project in @(
-            'src/Realtime.Contracts/Realtime.Contracts.csproj',
-            'src/Realtime.Client/Realtime.Client.csproj'
+            'src/RealtimeStack.Contracts/RealtimeStack.Contracts.csproj',
+            'src/RealtimeStack.Client/RealtimeStack.Client.csproj'
         )) {
             dotnet pack (Join-Path $repositoryRoot $project) --configuration Release --no-build --output $feedPath `
                 -p:DotNetClientVersion=$DotNetClientVersion -p:ContractsVersion=$ContractsVersion
@@ -73,15 +73,15 @@ try {
     $expectedEntries = @{
         $contractsPackage = @(
             'README.md',
-            'lib/netstandard2.0/Realtime.Contracts.dll',
-            'lib/netstandard2.0/Realtime.Contracts.xml',
-            'lib/net10.0/Realtime.Contracts.dll',
-            'lib/net10.0/Realtime.Contracts.xml'
+            'lib/netstandard2.0/RealtimeStack.Contracts.dll',
+            'lib/netstandard2.0/RealtimeStack.Contracts.xml',
+            'lib/net10.0/RealtimeStack.Contracts.dll',
+            'lib/net10.0/RealtimeStack.Contracts.xml'
         )
         $clientPackage = @(
             'README.md',
-            'lib/netstandard2.0/Realtime.Client.dll',
-            'lib/netstandard2.0/Realtime.Client.xml'
+            'lib/netstandard2.0/RealtimeStack.Client.dll',
+            'lib/netstandard2.0/RealtimeStack.Client.xml'
         )
     }
     foreach ($packagePath in $expectedEntries.Keys) {
@@ -142,11 +142,11 @@ try {
 "@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Consumer.csproj') -Encoding utf8NoBOM
 
         @'
-using Realtime.Client;
+using RealtimeStack.Client;
 
-using var client = new RealtimeClient(new RealtimeClientOptions
+using var client = new RealtimeStackClient(new RealtimeStackClientOptions
 {
-    Endpoint = new Uri("wss://gateway.example/realtime/ws"),
+    Endpoint = new Uri("wss://gateway.example/realtimestack/ws"),
 });
 Console.WriteLine(client.State);
 '@ | Set-Content -LiteralPath (Join-Path $consumerPath 'Program.cs') -Encoding utf8NoBOM

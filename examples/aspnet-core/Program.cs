@@ -1,8 +1,8 @@
-using Realtime.Config;
+using RealtimeStack.Config;
 using Microsoft.Data.Sqlite;
 using Npgsql;
-using Realtime.AspNetCore;
-using Realtime.HttpFallback;
+using RealtimeStack.AspNetCore;
+using RealtimeStack.HttpFallback;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDistributedMemoryCache();
@@ -12,17 +12,17 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromMinutes(20);
 });
-builder.Services.AddRealtimeConfiguration(builder.Configuration, registration => registration
+builder.Services.AddRealtimeStackConfiguration(builder.Configuration, registration => registration
     .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
     .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
     .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
 
 var app = builder.Build();
-app.UseRealtimeGateway();
+app.UseRealtimeStackGateway();
 app.UseSession();
-app.MapRealtimeGateway();
-if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
-app.MapRealtimePersistence(builder.Configuration);
-app.MapRealtimeDiagnostics();
-app.MapGet("/", () => Results.Text("Realtime ASP.NET Core integration example"));
+app.MapRealtimeStackGateway();
+if (app.Services.GetRequiredService<RealtimeStackSetupOptions>().HttpFallbackEnabled) app.MapRealtimeStackHttpFallback();
+app.MapRealtimeStackPersistence(builder.Configuration);
+app.MapRealtimeStackDiagnostics();
+app.MapGet("/", () => Results.Text("RealtimeStack ASP.NET Core integration example"));
 app.Run();

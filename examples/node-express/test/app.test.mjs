@@ -40,7 +40,7 @@ function fixture(overrides = {}) {
     heartbeatIntervalMilliseconds: 5000,
     instanceName: "node-express-a",
     topology: "non-ha",
-    redisInstancePrefix: "realtime:reference-node",
+    redisInstancePrefix: "realtimestack:reference-node",
     redisSessionKeyPrefix: "sessions",
     allowedTenants: ["tenant-a", "tenant-b"],
     allowedUsers: ["user-a", "user-b"],
@@ -104,7 +104,7 @@ test("rejects missing origins and identities without creating sessions", async (
     .set("Origin", context.config.publicOrigin)
     .send({ tenantId: "tenant-a", userId: "unknown" })
     .expect(400);
-  await request(context.app).post("/realtime/tickets")
+  await request(context.app).post("/realtimestack/tickets")
     .set("Origin", context.config.publicOrigin)
     .expect(401);
   assert.equal(context.values.size, 0);
@@ -119,7 +119,7 @@ test("establishes, validates, forwards, expires, and removes a session", async (
   assert.equal(loginResponse.body.tenantId, "tenant-a");
   assert.equal(context.values.size, 1);
   const [redisKey] = context.values.keys();
-  assert.match(redisKey, /^realtime:reference-node:sessions:[a-f0-9]{48}$/);
+  assert.match(redisKey, /^realtimestack:reference-node:sessions:[a-f0-9]{48}$/);
   assert.equal(loginResponse.text.includes(redisKey), false);
 
   const current = await agent.get("/api/session").expect(200);
@@ -135,12 +135,12 @@ test("establishes, validates, forwards, expires, and removes a session", async (
   const [replacementKey] = context.values.keys();
 
   const ticketBody = { topics: ["orders"] };
-  await agent.post("/realtime/tickets")
+  await agent.post("/realtimestack/tickets")
     .set("Origin", context.config.publicOrigin)
     .send(ticketBody)
     .expect(202, { forwarded: true });
   assert.deepEqual(context.proxyCalls, [{
-    path: "/realtime/tickets",
+    path: "/realtimestack/tickets",
     body: JSON.stringify(ticketBody),
     options: {
       target: context.config.gatewayUrl,
@@ -180,34 +180,34 @@ test("honors configured trusted proxy hops for secure session cookies", async ()
     .send({ tenantId: "tenant-a", userId: "user-a" })
     .expect(200);
   const cookies = response.headers["set-cookie"].join(";");
-  assert.match(cookies, /realtime_example_session=/);
+  assert.match(cookies, /realtimestack_example_session=/);
   assert.match(cookies, /Secure/);
 });
 
 test("serves only the canonical shared UI and generated SDK", async () => {
   const context = fixture();
   const page = await request(context.app).get("/").expect(200);
-  assert.match(page.text, /Realtime full circle/);
+  assert.match(page.text, /RealtimeStack full circle/);
   assert.match((await request(context.app).get("/fallback.html").expect(200)).text, /HTTP streaming/);
   assert.match((await request(context.app).get("/failover.html").expect(200)).text, /transport failover/);
-  assert.match((await request(context.app).get("/app.js").expect(200)).text, /Realtime\.RealtimeClient/);
+  assert.match((await request(context.app).get("/app.js").expect(200)).text, /RealtimeStack\.RealtimeStackClient/);
   const sdk = await request(context.app)
-    .get("/_content/Realtime.Browser/realtime.iife.js")
+    .get("/_content/RealtimeStack.Browser/realtimestack.iife.js")
     .expect(200);
-  assert.match(sdk.text, /Realtime/);
+  assert.match(sdk.text, /RealtimeStack/);
 });
 
 test("forwards HTTP fallback requests without stripping their mounted path", async () => {
   const context = fixture();
   await request(context.app)
-    .post("/realtime/http/connections/connection-a/messages?mode=test")
-    .set("X-Realtime-Connection", "connection-token")
+    .post("/realtimestack/http/connections/connection-a/messages?mode=test")
+    .set("X-RealtimeStack-Connection", "connection-token")
     .set("Content-Type", "application/json")
     .send({ type: "ping" })
     .expect(202, { forwarded: true });
 
   assert.equal(context.proxyCalls.length, 1);
-  assert.equal(context.proxyCalls[0].path, "/realtime/http/connections/connection-a/messages?mode=test");
+  assert.equal(context.proxyCalls[0].path, "/realtimestack/http/connections/connection-a/messages?mode=test");
   assert.deepEqual(context.proxyCalls[0].options, {
     target: context.config.gatewayUrl,
     changeOrigin: false,
@@ -226,12 +226,12 @@ test("keeps fallback receiver exemptions bounded", async () => {
     fallbackReceiverLimit: 2,
   });
   const fallback = request(app);
-  const path = "/realtime/http/connections/not-a-real-connection/poll";
+  const path = "/realtimestack/http/connections/not-a-real-connection/poll";
 
-  await fallback.post(path).set("X-Realtime-Connection", "not-a-real-token").expect(202);
-  await fallback.post(path).set("X-Realtime-Connection", "not-a-real-token").expect(202);
+  await fallback.post(path).set("X-RealtimeStack-Connection", "not-a-real-token").expect(202);
+  await fallback.post(path).set("X-RealtimeStack-Connection", "not-a-real-token").expect(202);
   const limited = await fallback.post(path)
-    .set("X-Realtime-Connection", "not-a-real-token")
+    .set("X-RealtimeStack-Connection", "not-a-real-token")
     .expect(429);
 
   assert.equal(limited.body.code, "rate_limited");
@@ -267,7 +267,7 @@ test("returns a generic gateway failure when forwarding cannot start", async () 
   });
   const failingAgent = request.agent(app);
   await login(failingAgent, context.config).expect(200);
-  const response = await failingAgent.post("/realtime/tickets")
+  const response = await failingAgent.post("/realtimestack/tickets")
     .set("Origin", context.config.publicOrigin)
     .expect(503);
   assert.equal(response.body.code, "service_unavailable");
@@ -290,7 +290,7 @@ test("destroys trickling ticket requests at the total deadline", async () => {
   const agent = request.agent(app);
   await login(agent, context.config).expect(200);
 
-  const response = await agent.post("/realtime/tickets")
+  const response = await agent.post("/realtimestack/tickets")
     .set("Origin", context.config.publicOrigin)
     .send({ topics: ["orders"] })
     .expect(503);
@@ -302,10 +302,10 @@ test("destroys trickling ticket requests at the total deadline", async () => {
 test("proxies only browser persistence operations and leaves worker routes private", async () => {
   const current = fixture();
   for (const path of ["records/read", "records/ack", "tasks/read"]) {
-    await request(current.app).post(`/realtime/persistence/${path}`).send({ streamId: "inbox" }).expect(202);
-    assert.equal(current.proxyCalls.at(-1).path, `/realtime/persistence/${path}`);
+    await request(current.app).post(`/realtimestack/persistence/${path}`).send({ streamId: "inbox" }).expect(202);
+    assert.equal(current.proxyCalls.at(-1).path, `/realtimestack/persistence/${path}`);
   }
-  await request(current.app).post("/realtime/persistence/worker/tasks").send({}).expect(404);
-  await request(current.app).get("/realtime/persistence/records/read").expect(404);
+  await request(current.app).post("/realtimestack/persistence/worker/tasks").send({}).expect(404);
+  await request(current.app).get("/realtimestack/persistence/records/read").expect(404);
   assert.equal(current.proxyCalls.length, 3);
 });

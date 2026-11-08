@@ -1,10 +1,10 @@
-# Realtime wire protocol
+# RealtimeStack wire protocol
 
 ## Connection and authentication
 
-Connect to `/realtime/ws` with the `realtime.v1` WebSocket subprotocol. Browser clients authenticate with the `realtime_session` HttpOnly cookie. Cookie authentication is accepted only when `Origin` exactly matches the request scheme, host, and effective port and is present in `Realtime:AllowedOrigins`. Tenant ID, user ID, topic grants, revocation, and expiry come only from the namespaced Redis session record; none are accepted from client payloads.
+Connect to `/realtimestack/ws` with the `realtimestack.v1` WebSocket subprotocol. Browser clients authenticate with the `realtimestack_session` HttpOnly cookie. Cookie authentication is accepted only when `Origin` exactly matches the request scheme, host, and effective port and is present in `RealtimeStack:AllowedOrigins`. Tenant ID, user ID, topic grants, revocation, and expiry come only from the namespaced Redis session record; none are accepted from client payloads.
 
-Approved cross-origin and non-browser clients first POST `/realtime/tickets` using a valid same-origin session. The returned cryptographically random ticket is valid for 30 seconds by default, is bound to the request host, and is atomically consumed once via the `ticket` query parameter. A rejected audience also consumes the ticket to prevent probing or replay.
+Approved cross-origin and non-browser clients first POST `/realtimestack/tickets` using a valid same-origin session. The returned cryptographically random ticket is valid for 30 seconds by default, is bound to the request host, and is atomically consumed once via the `ticket` query parameter. A rejected audience also consumes the ticket to prevent probing or replay.
 
 ## Envelope
 
@@ -50,7 +50,7 @@ Clients should use exponential reconnect delay capped by the advertised maximum 
 
 Redis Pub/Sub provides ephemeral cross-instance fan-out. Messages published while no subscribed gateway is connected are not replayed. The channel and all keys are namespaced by `Redis:InstancePrefix`; live WebSocket objects and local subscriptions are never stored in Redis.
 
-Redis Streams are optional and apply only when `eventClass` exactly matches `Realtime:DurableEventClasses`. Streams provide bounded retention, consumer-group acknowledgment, idle pending-entry reassignment, at-least-once delivery, Redis-backed completion markers, and a bounded poison stream for invalid JSON. Consumers must perform their idempotent side effect first, record the message ID as completed only after that side effect succeeds, and then acknowledge the stream entry. A recovered entry with an existing completion marker may be acknowledged without repeating the side effect. A crash before completion leaves the entry pending for recovery; a crash after completion but before acknowledgment is safe because recovery observes the completion marker. Pub/Sub delivery and Streams replay are separate semantics and must not be treated as interchangeable.
+Redis Streams are optional and apply only when `eventClass` exactly matches `RealtimeStack:DurableEventClasses`. Streams provide bounded retention, consumer-group acknowledgment, idle pending-entry reassignment, at-least-once delivery, Redis-backed completion markers, and a bounded poison stream for invalid JSON. Consumers must perform their idempotent side effect first, record the message ID as completed only after that side effect succeeds, and then acknowledge the stream entry. A recovered entry with an existing completion marker may be acknowledged without repeating the side effect. A crash before completion leaves the entry pending for recovery; a crash after completion but before acknowledgment is safe because recovery observes the completion marker. Pub/Sub delivery and Streams replay are separate semantics and must not be treated as interchangeable.
 
 ## Compatibility policy
 
@@ -58,4 +58,4 @@ Version `1.0` is matched exactly. Additive optional payload fields may be introd
 
 Metrics use bounded operation, outcome, direction, reason, endpoint, message-type, and close-code dimensions plus aggregate counters and histograms; correlation IDs are not metric labels. Traces and structured logs may carry bounded operational context but must never include cookies, tickets, message payloads, tenant IDs, or user IDs.
 
-Language-neutral fixtures in `protocol/fixtures/v1/envelopes.json` are consumed by both the .NET contract suite and `@realtime/client`. A fixture or protocol constant change that is not understood by either implementation fails CI. Later .NET consumer SDKs must consume the same fixtures; full cross-SDK live conformance is exercised by the packaged-consumer application after those SDKs are available.
+Language-neutral fixtures in `protocol/fixtures/v1/envelopes.json` are consumed by both the .NET contract suite and `@realtimestack/client`. A fixture or protocol constant change that is not understood by either implementation fails CI. Later .NET consumer SDKs must consume the same fixtures; full cross-SDK live conformance is exercised by the packaged-consumer application after those SDKs are available.

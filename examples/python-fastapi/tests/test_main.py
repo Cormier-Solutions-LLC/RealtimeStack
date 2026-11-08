@@ -45,7 +45,7 @@ def settings(**overrides: object) -> Settings:
         "HEARTBEAT_INTERVAL_MILLISECONDS": 5000,
         "INSTANCE_NAME": "python-fastapi-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "realtime:test",
+        "REDIS_INSTANCE_PREFIX": "realtimestack:test",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a",
         "ALLOWED_USERS": "user-a",
@@ -61,8 +61,8 @@ def test_public_forwarding_headers_use_the_validated_browser_scheme() -> None:
 
 def test_websocket_requires_the_exact_subprotocol() -> None:
     assert offers_protocol(None) is False
-    assert offers_protocol("other, realtime.v10") is False
-    assert offers_protocol("other, realtime.v1") is True
+    assert offers_protocol("other, realtimestack.v10") is False
+    assert offers_protocol("other, realtimestack.v1") is True
 
 
 @pytest.mark.asyncio
@@ -153,7 +153,7 @@ async def test_timezone_less_session_expiry_is_unauthenticated() -> None:
             )
 
     request = SimpleNamespace(
-        cookies={"realtime_session": "0123456789abcdef"},
+        cookies={"realtimestack_session": "0123456789abcdef"},
         app=SimpleNamespace(state=SimpleNamespace(redis=Redis())),
     )
     assert await read_session(request, settings()) is None  # type: ignore[arg-type]
@@ -167,7 +167,7 @@ async def test_ticket_forwards_the_public_scheme_to_an_internal_gateway() -> Non
     app.state.http = upstream
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="https://public.example.test") as client:
-        response = await client.post("/realtime/tickets", headers={"Origin": configured.PUBLIC_ORIGIN}, content=b"{}")
+        response = await client.post("/realtimestack/tickets", headers={"Origin": configured.PUBLIC_ORIGIN}, content=b"{}")
 
     assert response.status_code == 202
     assert upstream.calls == 1
@@ -181,7 +181,7 @@ async def test_ticket_rejects_streamed_oversized_upstream_response() -> None:
     app.state.http = Upstream(b"a" * (MAXIMUM_BODY_BYTES + 1))
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
-        response = await client.post("/realtime/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
+        response = await client.post("/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
 
     assert response.status_code == 503
     assert response.json()["code"] == "service_unavailable"
@@ -207,7 +207,7 @@ async def test_ticket_enforces_a_total_streaming_deadline(monkeypatch: pytest.Mo
     app.state.http = SlowUpstream()
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
-        response = await client.post("/realtime/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
+        response = await client.post("/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
 
     assert response.status_code == 503
     assert response.json()["code"] == "service_unavailable"
@@ -226,7 +226,7 @@ async def test_ticket_rejects_streamed_oversized_body_before_forwarding() -> Non
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
         response = await client.post(
-            "/realtime/tickets",
+            "/realtimestack/tickets",
             headers={"Origin": "http://127.0.0.1:15500"},
             content=content(),
         )
@@ -241,7 +241,7 @@ async def test_http_fallback_forwards_all_affinity_cookies() -> None:
         return httpx.Response(
             201,
             headers=[
-                ("set-cookie", "affinity=one; Path=/realtime/http; Secure; SameSite=None"),
+                ("set-cookie", "affinity=one; Path=/realtimestack/http; Secure; SameSite=None"),
                 ("set-cookie", "secondary=two; Path=/; Secure; SameSite=None"),
             ],
             content=b"{}",
@@ -253,13 +253,13 @@ async def test_http_fallback_forwards_all_affinity_cookies() -> None:
     transport = httpx.ASGITransport(app=app)
     try:
         async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
-            response = await client.post("/realtime/http/connect", content=b"")
+            response = await client.post("/realtimestack/http/connect", content=b"")
     finally:
         await upstream.aclose()
 
     assert response.status_code == 201
     assert response.headers.get_list("set-cookie") == [
-        "affinity=one; Path=/realtime/http; Secure; SameSite=None",
+        "affinity=one; Path=/realtimestack/http; Secure; SameSite=None",
         "secondary=two; Path=/; Secure; SameSite=None",
     ]
 

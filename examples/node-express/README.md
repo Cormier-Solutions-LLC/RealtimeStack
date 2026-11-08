@@ -1,12 +1,12 @@
 # Node.js and Express reference application
 
-This small adapter demonstrates a non-production Node.js/Express front end for Realtime. It establishes an Express session, writes the gateway-compatible identity record to Redis, forwards connection-ticket requests and WebSocket upgrades to a configured gateway, and serves the repository's canonical browser SDK and shared UI without copying either one.
+This small adapter demonstrates a non-production Node.js/Express front end for RealtimeStack. It establishes an Express session, writes the gateway-compatible identity record to Redis, forwards connection-ticket requests and WebSocket upgrades to a configured gateway, and serves the repository's canonical browser SDK and shared UI without copying either one.
 
 ## Prerequisites and local run
 
 - Node.js 26.x (`package.json` declares `>=26.10.0 <27`; the container pins 26.10.0) and npm 12.1.0. The engine declaration alone is not a runtime rejection.
 - Redis 7.4 or a compatible configured service
-- A running Realtime 0.1.x gateway configured to trust `PUBLIC_ORIGIN` and use the same Redis instance/session prefixes
+- A running RealtimeStack 0.1.x gateway configured to trust `PUBLIC_ORIGIN` and use the same Redis instance/session prefixes
 - Generated SDK and shared UI assets: run `npm ci` then `npm run build` in `sdk/typescript` to produce `sdk/typescript/dist` and `examples/shared-web/dist`.
 
 From `examples/node-express`, copy `.env.example` into your environment, replace `SESSION_SECRET`, and adjust every endpoint and port for the target environment. The file is an example fixture; the application does not read `.env` files or contain network defaults.
@@ -24,22 +24,22 @@ $env:SESSION_LIFETIME_SECONDS = "1200"
 $env:HEARTBEAT_INTERVAL_MILLISECONDS = "15000"
 $env:INSTANCE_NAME = "node-express-a"
 $env:TOPOLOGY = "non-ha"
-$env:REDIS_INSTANCE_PREFIX = "realtime:reference-node"
+$env:REDIS_INSTANCE_PREFIX = "realtimestack:reference-node"
 $env:REDIS_SESSION_KEY_PREFIX = "sessions"
 $env:ALLOWED_TENANTS = "tenant-a,tenant-b"
 $env:ALLOWED_USERS = "user-a,user-b"
 npm start
 ```
 
-Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `Realtime:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
+Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
 
 Startup validates all configuration and exits nonzero on a missing or invalid value or unavailable Redis. `TRUST_PROXY_HOPS` must match the exact number of trusted TLS-terminating proxies (`0` for direct traffic); ticket proxy requests are bounded to ten seconds. Lifecycle and proxy handlers emit structural JSON; Express application handlers log structural objects through the default console logger. They intentionally omit sensitive values, but do not assume all framework logs are redacted. `/health` checks Redis readiness and PING, returning 200 or 503; the global request limiter can also return 429. It does not probe the gateway. Shutdown on `SIGINT` or `SIGTERM` stops accepting work, closes the proxy and Redis client, and allows 15 seconds for WebSocket drain, with a forced-exit timer at 16 seconds.
 
 Run the repeatable checks with `npm ci && npm run check`. Run the container from the repository root so the canonical assets are in scope:
 
 ```text
-docker build -f examples/node-express/Dockerfile -t realtime-node-express:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15100:15100 --env-file examples/node-express/.env.example --env SESSION_SECRET --env GATEWAY_URL=http://host.docker.internal:15101 --env REDIS_URL=redis://host.docker.internal:16379 realtime-node-express:local
+docker build -f examples/node-express/Dockerfile -t realtimestack-node-express:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15100:15100 --env-file examples/node-express/.env.example --env SESSION_SECRET --env GATEWAY_URL=http://host.docker.internal:15101 --env REDIS_URL=redis://host.docker.internal:16379 realtimestack-node-express:local
 ```
 
 Set `SESSION_SECRET` in the invoking shell before the container command; `--env SESSION_SECRET` passes that runtime value. The mapped ports are local fixture values and must match your gateway, Redis and public origin. Replace every fixture value before a real deployment. Do not bake the environment file or a secret into the image.
@@ -51,7 +51,7 @@ Set `SESSION_SECRET` in the invoking shell before the container command; `--env 
 | Login and session establishment | Example | Allowlisted fixture identities; authoritative record is in Redis |
 | Connection-ticket endpoint | Available | Same-origin POST is forwarded to the gateway |
 | WebSocket connection | Available | Upgrade is forwarded; gateway validates Origin and ticket |
-| Connect, subscribe, publish, receive, reconnect | Available | Canonical `@realtime/client` browser client and shared UI |
+| Connect, subscribe, publish, receive, reconnect | Available | Canonical `@realtimestack/client` browser client and shared UI |
 | Expired session/ticket and rejected Origin | Available | Redis TTL/session lookup and gateway policy enforce rejection |
 | Health and redacted diagnostics | Available | No secrets or network identities returned |
 | Logout | Available | Redis and both cookies are removed |
@@ -69,9 +69,9 @@ This is a teaching adapter, not a production identity system or reverse proxy. `
 | Node.js | 26.10.0 | Supported example runtime |
 | Express | 5.2.1 | Supported example framework |
 | express-session | 1.19.0 | Supported middleware; MemoryStore is non-production |
-| Realtime browser SDK | 1.1.2-beta | Canonical generated shared JavaScript |
-| Realtime protocol | 1.0 | Supported wire protocol |
-| Realtime gateway | 0.1.x repository build | Required external dependency |
+| RealtimeStack browser SDK | 2.0.0-beta | Canonical generated shared JavaScript |
+| RealtimeStack protocol | 1.0 | Supported wire protocol |
+| RealtimeStack gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |
 | Container base | Node 26.10.0 Alpine, pinned OCI index digest | Reproducible multi-platform base |
 
@@ -89,4 +89,4 @@ Containers use `/app/shared-web/optimized`; `SHARED_ASSET_ROOT=/app/shared-web/r
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

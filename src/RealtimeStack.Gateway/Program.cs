@@ -1,0 +1,167 @@
+using RealtimeStack.Config;
+using Microsoft.Data.Sqlite;
+using Npgsql;
+using System.Reflection;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Options;
+using RealtimeStack.AspNetCore;
+using RealtimeStack.Contracts;
+using RealtimeStack.Gateway;
+using RealtimeStack.HttpFallback;
+using RealtimeStack.Redis;
+
+var setupOnly = args.Contains("--realtimestack-setup", StringComparer.Ordinal);
+var hostArgs = args.Where(argument => argument != "--realtimestack-setup").ToArray();
+var builder = WebApplication.CreateSlimBuilder(hostArgs);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    options.UseUtcTimestamp = true;
+});
+
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddCommandLine(hostArgs);
+// Preserve standalone gateway defaults when a host replaces the shipped settings file.
+builder.Configuration["RealtimeStackSetup:GatewayEnabled"] ??= "true";
+builder.Configuration["RealtimeStackSetup:HttpFallbackEnabled"] ??= builder.Configuration["RealtimeStackSetup:GatewayEnabled"];
+builder.Services.AddRealtimeStackConfiguration(builder.Configuration, registration => registration
+    .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
+    .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
+    .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
+var diagnosticsEnabled = builder.Configuration.GetValue<bool>("Diagnostics:Enabled");
+var diagnosticsPolicy = builder.Configuration["Diagnostics:AuthorizationPolicy"];
+var metricsPolicy = builder.Configuration["Metrics:AuthorizationPolicy"];
+var protectedMetricsEnabled = builder.Configuration.GetValue<bool>("Metrics:Enabled") &&
+    !string.IsNullOrWhiteSpace(metricsPolicy);
+if (diagnosticsEnabled && protectedMetricsEnabled &&
+    string.Equals(diagnosticsPolicy, metricsPolicy, StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Diagnostics and protected metrics require distinct authorization policies.");
+}
+if (diagnosticsEnabled)
+{
+    var diagnosticsToken = builder.Configuration["Diagnostics:OperatorToken"];
+    if (string.IsNullOrWhiteSpace(diagnosticsPolicy) || string.IsNullOrWhiteSpace(diagnosticsToken))
+    {
+        throw new InvalidOperationException(
+            "Standalone diagnostics require an authorization policy and a Secret-backed Diagnostics:OperatorToken.");
+    }
+    builder.Services.AddRealtimeStackDiagnosticsBearer(diagnosticsPolicy, diagnosticsToken);
+}
+if (protectedMetricsEnabled)
+{
+    var metricsToken = builder.Configuration["Metrics:ScrapeToken"];
+    if (string.IsNullOrWhiteSpace(metricsPolicy) || string.IsNullOrWhiteSpace(metricsToken))
+    {
+        throw new InvalidOperationException(
+            "Protected metrics require an authorization policy and a Secret-backed Metrics:ScrapeToken.");
+    }
+    if (diagnosticsEnabled && string.Equals(
+        metricsToken,
+        builder.Configuration["Diagnostics:OperatorToken"],
+        StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("Diagnostics and protected metrics require distinct bearer tokens.");
+    }
+    builder.Services.AddRealtimeStackMetricsBearer(metricsPolicy, metricsToken);
+}
+
+var app = builder.Build();
+if (setupOnly)
+{
+    await app.Services.GetRequiredService<RealtimeStackSetupManager>().InitializeAsync();
+    await app.DisposeAsync();
+    return;
+}
+var state = app.Services.GetRequiredService<GatewayState>();
+var metrics = app.Services.GetRequiredService<GatewayMetrics>();
+var gatewayOptions = app.Services.GetRequiredService<IOptions<GatewayOptions>>().Value;
+var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("GatewayLifecycle");
+var serviceVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+var logStarted = LoggerMessage.Define<string, string>(
+    LogLevel.Information,
+    new EventId(1000, "GatewayStarted"),
+    "Gateway {ServiceName} version {Version} started");
+var logDraining = LoggerMessage.Define<string>(
+    LogLevel.Information,
+    new EventId(1001, "GatewayDraining"),
+    "Gateway {ServiceName} is draining for shutdown");
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    state.MarkStarted();
+    logStarted(logger, gatewayOptions.ServiceName, serviceVersion, null);
+});
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    state.BeginDrain();
+    logDraining(logger, gatewayOptions.ServiceName, null);
+});
+
+app.UseRealtimeStackGateway();
+if (diagnosticsEnabled || protectedMetricsEnabled)
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
+app.MapRealtimeStackGateway();
+if (app.Services.GetRequiredService<RealtimeStackSetupOptions>().HttpFallbackEnabled) app.MapRealtimeStackHttpFallback();
+app.MapRealtimeStackPersistence(builder.Configuration);
+app.MapRealtimeStackDiagnostics();
+
+app.MapGet("/health/startup", Results<Ok<HealthStatusResponse>, JsonHttpResult<HealthStatusResponse>> () =>
+{
+    metrics.RecordHealthRequest("startup");
+    var started = state.IsStarted;
+    var response = CreateHealthResponse(started ? "healthy" : "starting");
+    return started
+        ? TypedResults.Ok(response)
+        : TypedResults.Json(
+            response,
+            RealtimeStackJsonSerializerContext.Default.HealthStatusResponse,
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+});
+
+app.MapGet("/health/live", Ok<HealthStatusResponse> () =>
+{
+    metrics.RecordHealthRequest("live");
+    return TypedResults.Ok(CreateHealthResponse("healthy"));
+});
+
+app.MapGet("/health/ready", async Task<Results<Ok<HealthStatusResponse>, JsonHttpResult<HealthStatusResponse>>> (CancellationToken cancellationToken) =>
+{
+    metrics.RecordHealthRequest("ready");
+    var ready = await state.IsReadyAsync(cancellationToken);
+    if (ready && app.Services.GetRequiredService<RealtimeStackSetupOptions>().PersistenceEnabled)
+    {
+        var checks = await app.Services.GetRequiredService<RealtimeStackSetupManager>().InspectAsync(cancellationToken);
+        ready = checks.All(check => check.State != RealtimeStackSetupState.Unavailable);
+    }
+    var response = CreateHealthResponse(ready ? "healthy" : "unavailable");
+    return ready
+        ? TypedResults.Ok(response)
+        : TypedResults.Json(
+            response,
+            RealtimeStackJsonSerializerContext.Default.HealthStatusResponse,
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+});
+
+app.Run();
+
+HealthStatusResponse CreateHealthResponse(string status)
+{
+    IReadOnlyDictionary<string, string>? checks = null;
+    if (gatewayOptions.DetailedHealthChecks)
+    {
+        checks = new Dictionary<string, string>
+        {
+            ["started"] = state.IsStarted ? "healthy" : "starting",
+            ["draining"] = state.IsDraining ? "draining" : "accepting-traffic",
+        };
+    }
+
+    return new HealthStatusResponse(status, serviceVersion, DateTimeOffset.UtcNow, checks);
+}
+
+public partial class Program;

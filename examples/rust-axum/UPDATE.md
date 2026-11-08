@@ -27,7 +27,7 @@ Update this adapter atomically with the gateway, protocol fixtures, shared web a
      - `cargo clippy --locked --all-targets -- -D warnings`
      - `cargo build --locked --release`
    - Build and scan the container from repository root:
-     - `docker build --file examples/rust-axum/Dockerfile --tag realtime-rust-axum:<candidate> .`
+     - `docker build --file examples/rust-axum/Dockerfile --tag realtimestack-rust-axum:<candidate> .`
      - Run the repository container vulnerability gate (HIGH/CRITICAL fail threshold).
    - Run shared browser smoke scenarios from `sdk/typescript`:
      - `npx playwright install --with-deps chromium`
@@ -46,4 +46,4 @@ If this procedure changes, coordinate matching updates to sibling adapter update
 
 Routes, configuration, runtime/dependencies, shared assets, protocol/gateway compatibility, and this example must not disappear silently. Each deprecation names the replacement, warning release, migration, security impact, verification, rollback, and removal version/window. The replacement comes first. Until another window exists, removal requires a breaking release and the previous repository version is the rollback target.
 
-There are no active deprecations. Redis record shape, `realtime_session`, Origin behavior, and ticket/WebSocket routes are coordinated breaking changes.
+There are no active deprecations. Redis record shape, `realtimestack_session`, Origin behavior, and ticket/WebSocket routes are coordinated breaking changes.

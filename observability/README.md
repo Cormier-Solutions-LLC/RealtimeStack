@@ -1,6 +1,6 @@
-# Realtime gateway observability
+# RealtimeStack gateway observability
 
-The `helm/realtime-gateway` chart can emit observability resources from values under `observability`:
+The `helm/realtimestack-gateway` chart can emit observability resources from values under `observability`:
 
 - `ServiceMonitor` when `metrics.enabled` and `observability.serviceMonitor.enabled` are both true and the `monitoring.coreos.com/v1/ServiceMonitor` CRD is available.
 - `PrometheusRule` when `metrics.enabled` and `observability.prometheusRule.enabled` are both true and the `monitoring.coreos.com/v1/PrometheusRule` CRD is available.

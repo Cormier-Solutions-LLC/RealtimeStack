@@ -46,6 +46,6 @@ ENV RUNNER_TOOL_CACHE=/opt/hostedtoolcache \
     CARGO_HOME=/home/runner/.cargo \
     RUSTUP_HOME=/home/runner/.rustup \
     PATH=/opt/ci-tools/bin:/opt/hostedtoolcache/node/26.10.0/x64/bin:/home/runner/.dotnet:/home/runner/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-LABEL org.opencontainers.image.title="Realtime Linux CI runner" \
+LABEL org.opencontainers.image.title="RealtimeStack Linux CI runner" \
       org.opencontainers.image.description="Ubuntu 24.04 ARC runner with audited CI toolchains and Playwright engines"
 USER runner

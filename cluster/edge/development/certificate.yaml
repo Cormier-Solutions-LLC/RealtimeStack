@@ -1,14 +1,14 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: realtime-local
-  namespace: development-realtime
+  name: realtimestack-local
+  namespace: development-realtimestack
   labels:
-    realtime.example/environment: development
+    realtimestack.example/environment: development
 spec:
-  secretName: realtime-local-tls
+  secretName: realtimestack-local-tls
   dnsNames:
-    - realtime.example.test
+    - realtimestack.example.test
   issuerRef:
     kind: ClusterIssuer
-    name: realtime-local-ca
+    name: realtimestack-local-ca

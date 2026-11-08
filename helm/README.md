@@ -1,6 +1,6 @@
-# Realtime gateway Helm chart
+# RealtimeStack gateway Helm chart
 
-`helm/realtime-gateway` is the versioned deployment chart for the Realtime gateway.
+`helm/realtimestack-gateway` is the versioned deployment chart for the RealtimeStack gateway.
 
 ## What the chart renders
 
@@ -29,8 +29,8 @@ Security defaults include `runAsUser/runAsGroup/fsGroup=1654`, `allowPrivilegeEs
 Validated in this repository with Helm `v3.21.4`:
 
 ```sh
-helm lint ./helm/realtime-gateway --strict
-helm template dev-realtime ./helm/realtime-gateway --namespace dev-realtime --values ./cluster/redis/managed-gateway-values.example.yaml
+helm lint ./helm/realtimestack-gateway --strict
+helm template dev-realtimestack ./helm/realtimestack-gateway --namespace dev-realtimestack --values ./cluster/redis/managed-gateway-values.example.yaml
 ```
 
 ## Install and upgrade
@@ -44,7 +44,7 @@ VALUES_FILE='<path-to-values.yaml>'
 IMAGE_REPOSITORY='<registry/repository>'
 IMAGE_DIGEST='sha256:<64-hex-digest>'
 
-helm upgrade --install "$RELEASE_NAME" ./helm/realtime-gateway \
+helm upgrade --install "$RELEASE_NAME" ./helm/realtimestack-gateway \
   --namespace "$NAMESPACE" \
   --create-namespace \
   --values "$VALUES_FILE" \
@@ -53,17 +53,17 @@ helm upgrade --install "$RELEASE_NAME" ./helm/realtime-gateway \
   --atomic --wait
 ```
 
-For an official version, download the public `realtime-gateway-<version>.tgz`
+For an official version, download the public `realtimestack-gateway-<version>.tgz`
 asset from that version's GitHub Release and use its path in place of
-`./helm/realtime-gateway`. The release also includes `release-manifest.json`,
+`./helm/realtimestack-gateway`. The release also includes `release-manifest.json`,
 which binds the coordinated version and source commit to the published gateway
 image evidence. Release assets are public when this repository is public; the
 short-lived Actions artifact is retained only as workflow evidence.
 
 ```sh
 VERSION='<version>'
-gh release download "${VERSION}" --pattern "realtime-gateway-${VERSION}.tgz"
-helm upgrade --install "$RELEASE_NAME" "./realtime-gateway-${VERSION}.tgz" \
+gh release download "${VERSION}" --pattern "realtimestack-gateway-${VERSION}.tgz"
+helm upgrade --install "$RELEASE_NAME" "./realtimestack-gateway-${VERSION}.tgz" \
   --namespace "$NAMESPACE" \
   --create-namespace \
   --values "$VALUES_FILE" \
@@ -76,7 +76,7 @@ For managed Redis gateway values, use `cluster/redis/managed-gateway-values.exam
 
 ## Naming
 
-Release and namespace names are configuration inputs. Use environment-specific names (for example, `dev-realtime` / `dev-realtime`) and keep those values outside source-controlled templates.
+Release and namespace names are configuration inputs. Use environment-specific names (for example, `dev-realtimestack` / `dev-realtimestack`) and keep those values outside source-controlled templates.
 
 ## Topology and Redis mode expectations
 

@@ -1,4 +1,4 @@
-/*! Realtime reference assets | MIT */
+/*! RealtimeStack reference assets | MIT */
 (() => {
   const output = document.querySelector("#events");
   const state = document.querySelector("#state");
@@ -8,12 +8,12 @@
   const transportControls = document.querySelector("#transport-controls");
   transportControls.hidden = pageMode !== "failover";
   document.querySelector("h1").textContent = pageMode === "fallback"
-    ? "Realtime HTTP streaming"
-    : pageMode === "failover" ? "Realtime transport failover" : "Realtime full circle";
+    ? "RealtimeStack HTTP streaming"
+    : pageMode === "failover" ? "RealtimeStack transport failover" : "RealtimeStack full circle";
   const messageModal = document.querySelector("#message-modal");
   const messageRoute = document.querySelector("#message-route");
   const messagePayload = document.querySelector("#message-payload");
-  const durable = new Realtime.RealtimePersistenceClient();
+  const durable = new RealtimeStack.RealtimeStackPersistenceClient();
   let displayedInbox;
   let durableRequests = new AbortController();
   const durableOutput = document.querySelector("#durable-result");
@@ -99,13 +99,13 @@
   document.querySelector("#connect").onclick = () => invoke(async () => {
     const configuration = await runtimeConfiguration;
     const transportOptions = pageMode === "fallback"
-      ? { transports: ["http-streaming"], httpStreaming: { url: "/realtime/http" } }
+      ? { transports: ["http-streaming"], httpStreaming: { url: "/realtimestack/http" } }
       : pageMode === "failover"
-        ? { transports: ["websocket", "http-streaming"], httpStreaming: { url: "/realtime/http" },
+        ? { transports: ["websocket", "http-streaming"], httpStreaming: { url: "/realtimestack/http" },
           ...(document.querySelector("#disable-websocket").checked
             ? { webSocketFactory: () => { throw new Error("WebSockets disabled by the example page."); } } : {}) }
         : {};
-    client = new globalThis.Realtime.RealtimeClient({ url: "/realtime/ws", authentication: { kind: "ticket" },
+    client = new globalThis.RealtimeStack.RealtimeStackClient({ url: "/realtimestack/ws", authentication: { kind: "ticket" },
       ...transportOptions,
       heartbeatIntervalMilliseconds: configuration.heartbeatIntervalMilliseconds,
       reconnect: { initialDelayMilliseconds: 50, maximumDelayMilliseconds: 500, jitterRatio: 0, maximumAttempts: 20 } });

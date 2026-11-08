@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <VersionPrefix>$(ContractsVersion)</VersionPrefix>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable><PackageId>RealtimeStack.Config</PackageId>
+    <Description>Registration, setup inspection, and first-run configuration for RealtimeStack systems and database plugins.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile><NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../RealtimeStack.AspNetCore/RealtimeStack.AspNetCore.csproj" />
+    <ProjectReference Include="../RealtimeStack.Browser/RealtimeStack.Browser.csproj" />
+    <ProjectReference Include="../RealtimeStack.Client/RealtimeStack.Client.csproj" />
+    <ProjectReference Include="../RealtimeStack.Contracts/RealtimeStack.Contracts.csproj" />
+    <ProjectReference Include="../RealtimeStack.HttpFallback/RealtimeStack.HttpFallback.csproj" />
+    <ProjectReference Include="../RealtimeStack.Redis/RealtimeStack.Redis.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.AzureSql/RealtimeStack.Plugins.AzureSql.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.CockroachDb/RealtimeStack.Plugins.CockroachDb.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.Db2/RealtimeStack.Plugins.Db2.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.MariaDb/RealtimeStack.Plugins.MariaDb.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.MySql/RealtimeStack.Plugins.MySql.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.Oracle/RealtimeStack.Plugins.Oracle.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.Persistence/RealtimeStack.Plugins.Persistence.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.PostgreSql/RealtimeStack.Plugins.PostgreSql.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.Snowflake/RealtimeStack.Plugins.Snowflake.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.Sqlite/RealtimeStack.Plugins.Sqlite.csproj" />
+    <ProjectReference Include="../RealtimeStack.Plugins.SqlServer/RealtimeStack.Plugins.SqlServer.csproj" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

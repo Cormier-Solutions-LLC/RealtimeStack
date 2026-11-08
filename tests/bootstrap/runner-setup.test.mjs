@@ -6,14 +6,14 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 const root = new URL('../../', import.meta.url);
-const action = readFileSync(new URL('.github/actions/setup-realtime-runner/action.yml', root), 'utf8');
-const setup = './.github/actions/setup-realtime-runner';
+const action = readFileSync(new URL('.github/actions/setup-realtimestack-runner/action.yml', root), 'utf8');
+const setup = './.github/actions/setup-realtimestack-runner';
 const linuxOnly = { skip: process.platform !== 'linux' };
 const scripts = [...action.matchAll(/^      run: \|\n((?:        .*\n|\n)+)/gm)]
   .map(match => match[1].replace(/^        /gm, ''));
 
 test('GitHub YAML files retain LF checkout with Windows line-ending settings', t => {
-  const directory = mkdtempSync(join(tmpdir(), 'realtime-yaml-checkout-'));
+  const directory = mkdtempSync(join(tmpdir(), 'realtimestack-yaml-checkout-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const git = (...args) => {
     const result = spawnSync('git', ['-c', 'core.autocrlf=true', '-c', 'core.eol=crlf', ...args], { cwd: directory, encoding: 'utf8' });
@@ -21,7 +21,7 @@ test('GitHub YAML files retain LF checkout with Windows line-ending settings', t
   };
   git('init');
   writeFileSync(join(directory, '.gitattributes'), readFileSync(new URL('.gitattributes', root)));
-  const paths = ['.github/workflows/ci.yml', '.github/workflows/ci-failure-autofix.yml', '.github/actions/setup-realtime-runner/action.yml'];
+  const paths = ['.github/workflows/ci.yml', '.github/workflows/ci-failure-autofix.yml', '.github/actions/setup-realtimestack-runner/action.yml'];
   for (const path of paths) {
     mkdirSync(join(directory, path, '..'), { recursive: true });
     writeFileSync(join(directory, path), readFileSync(new URL(path, root)));
@@ -64,7 +64,7 @@ test('all Linux jobs use shared setup after checkout and before dependent steps'
       const stepsBeforeSetup = job.slice(job.indexOf('    steps:'), setupIndex);
       assert.ok(!/\n        (?:run|shell):/.test(stepsBeforeSetup), `${file}: ${name} runs setup before scripts`);
       if (/docker\/login-action|docker (?:run|build|load)|start-ci-redis|    services:/.test(job)) {
-        assert.match(job.slice(setupIndex), /^uses: .*setup-realtime-runner\n        with:\n          docker: 'true'/);
+        assert.match(job.slice(setupIndex), /^uses: .*setup-realtimestack-runner\n        with:\n          docker: 'true'/);
       }
     }
   }
@@ -85,7 +85,7 @@ test('setup validation is triggered by workflow and local action changes', () =>
 });
 
 function fixture(t, overrides = {}) {
-  const directory = mkdtempSync(join(tmpdir(), 'realtime-runner-setup-'));
+  const directory = mkdtempSync(join(tmpdir(), 'realtimestack-runner-setup-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const log = join(directory, 'packages.log');
   const commands = {

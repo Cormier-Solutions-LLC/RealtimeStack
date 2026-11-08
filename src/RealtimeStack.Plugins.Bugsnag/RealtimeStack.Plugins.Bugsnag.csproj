@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <VersionPrefix>$(ContractsVersion)</VersionPrefix>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>RealtimeStack.Plugins.Bugsnag</PackageId>
+    <Description>Bugsnag error reporting adapter for RealtimeStack.Plugins.Logging.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Explicit null/range guards also compile for .NET Standard 2.0. -->
+    <NoWarn>$(NoWarn);CS1591;CA1510;CA1512</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../RealtimeStack.Plugins.Logging/RealtimeStack.Plugins.Logging.csproj" />
+    <PackageReference Include="Bugsnag" Version="[4.1.1,5.0.0)" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

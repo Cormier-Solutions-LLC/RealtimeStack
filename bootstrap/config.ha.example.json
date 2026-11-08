@@ -9,15 +9,15 @@
     "logDirectory": ".bootstrap/env/{environment}/logs"
   },
   "image": {
-    "repository": "ghcr.io/example-org/realtime-gateway",
-    "tag": "1.1.2-beta",
+    "repository": "ghcr.io/example-org/realtimestack-gateway",
+    "tag": "2.0.0-beta",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""
   },
   "kubernetes": {
     "context": "production",
-    "namespace": "prod-realtime",
+    "namespace": "prod-realtimestack",
     "storageClass": "longhorn",
     "failureDomains": 3
   },
@@ -25,7 +25,7 @@
     "traefikNamespace": "traefik",
     "traefikService": "traefik",
     "traefikPodLabels": { "app.kubernetes.io/name": "traefik" },
-    "directIngressNamespaceLabels": { "kubernetes.io/metadata.name": "prod-realtime" },
+    "directIngressNamespaceLabels": { "kubernetes.io/metadata.name": "prod-realtimestack" },
     "directIngressPodLabels": {},
     "trustedProxyCidrs": ["192.0.2.0/24"],
     "metalLbNamespace": "metallb-system",
@@ -38,10 +38,10 @@
     "externalHaConfirmed": false,
     "externalEgressCidrs": [],
     "tls": false,
-    "credentialsSecret": "prod-realtime-redis",
-    "credentialKey": "realtime",
+    "credentialsSecret": "prod-realtimestack-redis",
+    "credentialKey": "realtimestack",
     "adminCredentialKey": "redis-password",
-    "instancePrefix": "realtime:prod",
+    "instancePrefix": "realtimestack:prod",
     "managedChart": "oci://registry-1.docker.io/bitnamicharts/redis",
     "managedChartVersion": "23.1.1",
     "managedChartArchiveSha256": "sha256:05665707e771f9ed843842d3ebacb992ef1c4089f138b9711446b37db76ad60a",
@@ -74,8 +74,8 @@
     "host": "gateway.example.com",
     "allowedOrigins": ["https://gateway.example.com"],
     "entryPoint": "websecure",
-    "webSocketPath": "/realtime/ws",
-    "httpFallbackPath": "/realtime/http",
+    "webSocketPath": "/realtimestack/ws",
+    "httpFallbackPath": "/realtimestack/http",
     "tlsSecretName": "gateway-example-com-tls",
     "certificateName": "gateway-example-com"
   },
@@ -98,7 +98,7 @@
     "enabled": false,
     "provider": "PostgreSql",
     "customProviderImage": false,
-    "tableName": "realtime_records",
+    "tableName": "realtimestack_records",
     "commandTimeoutSeconds": 30,
     "connectionSecret": {
       "name": "",
@@ -106,7 +106,7 @@
     },
     "api": {
       "enabled": false,
-      "basePath": "/realtime/persistence",
+      "basePath": "/realtimestack/persistence",
       "workerTokenSecret": {
         "name": "",
         "key": "token"
@@ -121,7 +121,7 @@
     },
     "storage": {
       "existingClaim": "",
-      "mountPath": "/var/lib/realtime"
+      "mountPath": "/var/lib/realtimestack"
     },
     "egress": {
       "namespaceSelector": {},

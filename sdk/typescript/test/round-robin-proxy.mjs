@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const port = Number.parseInt(process.env.REALTIME_BROWSER_PROXY_PORT ?? "18083", 10);
-const backends = (process.env.REALTIME_BROWSER_BACKENDS ?? "http://127.0.0.1:18081,http://127.0.0.1:18082")
+const port = Number.parseInt(process.env.REALTIMESTACK_BROWSER_PROXY_PORT ?? "18083", 10);
+const backends = (process.env.REALTIMESTACK_BROWSER_BACKENDS ?? "http://127.0.0.1:18081,http://127.0.0.1:18082")
   .split(",")
   .map((entry) => new URL(entry));
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535 || backends.length < 2) {
@@ -19,8 +19,8 @@ let websocketIndex = 0;
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const staticFiles = new Map([
   ["/examples/browser/index.html", ["text/html; charset=utf-8", readFileSync(resolve(testRoot, "examples/browser/index.html"))]],
-  ["/examples/browser/realtime-example.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "examples/browser/realtime-example.js"))]],
-  ["/sdk/typescript/dist/realtime.iife.min.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "sdk/typescript/dist/realtime.iife.min.js"))]],
+  ["/examples/browser/realtimestack-example.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "examples/browser/realtimestack-example.js"))]],
+  ["/sdk/typescript/dist/realtimestack.iife.min.js", ["text/javascript; charset=utf-8", readFileSync(resolve(testRoot, "sdk/typescript/dist/realtimestack.iife.min.js"))]],
 ]);
 
 const server = createServer((request, response) => {
@@ -49,7 +49,7 @@ const server = createServer((request, response) => {
     return;
   }
   stats.httpRequests += 1;
-  if (request.url?.startsWith("/realtime/tickets")) {
+  if (request.url?.startsWith("/realtimestack/tickets")) {
     stats.ticketRequests += 1;
   }
   const target = backends[httpIndex++ % backends.length];

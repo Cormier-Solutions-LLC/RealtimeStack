@@ -17,7 +17,7 @@ final class ReferenceConfigTest extends TestCase
             'listen_host' => '127.0.0.1', 'port' => '15500', 'public_origin' => 'http://127.0.0.1:15500', 'gateway_url' => 'http://127.0.0.1:15501',
             'redis_url' => 'redis://127.0.0.1:6379', 'session_secret' => str_repeat('x', 32), 'session_lifetime_seconds' => '1200',
             'heartbeat_interval_milliseconds' => '5000',
-            'instance_name' => 'php-laravel-a', 'topology' => 'non-ha', 'redis_instance_prefix' => 'realtime:test',
+            'instance_name' => 'php-laravel-a', 'topology' => 'non-ha', 'redis_instance_prefix' => 'realtimestack:test',
             'redis_session_key_prefix' => 'sessions', 'allowed_tenants' => 'tenant-a', 'allowed_users' => 'user-a',
             'shared_asset_root' => __DIR__, 'sdk_asset_root' => __DIR__,
         ];
@@ -29,7 +29,7 @@ final class ReferenceConfigTest extends TestCase
         self::assertSame('127.0.0.1', $config->listenHost);
         self::assertSame(15500, $config->port);
         self::assertTrue($config->allows('tenant-a', 'user-a'));
-        self::assertSame('realtime:test:sessions:id', $config->sessionKey('id'));
+        self::assertSame('realtimestack:test:sessions:id', $config->sessionKey('id'));
         self::assertSame('http', $config->publicScheme());
         self::assertSame(5000, $config->heartbeatIntervalMilliseconds);
     }
@@ -140,7 +140,7 @@ final class ReferenceConfigTest extends TestCase
     {
         $caddyfile = file_get_contents(__DIR__.'/../../Caddyfile');
         self::assertIsString($caddyfile);
-        self::assertStringContainsString('@bounded_request path /api/login /realtime/tickets', $caddyfile);
+        self::assertStringContainsString('@bounded_request path /api/login /realtimestack/tickets', $caddyfile);
         self::assertStringContainsString('request_body @bounded_request', $caddyfile);
         self::assertStringContainsString('max_size 65536', $caddyfile);
         self::assertStringContainsString('header_up X-Forwarded-Proto {$PUBLIC_SCHEME}', $caddyfile);
@@ -152,8 +152,8 @@ final class ReferenceConfigTest extends TestCase
         $startup = file_get_contents(__DIR__.'/../../start.sh');
         self::assertIsString($preflight);
         self::assertIsString($startup);
-        self::assertStringContainsString('realtime.iife.js', $preflight);
-        self::assertStringContainsString('realtime.iife.min.js', $preflight);
+        self::assertStringContainsString('realtimestack.iife.js', $preflight);
+        self::assertStringContainsString('realtimestack.iife.min.js', $preflight);
         self::assertStringContainsString('readiness_url="http://$readiness_host:$PORT/api/diagnostics"', $startup);
         self::assertStringContainsString('json_decode(stream_get_contents(STDIN), true)', $startup);
         self::assertStringContainsString('=== "PHP / Laravel"', $startup);

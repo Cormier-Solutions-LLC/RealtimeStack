@@ -21,7 +21,7 @@ export default defineConfig({
   use: { baseURL: frontendOrigin, trace: "retain-on-failure", screenshot: "only-on-failure", video: "retain-on-failure" },
   webServer: [
     {
-      command: "dotnet run --project examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
+      command: "dotnet run --project examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
       cwd: repositoryRoot,
       url: `${gatewayOrigin}/health`,
       timeout: 60_000,
@@ -32,9 +32,9 @@ export default defineConfig({
         FullCircle__Topology: "non-ha",
         FullCircle__InstanceName: "gateway-a",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "realtime:go-gin-tests",
-        Realtime__SessionSource: "Cookie",
-        Realtime__AllowedOrigins__0: frontendOrigin,
+        Redis__InstancePrefix: "realtimestack:go-gin-tests",
+        RealtimeStack__SessionSource: "Cookie",
+        RealtimeStack__AllowedOrigins__0: frontendOrigin,
       },
     },
     {
@@ -47,7 +47,7 @@ export default defineConfig({
         LISTEN_HOST: "127.0.0.1", PORT: "15500", PUBLIC_ORIGIN: frontendOrigin, GATEWAY_URL: gatewayOrigin,
         REDIS_URL: `redis://${redisEndpoint}`, SESSION_LIFETIME_SECONDS: "1200", HEARTBEAT_INTERVAL_MILLISECONDS: "5000",
         INSTANCE_NAME: "go-gin-a", TOPOLOGY: "non-ha",
-        REDIS_INSTANCE_PREFIX: "realtime:go-gin-tests", REDIS_SESSION_KEY_PREFIX: "sessions",
+        REDIS_INSTANCE_PREFIX: "realtimestack:go-gin-tests", REDIS_SESSION_KEY_PREFIX: "sessions",
         ALLOWED_TENANTS: "tenant-a,tenant-b", ALLOWED_USERS: "user-a,user-b",
         SHARED_ASSET_ROOT: resolve(repositoryRoot, "examples/shared-web/dist/optimized"),
         SDK_ASSET_ROOT: resolve(repositoryRoot, "sdk/typescript/dist"),

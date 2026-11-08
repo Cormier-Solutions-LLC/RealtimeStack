@@ -1,6 +1,6 @@
 export interface WebSocketLike {
   readonly readyState: number;
-  readonly transport?: RealtimeTransport | undefined;
+  readonly transport?: RealtimeStackTransport | undefined;
   binaryType: BinaryType;
   onopen: ((event: Event) => void) | null;
   onmessage: ((event: MessageEvent) => void) | null;
@@ -10,15 +10,15 @@ export interface WebSocketLike {
   close(code?: number, reason?: string): void;
 }
 
-export type RealtimeTransport = "websocket" | "http-streaming";
+export type RealtimeStackTransport = "websocket" | "http-streaming";
 
 export interface HttpStreamingOptions {
   readonly url: string | URL;
   readonly fetch?: typeof globalThis.fetch;
 }
 
-export interface RealtimeTransportOptions {
-  readonly transports?: readonly RealtimeTransport[];
+export interface RealtimeStackTransportOptions {
+  readonly transports?: readonly RealtimeStackTransport[];
   readonly httpStreaming?: HttpStreamingOptions;
   readonly webSocketFactory?: (url: string, protocol: string) => WebSocketLike;
 }
@@ -39,7 +39,7 @@ function closeEvent(code: number, reason: string, wasClean: boolean): CloseEvent
 export function createTransportSocket(
   websocketUrl: string,
   protocol: string,
-  options: RealtimeTransportOptions,
+  options: RealtimeStackTransportOptions,
   nextConnectionUrl?: () => Promise<string>,
 ): WebSocketLike {
   const transports = options.transports ?? ["websocket"];
@@ -85,7 +85,7 @@ class InitializingFallbackSocket implements WebSocketLike {
     return this.state;
   }
 
-  public get transport(): RealtimeTransport | undefined {
+  public get transport(): RealtimeStackTransport | undefined {
     return this.socket?.transport ?? (this.opened ? "websocket" : undefined);
   }
 
@@ -202,7 +202,7 @@ class HttpStreamingSocket implements WebSocketLike {
       const response = await this.fetcher(this.connectionUrl(id, "messages"), {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", "X-Realtime-Connection": token },
+        headers: { "Content-Type": "application/json", "X-RealtimeStack-Connection": token },
         body: data,
         signal: this.controller.signal,
       });
@@ -219,7 +219,7 @@ class HttpStreamingSocket implements WebSocketLike {
       void this.fetcher(this.connectionUrl(id), {
         method: "DELETE",
         credentials: "include",
-        headers: { "X-Realtime-Connection": token },
+        headers: { "X-RealtimeStack-Connection": token },
         keepalive: true,
       }).catch(() => undefined);
     }
@@ -256,7 +256,7 @@ class HttpStreamingSocket implements WebSocketLike {
       const response = await this.fetcher(this.connectionUrl(this.connectionId, "poll"), {
         method: "POST",
         credentials: "include",
-        headers: { Accept: "application/json", "X-Realtime-Connection": this.connectionToken },
+        headers: { Accept: "application/json", "X-RealtimeStack-Connection": this.connectionToken },
         signal: this.controller.signal,
       });
       if (response.status === 204) continue;

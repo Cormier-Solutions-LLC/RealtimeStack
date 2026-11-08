@@ -7,7 +7,7 @@ const redisUrl = redisEndpoint.includes("://") ? redisEndpoint : `redis://${redi
 export default async function globalSetup() {
   const redis = createClient({ url: redisUrl });
   await redis.connect();
-  const sessionKey = `realtime:browser-tests:sessions:${sessionId}`;
+  const sessionKey = `realtimestack:browser-tests:sessions:${sessionId}`;
   await redis.set(sessionKey, JSON.stringify({
     tenantId: "browser-tenant",
     userId: "browser-user",
@@ -15,7 +15,7 @@ export default async function globalSetup() {
     expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
     revoked: false,
   }), { EX: 600 });
-  const isolatedSessionKey = "realtime:browser-tests:sessions:isolated-session-123456";
+  const isolatedSessionKey = "realtimestack:browser-tests:sessions:isolated-session-123456";
   await redis.set(isolatedSessionKey, JSON.stringify({
     tenantId: "isolated-tenant",
     userId: "isolated-user",
@@ -24,19 +24,19 @@ export default async function globalSetup() {
     revoked: false,
   }), { EX: 600 });
   const expiredTicket = "expired-browser-ticket-12345678901234567890";
-  await redis.set(`realtime:browser-tests:tickets:${expiredTicket}`, JSON.stringify({
+  await redis.set(`realtimestack:browser-tests:tickets:${expiredTicket}`, JSON.stringify({
     tenantId: "browser-tenant",
     userId: "browser-user",
     allowedTopics: ["orders"],
     expiresAt: new Date(Date.now() - 60_000).toISOString(),
-    audience: `127.0.0.1:${process.env.REALTIME_BROWSER_PROXY_PORT ?? "18083"}`,
+    audience: `127.0.0.1:${process.env.REALTIMESTACK_BROWSER_PROXY_PORT ?? "18083"}`,
   }), { EX: 600 });
   await redis.quit();
 
   return async () => {
     const cleanup = createClient({ url: redisUrl });
     await cleanup.connect();
-    await cleanup.del(sessionKey, isolatedSessionKey, `realtime:browser-tests:tickets:${expiredTicket}`);
+    await cleanup.del(sessionKey, isolatedSessionKey, `realtimestack:browser-tests:tickets:${expiredTicket}`);
     await cleanup.quit();
   };
 }

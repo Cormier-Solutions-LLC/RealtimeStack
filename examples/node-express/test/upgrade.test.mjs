@@ -49,7 +49,7 @@ test("destroys upgrades with malformed request targets", () => {
 
 test("forwards only the configured websocket path", () => {
   const context = fixture();
-  const request = { url: "/realtime/ws?ticket=example" };
+  const request = { url: "/realtimestack/ws?ticket=example" };
   const head = Buffer.alloc(0);
   context.handler(request, context.socket, head);
   assert.equal(context.socket.destroyed, false);
@@ -65,7 +65,7 @@ test("forwards only the configured websocket path", () => {
 
 test("destroys both sides when the gateway websocket handshake exceeds its deadline", () => {
   const context = fixture();
-  context.handler({ url: "/realtime/ws" }, context.socket, Buffer.alloc(0));
+  context.handler({ url: "/realtimestack/ws" }, context.socket, Buffer.alloc(0));
   context.deadline.callback();
   assert.match(context.proxyRequest.destroyedWith.message, /timed out/);
   assert.equal(context.socket.destroyed, true);
@@ -73,7 +73,7 @@ test("destroys both sides when the gateway websocket handshake exceeds its deadl
 
 test("cancels the gateway websocket handshake deadline after upgrade", () => {
   const context = fixture();
-  context.handler({ url: "/realtime/ws" }, context.socket, Buffer.alloc(0));
+  context.handler({ url: "/realtimestack/ws" }, context.socket, Buffer.alloc(0));
   const gateway = new EventEmitter();
   context.proxyRequest.emit("upgrade", {}, gateway);
   assert.deepEqual(context.cancelled, [context.deadline]);
@@ -82,7 +82,7 @@ test("cancels the gateway websocket handshake deadline after upgrade", () => {
 
 test("cancels the handshake and upstream request when the browser disconnects", () => {
   const context = fixture();
-  context.handler({ url: "/realtime/ws" }, context.socket, Buffer.alloc(0));
+  context.handler({ url: "/realtimestack/ws" }, context.socket, Buffer.alloc(0));
   context.socket.emit("close");
   assert.deepEqual(context.cancelled, [context.deadline]);
   assert.equal(context.proxyRequest.destroyed, true);

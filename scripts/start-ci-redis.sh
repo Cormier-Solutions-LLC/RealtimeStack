@@ -3,7 +3,7 @@ set -euo pipefail
 
 : "${CI_REDIS_IMAGE:?CI_REDIS_IMAGE must contain the complete Redis image reference}"
 
-container_name="realtime-ci-redis-${GITHUB_RUN_ID:-local}-${GITHUB_JOB:-job}"
+container_name="realtimestack-ci-redis-${GITHUB_RUN_ID:-local}-${GITHUB_JOB:-job}"
 bind_address="${CI_REDIS_BIND_ADDRESS:-127.0.0.1}"
 host_port="${CI_REDIS_PORT:-6379}"
 docker run --detach --rm \

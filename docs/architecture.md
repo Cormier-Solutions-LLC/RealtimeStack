@@ -2,9 +2,9 @@
 
 ## Deployment and hosting boundary
 
-`Realtime.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `RealtimeStack.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
+`RealtimeStack.Gateway` is a standalone ASP.NET Core process and Native AOT deployable. It composes the reusable `RealtimeStack.AspNetCore` package, adds the health endpoints and standalone diagnostics/metrics authentication helpers, and supplies JSON console logging. It has no dependency on a customer application.
 
-Applications that need the same realtime capability in an existing ASP.NET Core process can reference `RealtimeStack.AspNetCore` and call `AddRealtimeGateway`, `UseRealtimeGateway`, and `MapRealtimeGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
+Applications that need the same realtimestack capability in an existing ASP.NET Core process can reference `RealtimeStack.AspNetCore` and call `AddRealtimeStackGateway`, `UseRealtimeStackGateway`, and `MapRealtimeStackGateway`. The host remains responsible for its HTTP pipeline, session integration, authorization policies, configuration providers, and deployment lifecycle.
 
 Both hosting modes use the same protocol, Redis, diagnostics, metrics, and configuration contracts. Deployment names, network identities, trust boundaries, and Secret names are supplied at runtime rather than encoded in the application.
 
@@ -13,7 +13,7 @@ Both hosting modes use the same protocol, Redis, diagnostics, metrics, and confi
 - **`RealtimeStack.Contracts`** owns the wire envelopes, health and ticket DTOs, Redis records, durable messages, protocol validation, and source-generated `System.Text.Json` context. It targets .NET Standard 2.0 and .NET 10.
 - **`RealtimeStack.Redis`** owns the reconnecting Redis connection, session lookup, atomic single-use ticket issue/consume flow, namespaced Pub/Sub, and optional durable Streams store.
 - **`RealtimeStack.AspNetCore`** owns service registration, option validation, middleware and endpoint mapping, authentication resolution, connection lifecycle, dispatch and authorization, local connection state, Redis subscription, metrics, OpenTelemetry, diagnostics, and graceful drain behavior.
-- **`Realtime.Gateway`** is the standalone composition root and lifecycle host.
+- **`RealtimeStack.Gateway`** is the standalone composition root and lifecycle host.
 - **`RealtimeStack.Client`** is the .NET Standard 2.0 client, including transport abstraction, authentication refresh, bounded queues, request correlation, heartbeats, reconnect, and subscription restoration.
 - **`sdk/typescript`** is the canonical TypeScript/browser client and deterministic ESM/IIFE asset pipeline. **`RealtimeStack.Browser`** packages those browser artifacts for ASP.NET Core consumers.
 - **`RealtimeStack.HttpFallback`** is an optional ASP.NET Core transport package. It maps authenticated HTTP command and long-poll/stream endpoints while reusing the gateway's dispatcher, connection registry, authorization, and Redis delivery path.
@@ -24,7 +24,7 @@ The dependency direction is inward: hosts and clients depend on the public contr
 
 ## Connection and authentication flow
 
-1. The client connects to the configured WebSocket endpoint using the `realtime.v1` subprotocol.
+1. The client connects to the configured WebSocket endpoint using the `realtimestack.v1` subprotocol.
 2. The gateway resolves a server-controlled session identifier from the configured cookie or ASP.NET Core session source, or consumes a short-lived connection ticket. Query-string tickets are intended for clients that cannot send the session cookie and are redacted from application logging paths.
 3. Redis supplies the session/ticket identity, tenant, user, allowed topics, expiry, and revocation state. A ticket is audience-bound and atomically consumed once.
 4. The gateway registers the socket locally and periodically revalidates the authenticated session. Expired, revoked, invalid, or unavailable authentication closes the connection with a protocol-defined reason.
@@ -73,7 +73,7 @@ Secrets are referenced from existing Kubernetes Secrets and injected at runtime.
 
 ## Native AOT and supply-chain constraints
 
-- Protocol and HTTP DTOs must use `RealtimeJsonSerializerContext`; runtime reflection and unregistered dynamic JSON are not allowed on Native AOT paths.
+- Protocol and HTTP DTOs must use `RealtimeStackJsonSerializerContext`; runtime reflection and unregistered dynamic JSON are not allowed on Native AOT paths.
 - Compiler, analyzer, trimming, and AOT warnings fail the build.
 - The gateway publishes on the chiseled .NET 10 runtime-deps base as UID 1654 and disables runtime diagnostics in the container.
 - CI restores locked dependencies, verifies deterministic client/package outputs, tests clean consumers, scans source and images, smoke-tests a rootless read-only container, and emits SBOM and immutable release evidence.
@@ -81,6 +81,6 @@ Secrets are referenced from existing Kubernetes Secrets and injected at runtime.
 
 ## Versioning
 
-`Directory.Build.props` defines independent release inputs for the gateway application, container, Contracts, Redis adapter, ASP.NET Core integration, .NET client, browser package, and Helm chart. Each .NET project consumes only its corresponding application, container, or package property, allowing compatible artifacts to advance without forcing a single shared version. The TypeScript/npm version is maintained in `sdk/typescript/package.json` and must match the browser package version during the coordinated package build. The chart's source `version` and `appVersion` are maintained in `helm/realtime-gateway/Chart.yaml`.
+`Directory.Build.props` defines independent release inputs for the gateway application, container, Contracts, Redis adapter, ASP.NET Core integration, .NET client, browser package, and Helm chart. Each .NET project consumes only its corresponding application, container, or package property, allowing compatible artifacts to advance without forcing a single shared version. The TypeScript/npm version is maintained in `sdk/typescript/package.json` and must match the browser package version during the coordinated package build. The chart's source `version` and `appVersion` are maintained in `helm/realtimestack-gateway/Chart.yaml`.
 
-The NuGet packages, npm package, gateway application, container, Helm chart, scripts, and reference applications are coordinated at `1.1.2-beta`. Release automation may append source revision metadata where supported. Compatibility ranges, deterministic candidate construction, immutable evidence, publication, promotion, and rollback are defined in the [package release policy](package-release.md).
+The NuGet packages, npm package, gateway application, container, Helm chart, scripts, and reference applications are coordinated at `2.0.0-beta`. Release automation may append source revision metadata where supported. Compatibility ranges, deterministic candidate construction, immutable evidence, publication, promotion, and rollback are defined in the [package release policy](package-release.md).

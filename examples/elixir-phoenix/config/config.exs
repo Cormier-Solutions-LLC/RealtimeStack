@@ -11,8 +11,8 @@ config :logger, :default_handler,
 
 config :phoenix, :json_library, Jason
 
-config :realtime_example, RealtimeExample.Endpoint,
+config :realtimestack_example, RealtimeStackExample.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   server: true,
-  render_errors: [formats: [json: RealtimeExample.ErrorJSON], layout: false],
-  pubsub_server: RealtimeExample.PubSub
+  render_errors: [formats: [json: RealtimeStackExample.ErrorJSON], layout: false],
+  pubsub_server: RealtimeStackExample.PubSub

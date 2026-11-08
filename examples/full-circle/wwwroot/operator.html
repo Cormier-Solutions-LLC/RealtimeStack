@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Realtime operator diagnostics</title>
+  <title>RealtimeStack operator diagnostics</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
@@ -20,7 +20,7 @@
     </section>
     <section>
       <h2>Temporary logging</h2>
-      <label>Category <input id="category" value="Realtime"></label>
+      <label>Category <input id="category" value="RealtimeStack"></label>
       <label>Level <select id="level"><option>Debug</option><option>Trace</option><option>Information</option><option>Warning</option></select></label>
       <label>Duration seconds <input id="duration" type="number" min="30" max="3600" value="300"></label>
       <label>Reason <input id="reason" value="full-circle diagnostics verification"></label>
@@ -30,9 +30,9 @@
       <p>Automatic reversion in <strong id="countdown">not active</strong></p>
     </section>
     <section><h2>Live output</h2><pre id="output" aria-live="polite"></pre></section>
-    <p><a href="/">Return to realtime workflow</a></p>
+    <p><a href="/">Return to realtimestack workflow</a></p>
   </main>
-  <script src="/_content/Realtime.Browser/realtime.iife.js"></script>
+  <script src="/_content/RealtimeStack.Browser/realtimestack.iife.js"></script>
   <script src="/operator.js"></script>
 </body>
 </html>

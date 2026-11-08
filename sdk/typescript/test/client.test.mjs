@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   PROTOCOL_VERSION,
-  RealtimeClient,
-  RealtimeError,
-  RealtimeQueueError,
+  RealtimeStackClient,
+  RealtimeStackError,
+  RealtimeStackQueueError,
   WEBSOCKET_SUBPROTOCOL,
-} from "../dist/realtime.js";
+} from "../dist/realtimestack.js";
 
 class FakeSocket {
   readyState = 0;
@@ -81,8 +81,8 @@ test("ticket authentication connects without surfacing credential material", asy
   const sockets = [];
   const ticket = "test-ticket-material-12345678901234567890";
   let ticketEndpoint;
-  const client = new RealtimeClient({
-    url: "https://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "https://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async (endpoint) => {
@@ -103,7 +103,7 @@ test("ticket authentication connects without surfacing credential material", asy
 
   await client.connect();
   assert.equal(client.state, "open");
-  assert.equal(ticketEndpoint.toString(), "https://gateway.example/realtime/tickets");
+  assert.equal(ticketEndpoint.toString(), "https://gateway.example/realtimestack/tickets");
   assert.equal(sockets[0].protocol, WEBSOCKET_SUBPROTOCOL);
   assert.equal(new URL(sockets[0].url).protocol, "wss:");
   assert.equal(new URL(sockets[0].url).searchParams.get("ticket"), ticket);
@@ -112,15 +112,15 @@ test("ticket authentication connects without surfacing credential material", asy
 
 test("reserved reconnect context cannot be supplied by callers", () => {
   assert.throws(
-    () => new RealtimeClient({ url: "wss://gateway.example/realtime/ws?reconnect=true" }),
+    () => new RealtimeStackClient({ url: "wss://gateway.example/realtimestack/ws?reconnect=true" }),
     /reserved reconnect query parameter/,
   );
 });
 
 test("subscriptions are unique, dispatch events, and unsubscribe once", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -159,8 +159,8 @@ test("identical listener function registrations remain independent", async () =>
   let socket;
   let deliveries = 0;
   const listener = () => { deliveries += 1; };
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -194,8 +194,8 @@ test("identical listener function registrations remain independent", async () =>
 
 test("a failed final unsubscribe retains a retryable desired subscription", async () => {
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { enabled: false },
     webSocketFactory: (url, protocol) => {
       const socket = new FakeSocket(url, protocol);
@@ -216,7 +216,7 @@ test("a failed final unsubscribe retains a retryable desired subscription", asyn
     type: "error",
     error: { code: "service_draining", message: "Try again later." },
   });
-  await assert.rejects(failedUnsubscribe, (error) => error instanceof RealtimeError && error.code === "service_draining");
+  await assert.rejects(failedUnsubscribe, (error) => error instanceof RealtimeStackError && error.code === "service_draining");
   await waitUntil(() => client.state === "closed", "failed unsubscribe did not reset the connection");
   assert.deepEqual(client.desiredSubscriptions, ["topics/orders"]);
 
@@ -234,8 +234,8 @@ test("a failed final unsubscribe retains a retryable desired subscription", asyn
 
 test("duplicate subscribers share a failed in-flight subscription", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -249,16 +249,16 @@ test("duplicate subscribers share a failed in-flight subscription", async () => 
     type: "error",
     error: { code: "unauthorized", message: "Not authorized." },
   });
-  await assert.rejects(first, (error) => error instanceof RealtimeError && error.code === "unauthorized");
-  await assert.rejects(second, (error) => error instanceof RealtimeError && error.code === "unauthorized");
+  await assert.rejects(first, (error) => error instanceof RealtimeStackError && error.code === "unauthorized");
+  await assert.rejects(second, (error) => error instanceof RealtimeStackError && error.code === "unauthorized");
   assert.deepEqual(client.desiredSubscriptions, []);
   await client.disconnect();
 });
 
 test("duplicate subscriber cancellation is scoped to each caller", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -283,8 +283,8 @@ test("duplicate subscriber cancellation is scoped to each caller", async () => {
 test("reconnect uses a fresh ticket and restores each intended subscription once", async () => {
   const sockets = [];
   let ticketRequests = 0;
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async () => {
@@ -332,8 +332,8 @@ test("reconnect uses a fresh ticket and restores each intended subscription once
 test("temporary ticket-service interruption retries without corrupting subscription state", async () => {
   const sockets = [];
   let ticketRequests = 0;
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async () => {
@@ -370,8 +370,8 @@ test("temporary ticket-service interruption retries without corrupting subscript
 
 test("a failed subscription restoration reconciles every route and rejects queued commands", async () => {
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { initialDelayMilliseconds: 1, maximumDelayMilliseconds: 1, jitterRatio: 0, maximumAttempts: 2 },
     heartbeatIntervalMilliseconds: 60_000,
     webSocketFactory: (url, protocol) => {
@@ -394,7 +394,7 @@ test("a failed subscription restoration reconciles every route and rejects queue
   const publish = client.publish("topics/orders", { value: 42 });
   const publishRejection = assert.rejects(
     publish,
-    (error) => error instanceof RealtimeError && error.code === "subscription_restore_failed",
+    (error) => error instanceof RealtimeStackError && error.code === "subscription_restore_failed",
   );
   await waitUntil(() => sockets.length === 2 && sockets[1].sent.length === 1, "subscription restoration was not sent");
   const restoration = JSON.parse(sockets[1].sent[0]);
@@ -413,8 +413,8 @@ test("a failed subscription restoration reconciles every route and rejects queue
 
 test("a closed restoration socket cannot queue commands into the next generation", async () => {
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { initialDelayMilliseconds: 1, maximumDelayMilliseconds: 1, jitterRatio: 0, maximumAttempts: 3 },
     heartbeatIntervalMilliseconds: 60_000,
     webSocketFactory: (url, protocol) => {
@@ -447,8 +447,8 @@ test("a closed restoration socket cannot queue commands into the next generation
 test("open is emitted only after subscriptions are restored", async () => {
   const sockets = [];
   let publishAfterOpen;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { initialDelayMilliseconds: 1, maximumDelayMilliseconds: 1, jitterRatio: 0, maximumAttempts: 2 },
     heartbeatIntervalMilliseconds: 60_000,
     webSocketFactory: (url, protocol) => {
@@ -480,13 +480,13 @@ test("open is emitted only after subscriptions are restored", async () => {
 });
 
 test("bounded command queue rejects saturation", async () => {
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     maximumQueuedCommands: 1,
     webSocketFactory: (url, protocol) => new FakeSocket(url, protocol, false),
   });
   const first = client.publish("topics/orders", { value: 1 });
-  await assert.rejects(client.publish("topics/orders", { value: 2 }), RealtimeQueueError);
+  await assert.rejects(client.publish("topics/orders", { value: 2 }), RealtimeStackQueueError);
   await client.disconnect();
   await assert.rejects(first, /disconnected/i);
 });
@@ -496,8 +496,8 @@ test("an initial connection failure rejects every queued command", async () => {
   const ticketRequest = new Promise((_, reject) => {
     rejectTicketRequest = reject;
   });
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: { kind: "ticket", fetch: () => ticketRequest },
   });
   const first = client.publish("topics/orders", { value: 1 });
@@ -509,8 +509,8 @@ test("an initial connection failure rejects every queued command", async () => {
 });
 
 test("an explicit connection failure leaves the client closed", async () => {
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async () => new Response("unavailable", { status: 503 }),
@@ -525,8 +525,8 @@ test("an explicit connection failure rejects commands queued behind it", async (
   const ticketRequest = new Promise((_, reject) => {
     rejectTicketRequest = reject;
   });
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: { kind: "ticket", fetch: () => ticketRequest },
   });
   const connection = client.connect();
@@ -540,8 +540,8 @@ test("disconnect immediately cancels an outstanding ticket request and permits r
   const ticketRequest = new Promise(() => undefined);
   let ticketRequests = 0;
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: () => {
@@ -562,7 +562,7 @@ test("disconnect immediately cancels an outstanding ticket request and permits r
   });
   const connection = client.connect();
   await client.disconnect();
-  await assert.rejects(connection, (error) => error instanceof RealtimeError && error.code === "connection_superseded");
+  await assert.rejects(connection, (error) => error instanceof RealtimeStackError && error.code === "connection_superseded");
   assert.equal(sockets.length, 0);
   assert.equal(client.state, "closed");
   await client.connect();
@@ -573,8 +573,8 @@ test("disconnect immediately cancels an outstanding ticket request and permits r
 
 test("an explicit handshake failure does not schedule an automatic reconnect", async () => {
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { initialDelayMilliseconds: 1, maximumDelayMilliseconds: 1, jitterRatio: 0, maximumAttempts: 3 },
     webSocketFactory: (url, protocol) => {
       const socket = new FakeSocket(url, protocol, false);
@@ -594,8 +594,8 @@ test("an explicit handshake failure does not schedule an automatic reconnect", a
 test("close listeners observe closed state and can reconnect manually", async () => {
   const sockets = [];
   let manualConnection;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { enabled: false },
     webSocketFactory: (url, protocol) => {
       const socket = new FakeSocket(url, protocol);
@@ -627,8 +627,8 @@ test("a manual connection supersedes an in-flight automatic reconnect", async ()
     ticket: `${name}-ticket-123456789012345678901234567890`,
     expiresAt: new Date(Date.now() + 30_000).toISOString(),
   }), { status: 200, headers: { "Content-Type": "application/json" } });
-  const client = new RealtimeClient({
-    url: "wss://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "wss://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async () => {
@@ -665,8 +665,8 @@ test("a manual connection supersedes an in-flight automatic reconnect", async ()
 
 test("a synchronous send failure closes the broken socket and reconnects", async () => {
   const sockets = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { initialDelayMilliseconds: 1, maximumDelayMilliseconds: 1, jitterRatio: 0, maximumAttempts: 2 },
     heartbeatIntervalMilliseconds: 60_000,
     webSocketFactory: (url, protocol) => {
@@ -701,8 +701,8 @@ test("reconnect backoff advances after an immediate retry", async () => {
 
   try {
     const sockets = [];
-    const client = new RealtimeClient({
-      url: "wss://gateway.example/realtime/ws",
+    const client = new RealtimeStackClient({
+      url: "wss://gateway.example/realtimestack/ws",
       reconnect: { initialDelayMilliseconds: 0, maximumDelayMilliseconds: 4, jitterRatio: 0, maximumAttempts: 3 },
       heartbeatIntervalMilliseconds: 60_000,
       authentication: {
@@ -733,8 +733,8 @@ test("reconnect backoff advances after an immediate retry", async () => {
 
 test("invalid close arguments do not tear down an open client", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -748,8 +748,8 @@ test("invalid close arguments do not tear down an open client", async () => {
 
 test("queued and in-flight commands observe cancellation immediately", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol, false)),
     commandTimeoutMilliseconds: 60_000,
   });
@@ -770,8 +770,8 @@ test("queued and in-flight commands observe cancellation immediately", async () 
 
 test("oversized commands and cancelled operations fail before transport", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     maximumMessageBytes: 256,
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
@@ -779,7 +779,7 @@ test("oversized commands and cancelled operations fail before transport", async 
   await client.connect();
   await assert.rejects(
     client.publish("topics/orders", { value: "x".repeat(512) }),
-    (error) => error instanceof RealtimeError && error.code === "message_too_large",
+    (error) => error instanceof RealtimeStackError && error.code === "message_too_large",
   );
   const cancellation = new AbortController();
   cancellation.abort();
@@ -790,8 +790,8 @@ test("oversized commands and cancelled operations fail before transport", async 
 
 test("structured server errors reject only the correlated command", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -804,14 +804,14 @@ test("structured server errors reject only the correlated command", async () => 
     type: "error",
     error: { code: "unauthorized", message: "Not authorized." },
   });
-  await assert.rejects(publish, (error) => error instanceof RealtimeError && error.code === "unauthorized");
+  await assert.rejects(publish, (error) => error instanceof RealtimeStackError && error.code === "unauthorized");
   await client.disconnect();
 });
 
 test("heartbeat traffic keeps an otherwise idle client active", async () => {
   let socket;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => {
       socket = new FakeSocket(url, protocol);
       const originalSend = socket.send.bind(socket);
@@ -834,8 +834,8 @@ test("heartbeat traffic keeps an otherwise idle client active", async () => {
 test("malformed server traffic is isolated as a structured client error", async () => {
   let socket;
   const errors = [];
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,
   });
@@ -850,8 +850,8 @@ test("malformed server traffic is isolated as a structured client error", async 
 test("consumer listener failures cannot interrupt client lifecycle or event dispatch", async () => {
   let socket;
   let delivered = 0;
-  const client = new RealtimeClient({
-    url: "ws://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "ws://gateway.example/realtimestack/ws",
     reconnect: { enabled: false },
     webSocketFactory: (url, protocol) => (socket = new FakeSocket(url, protocol)),
     heartbeatIntervalMilliseconds: 60_000,

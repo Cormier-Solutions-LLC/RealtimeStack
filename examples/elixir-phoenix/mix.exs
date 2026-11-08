@@ -1,10 +1,10 @@
-defmodule RealtimeExample.MixProject do
+defmodule RealtimeStackExample.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :realtime_example,
-      version: "1.1.2-beta",
+      app: :realtimestack_example,
+      version: "2.0.0-beta",
       elixir: "~> 1.20.4",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -12,7 +12,7 @@ defmodule RealtimeExample.MixProject do
   end
 
   def application do
-    [mod: {RealtimeExample.Application, []}, extra_applications: [:logger, :crypto]]
+    [mod: {RealtimeStackExample.Application, []}, extra_applications: [:logger, :crypto]]
   end
 
   defp deps do

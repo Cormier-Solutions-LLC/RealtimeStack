@@ -1,28 +1,28 @@
 # Cross-platform bootstrap and topology guide
 
-Realtime has one versioned bootstrap contract and two supported entry points: `scripts/realtime-bootstrap.sh` for Bash 5 or later and `scripts/Realtime-Bootstrap.ps1` for PowerShell 7 or later. Both call the same Node.js 22+ engine, consume the same JSON configuration, render byte-identical plans and Helm values, use the same bounded operations, and return `0` for success, `1` for a prerequisite/execution failure, `2` for invalid input, or `3` for a safety stop.
+RealtimeStack has one versioned bootstrap contract and two supported entry points: `scripts/realtimestack-bootstrap.sh` for Bash 5 or later and `scripts/RealtimeStack-Bootstrap.ps1` for PowerShell 7 or later. Both call the same Node.js 22+ engine, consume the same JSON configuration, render byte-identical plans and Helm values, use the same bounded operations, and return `0` for success, `1` for a prerequisite/execution failure, `2` for invalid input, or `3` for a safety stop.
 
-Use `scripts/realtime-redis-secret.sh` or `scripts/Set-RealtimeRedisSecret.ps1` before a managed-Redis install. Those wrappers share one implementation, accept explicit context/namespace/Secret/key/password-file parameters, remove trailing CR/LF bytes, reject embedded newlines and identical credentials, and submit Secret data through standard input without exposing password values in process arguments. Run either bootstrap wrapper with `help`/`-Action help` for its shared command summary and use each PowerShell script's `Get-Help -Full` output for parameter help.
+Use `scripts/realtimestack-redis-secret.sh` or `scripts/Set-RealtimeStackRedisSecret.ps1` before a managed-Redis install. Those wrappers share one implementation, accept explicit context/namespace/Secret/key/password-file parameters, remove trailing CR/LF bytes, reject embedded newlines and identical credentials, and submit Secret data through standard input without exposing password values in process arguments. Run either bootstrap wrapper with `help`/`-Action help` for its shared command summary and use each PowerShell script's `Get-Help -Full` output for parameter help.
 
 ## Quick start
 
 Copy `bootstrap/config.example.json` for non-HA or `bootstrap/config.ha.example.json` for HA to ignored `.bootstrap/env/<environment>/config.json`, replace every example target with the intended environment, and keep the selected `topology` aligned with the file. Never put credentials in the file. It contains only existing Kubernetes Secret names and configurable key names. For a public registry image, leave `image.pullSecretName` empty; for a private image, create the pull Secret out of band and reference only its name.
 
 ```bash
-export REALTIME_BOOTSTRAP_CONFIG=/secure/config/realtime-dev.json
-bash ./scripts/realtime-bootstrap.sh plan --profile non-ha
-bash ./scripts/realtime-bootstrap.sh prerequisites --profile non-ha
-bash ./scripts/realtime-bootstrap.sh install --profile non-ha --name-suffix team-a
+export REALTIMESTACK_BOOTSTRAP_CONFIG=/secure/config/realtimestack-dev.json
+bash ./scripts/realtimestack-bootstrap.sh plan --profile non-ha
+bash ./scripts/realtimestack-bootstrap.sh prerequisites --profile non-ha
+bash ./scripts/realtimestack-bootstrap.sh install --profile non-ha --name-suffix team-a
 ```
 
 ```powershell
-$env:REALTIME_BOOTSTRAP_CONFIG = 'C:\secure\config\realtime-dev.json'
-./scripts/Realtime-Bootstrap.ps1 -Action plan -Profile non-ha
-./scripts/Realtime-Bootstrap.ps1 -Action prerequisites -Profile non-ha
-./scripts/Realtime-Bootstrap.ps1 -Action install -Profile non-ha -NameSuffix team-a
+$env:REALTIMESTACK_BOOTSTRAP_CONFIG = 'C:\secure\config\realtimestack-dev.json'
+./scripts/RealtimeStack-Bootstrap.ps1 -Action plan -Profile non-ha
+./scripts/RealtimeStack-Bootstrap.ps1 -Action prerequisites -Profile non-ha
+./scripts/RealtimeStack-Bootstrap.ps1 -Action install -Profile non-ha -NameSuffix team-a
 ```
 
-`--config`/`-Config` takes precedence over `REALTIME_BOOTSTRAP_CONFIG`. `--name-suffix`/`-NameSuffix` overrides the configured suffix, derives the release and Redis instance identities together, and writes the ignored `.bootstrap/naming.json` manifest consumed by other automation. The lifecycle actions are `prerequisites`, `plan`, `bootstrap`, `backup`, `install`, `update`, `validate`, `rollback`, `recover`, and `teardown`. `bootstrap` performs locked .NET restore and a Release build; `backup` captures the current target without changing it. `organize --dry-run` previews deterministic moves from a legacy flat `.bootstrap` directory without writing a manifest or lifecycle log, `organize` applies them and writes a manifest under `.bootstrap/organization`, and `restore-layout --manifest <file> --dry-run` previews the reverse operation before `restore-layout --manifest <file>` applies it. Bash flags use kebab case; PowerShell parameters use normal PowerShell casing. `--dry-run`/`-DryRun`, the timeout, topology confirmation, backup path, manifest path, and force switch have identical meaning.
+`--config`/`-Config` takes precedence over `REALTIMESTACK_BOOTSTRAP_CONFIG`. `--name-suffix`/`-NameSuffix` overrides the configured suffix, derives the release and Redis instance identities together, and writes the ignored `.bootstrap/naming.json` manifest consumed by other automation. The lifecycle actions are `prerequisites`, `plan`, `bootstrap`, `backup`, `install`, `update`, `validate`, `rollback`, `recover`, and `teardown`. `bootstrap` performs locked .NET restore and a Release build; `backup` captures the current target without changing it. `organize --dry-run` previews deterministic moves from a legacy flat `.bootstrap` directory without writing a manifest or lifecycle log, `organize` applies them and writes a manifest under `.bootstrap/organization`, and `restore-layout --manifest <file> --dry-run` previews the reverse operation before `restore-layout --manifest <file>` applies it. Bash flags use kebab case; PowerShell parameters use normal PowerShell casing. `--dry-run`/`-DryRun`, the timeout, topology confirmation, backup path, manifest path, and force switch have identical meaning.
 
 ## Topology decision
 
@@ -52,7 +52,7 @@ For an HA release, execute the approved nonproduction failure scenarios in `docs
 
 ## Support, migration, and deprecation
 
-The former `Bootstrap-Realtime.ps1` and `Deploy-Realtime.ps1` remain compatibility entry points during the v1 transition. New automation should use this cross-shell contract. Their bootstrap, validate/plan, deploy, rollback, remove, backup/recovery capabilities map respectively to `prerequisites`/`install`, `validate`/`plan`, `install`/`update`, `rollback`, `teardown`, and the automatic backup plus `recover` actions. No new feature is added to only one legacy script.
+The former `Bootstrap-RealtimeStack.ps1` and `Deploy-RealtimeStack.ps1` remain compatibility entry points during the v1 transition. New automation should use this cross-shell contract. Their bootstrap, validate/plan, deploy, rollback, remove, backup/recovery capabilities map respectively to `prerequisites`/`install`, `validate`/`plan`, `install`/`update`, `rollback`, `teardown`, and the automatic backup plus `recover` actions. No new feature is added to only one legacy script.
 
 Schema version 2 rejects unknown fields and invalid combinations. Migrate a version 1 configuration by setting `schemaVersion` to `2`, adding `ingress.webSocketPath` and `ingress.httpFallbackPath`, and adding `redis.managedChartArchiveSha256` plus the digest-pinned `redis.managedImages` object from the example. Version 1 configs are intentionally rejected because silently retaining rolling Redis images or an unpatched Sentinel Service recreates the startup and data-compatibility failures this contract fixes. A future incompatible field change increments `schemaVersion` and ships migration notes. Configuration, generated plans, backups, and logs may contain environment identity and must follow the operator’s retention policy; credentials must remain in the configured Secret provider.
 

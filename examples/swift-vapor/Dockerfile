@@ -10,7 +10,7 @@ COPY examples/swift-vapor/Sources ./Sources
 COPY examples/swift-vapor/Tests ./Tests
 RUN --mount=type=cache,id=swift-vapor-build,target=/source/.build \
     swift build --configuration release --static-swift-stdlib --disable-sandbox \
-    && cp "$(swift build --configuration release --show-bin-path)/RealtimeVaporExample" /server
+    && cp "$(swift build --configuration release --show-bin-path)/RealtimeStackVaporExample" /server
 
 FROM ${GO_IMAGE} AS caddy
 WORKDIR /source

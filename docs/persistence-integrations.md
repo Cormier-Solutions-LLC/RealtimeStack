@@ -1,13 +1,13 @@
 # Persistence across integrations
 
-The gateway exposes an optional HTTP interface independent of the WebSocket wire protocol. Node/Express, Spring Boot, Ktor, Axum, Gin, Phoenix, Laravel, Rails, and Vapor reference adapters forward the three browser operations at `/realtime/persistence`. Python/FastAPI does the same. They preserve the public Host, Origin, cookie and configured forwarding scheme. They do not proxy worker-write routes. The ASP.NET and full-circle examples map the same endpoints directly. Helm public ingress follows the same boundary.
+The gateway exposes an optional HTTP interface independent of the WebSocket wire protocol. Node/Express, Spring Boot, Ktor, Axum, Gin, Phoenix, Laravel, Rails, and Vapor reference adapters forward the three browser operations at `/realtimestack/persistence`. Python/FastAPI does the same. They preserve the public Host, Origin, cookie and configured forwarding scheme. They do not proxy worker-write routes. The ASP.NET and full-circle examples map the same endpoints directly. Helm public ingress follows the same boundary.
 
 Enable the gateway's persistence and API settings, register the selected driver, supply its connection Secret, and initialize the schema as described in [configuration](configuration.md). Reference adapters and the shared UI use the default API path; changing it requires matching proxy/client route configuration. A disabled API returns not found. The shared browser examples offer saved-item reads, acknowledgment of displayed items, and task lookup by ID.
 
 ## Browser and TypeScript
 
 ```javascript
-const saved = new Realtime.RealtimePersistenceClient();
+const saved = new RealtimeStack.RealtimeStackPersistenceClient();
 const records = await saved.read("inbox", "notification", lastProcessedSequence, 100);
 // Process and deduplicate records, then acknowledge only successfully processed data.
 if (records.length) await saved.acknowledge("inbox", "notification", records.at(-1).sequence);
@@ -18,19 +18,19 @@ The ESM/TypeScript export has the same class name. Browser operations use same-o
 
 ## Portable .NET client
 
-`RealtimeStack.Client` includes `RealtimePersistenceClient`, `RealtimeInboxKind`, `RealtimeSavedRecord`, and `RealtimeTaskStatus`, independently of ASP.NET or the database plugins. Supply a host-owned `HttpClient` with the correct BaseAddress, cookies, Origin and TLS policy; disable automatic redirects for credential-bearing traffic.
+`RealtimeStack.Client` includes `RealtimeStackPersistenceClient`, `RealtimeStackInboxKind`, `RealtimeStackSavedRecord`, and `RealtimeStackTaskStatus`, independently of ASP.NET or the database plugins. Supply a host-owned `HttpClient` with the correct BaseAddress, cookies, Origin and TLS policy; disable automatic redirects for credential-bearing traffic.
 
 ```csharp
-var saved = new Realtime.Client.RealtimePersistenceClient(http);
-var notifications = await saved.ReadAsync("inbox", RealtimeInboxKind.Notification, cancellationToken: token);
+var saved = new RealtimeStack.Client.RealtimeStackPersistenceClient(http);
+var notifications = await saved.ReadAsync("inbox", RealtimeStackInboxKind.Notification, cancellationToken: token);
 var status = await saved.GetTaskStatusAsync(taskId, token);
 ```
 
-The .NET console example also accepts `--task-status TASK_ID`, using `REALTIME_ENDPOINT`, `REALTIME_ORIGIN` and `REALTIME_COOKIE`. Ticket-only authentication cannot read persistent data: task and inbox reads require the existing session. Do not log cookie values.
+The .NET console example also accepts `--task-status TASK_ID`, using `REALTIMESTACK_ENDPOINT`, `REALTIMESTACK_ORIGIN` and `REALTIMESTACK_COOKIE`. Ticket-only authentication cannot read persistent data: task and inbox reads require the existing session. Do not log cookie values.
 
 ## HTTP contract for every server language
 
-All endpoints use POST with JSON and `Cache-Control: no-store`. Reader authentication uses the gateway's same-origin session validation and configured realtime authorization policy. Identity always comes from that session; extra tenant/owner fields in reader JSON do not select another account.
+All endpoints use POST with JSON and `Cache-Control: no-store`. Reader authentication uses the gateway's same-origin session validation and configured realtimestack authorization policy. Identity always comes from that session; extra tenant/owner fields in reader JSON do not select another account.
 
 | Suffix under the configured API path | JSON body | Authentication |
 | --- | --- | --- |

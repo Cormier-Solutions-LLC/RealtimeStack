@@ -1,4 +1,4 @@
-# Durable realtime persistence
+# Durable realtimestack persistence
 
 `RealtimeStack.Plugins.Persistence` is the shared package. All ten database plugins depend on it with the same bounded compatibility range as the rest of the package family. Plugin versions follow `ContractsVersion` in coordinated releases.
 
@@ -29,8 +29,8 @@ Every operation scopes records by tenant, owner, stream ID, and kind. Resolve te
 
 ```csharp
 using Microsoft.Data.Sqlite;
-using Realtime.Plugins.Persistence;
-using Realtime.Plugins.Sqlite;
+using RealtimeStack.Plugins.Persistence;
+using RealtimeStack.Plugins.Sqlite;
 
 var store = new SqlitePersistenceStore(() => new SqliteConnection(configuredConnectionString));
 var inbox = new DurableStreamKey(authenticatedTenant, authenticatedOwner, "inbox", DurableRecordKind.Message);

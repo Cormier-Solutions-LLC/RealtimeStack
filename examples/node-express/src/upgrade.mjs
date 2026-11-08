@@ -17,7 +17,7 @@ export function createUpgradeHandler({
       return;
     }
 
-    if (pathname !== "/realtime/ws") {
+    if (pathname !== "/realtimestack/ws") {
       socket.destroy();
       return;
     }

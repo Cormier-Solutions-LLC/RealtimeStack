@@ -1,4 +1,4 @@
-name: Validate Realtime runner setup
+name: Validate RealtimeStack runner setup
 
 on:
   pull_request:
@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
           native-aot: 'true'

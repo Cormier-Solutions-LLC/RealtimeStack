@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <VersionPrefix>$(ContractsVersion)</VersionPrefix>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>RealtimeStack.Plugins.Snowflake</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>RealtimeStack.Plugins.Snowflake</PackageId>
+    <Description>Snowflake durable realtimestack messages, notifications, and task status storage.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../RealtimeStack.Plugins.Persistence/RealtimeStack.Plugins.Persistence.csproj" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>
