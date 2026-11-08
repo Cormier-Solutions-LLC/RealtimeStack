@@ -10,7 +10,7 @@
   },
   "image": {
     "repository": "ghcr.io/example-org/realtime-gateway",
-    "tag": "1.1.0-beta",
+    "tag": "1.1.1-beta",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""

@@ -2,7 +2,7 @@
 
 `RealtimeStack.AspNetCore` adds the existing realtime gateway to an ASP.NET Core application without copying gateway infrastructure.
 
-The package targets `net10.0` and requires the ASP.NET Core shared framework. Add it to a .NET 10 web host from your approved NuGet source (`dotnet add package RealtimeStack.AspNetCore --version 1.1.0-beta`). It carries compatible Contracts and Redis dependencies; it does not launch a separate gateway process or provide a login/identity provider.
+The package targets `net10.0` and requires the ASP.NET Core shared framework. Add it to a .NET 10 web host from your approved NuGet source (`dotnet add package RealtimeStack.AspNetCore --version 1.1.1-beta`). It carries compatible Contracts and Redis dependencies; it does not launch a separate gateway process or provide a login/identity provider.
 
 The following host setup assumes the required external configuration is already supplied. Memory-backed ASP.NET Core sessions are suitable only for a single-process example; choose a shared session store for multiple replicas.
 
@@ -54,6 +54,6 @@ Set `Realtime:AuthorizationPolicy` to attach a standard ASP.NET Core authorizati
 
 `UseRealtimeGateway` installs forwarded-header, response-compression, diagnostics preflight and WebSocket middleware, so call it before authentication, authorization, session, and mapped endpoints. `MapRealtimeGateway` fails if called twice or if an existing equivalent route accepts the same method. Health endpoints are owned by the host: the standalone gateway maps `/health/startup`, `/health/live` and `/health/ready` in its `Program.cs`; these are not added by `MapRealtimeGateway`.
 
-`MapRealtimeDiagnostics` maps metrics only when `Metrics:Enabled` is true (the default); metrics are unprotected unless a policy/network restriction is configured. OTLP metric export is separately enabled by `Metrics:OtlpEnabled` and configured through standard OpenTelemetry exporter settings. See the [diagnostics runbook](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/runbooks/diagnostics.md), [protocol contract](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/protocol.md) and [package release policy](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/package-release.md).
+`MapRealtimeDiagnostics` maps metrics only when `Metrics:Enabled` is true (the default); metrics are unprotected unless a policy/network restriction is configured. OTLP metric export is separately enabled by `Metrics:OtlpEnabled` and configured through standard OpenTelemetry exporter settings. See the [diagnostics runbook](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/runbooks/diagnostics.md), [protocol contract](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/protocol.md) and [package release policy](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/package-release.md).
 
 Repository verification includes hosting integration tests and `scripts/Test-AspNetCorePackage.ps1` for an isolated packaged consumer. A successful package install does not validate deployment Redis, proxy trust, identity provisioning or operator authorization.

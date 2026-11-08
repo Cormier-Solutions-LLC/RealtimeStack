@@ -1,6 +1,6 @@
 {
   "package": "@realtime/client",
-  "version": "1.1.0-beta",
+  "version": "1.1.1-beta",
   "protocolVersion": "1.0",
   "subprotocol": "realtime.v1"
 }

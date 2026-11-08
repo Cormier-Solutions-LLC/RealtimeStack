@@ -2,7 +2,7 @@
 
 Runtime-neutral, versioned wire contracts shared by the Realtime gateway and clients. The package targets .NET Standard 2.0 and .NET 10, includes source-generated JSON metadata, and preserves camel-case compatibility with the TypeScript SDK and language-neutral fixtures.
 
-Install from your approved NuGet source with `dotnet add package RealtimeStack.Contracts --version 1.1.0-beta`. The .NET Standard target depends on System.Text.Json `[10.0.12,11.0.0)`; the .NET 10 target uses its framework implementation. No ASP.NET Core or Redis runtime is required by this package.
+Install from your approved NuGet source with `dotnet add package RealtimeStack.Contracts --version 1.1.1-beta`. The .NET Standard target depends on System.Text.Json `[10.0.12,11.0.0)`; the .NET 10 target uses its framework implementation. No ASP.NET Core or Redis runtime is required by this package.
 
 Use `RealtimeJsonSerializerContext` for source-generated, camel-case serialization and `ProtocolValidator` for envelope validation. Serialization does not itself validate or authorize a message:
 
@@ -34,4 +34,4 @@ var json = JsonSerializer.Serialize(
 
 Generated metadata covers the declared contract types and keeps the gateway's serialization path suitable for Native AOT. Custom application payload serialization must supply its own appropriate metadata; this package does not make arbitrary reflection-based application serialization AOT-safe. Retain or clone a `JsonElement` before disposing its owning `JsonDocument`.
 
-Additive optional fields under version `1.0` can be ignored by consumers; other version strings are rejected. Coordinate incompatible contract changes with gateway/client versions and the language-neutral fixtures. Repository verification includes `ProtocolContractTests`, `ProtocolSecurityTests`, TypeScript validation and `protocol/fixtures/v1/envelopes.json`. See the [protocol guide](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/protocol.md) and [package compatibility policy](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/package-release.md).
+Additive optional fields under version `1.0` can be ignored by consumers; other version strings are rejected. Coordinate incompatible contract changes with gateway/client versions and the language-neutral fixtures. Repository verification includes `ProtocolContractTests`, `ProtocolSecurityTests`, TypeScript validation and `protocol/fixtures/v1/envelopes.json`. See the [protocol guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/protocol.md) and [package compatibility policy](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/package-release.md).

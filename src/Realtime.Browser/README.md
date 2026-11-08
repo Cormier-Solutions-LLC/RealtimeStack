@@ -5,7 +5,7 @@ This package exposes the generated Realtime browser SDK as ASP.NET Core static w
 It targets `net10.0` and references the ASP.NET Core shared framework. Install it in a .NET 10 web host from your configured NuGet source:
 
 ```text
-dotnet add package RealtimeStack.Browser --version 1.1.0-beta
+dotnet add package RealtimeStack.Browser --version 1.1.1-beta
 ```
 
 Enable static file serving in the consuming host, as in the repository's clean-consumer check:
@@ -31,4 +31,4 @@ The IIFE exposes `RealtimeStack.RealtimeClient` and `RealtimeStack.DiagnosticsCl
 
 For repository builds, run `npm --prefix sdk/typescript ci` and `npm --prefix sdk/typescript run build` with Node.js 22+ before packing this project. The Razor project copies existing `sdk/typescript/dist` files; it does not run npm or regenerate them. Generated `wwwroot` content is not an independent source to edit. `scripts/Test-BrowserPackage.ps1` inspects package entries and builds an isolated .NET 10 consumer/static-asset manifest; SDK browser tests verify runtime behavior separately.
 
-Serve over HTTPS outside loopback development. Allow the external script/module and configured connection origin in CSP; no `unsafe-eval` is required. Choose deliberately whether to publish source maps, never put operator tokens in public assets/storage, and redact ticket-bearing handshake URLs at the edge. See the [SDK guide](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/sdk/typescript/README.md) and [package release policy](https://github.com/Cormier-Solutions-LLC/WebSockets-Kubernetes/blob/main/docs/package-release.md).
+Serve over HTTPS outside loopback development. Allow the external script/module and configured connection origin in CSP; no `unsafe-eval` is required. Choose deliberately whether to publish source maps, never put operator tokens in public assets/storage, and redact ticket-bearing handshake URLs at the edge. See the [SDK guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/sdk/typescript/README.md) and [package release policy](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/package-release.md).

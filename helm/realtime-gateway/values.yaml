@@ -6,7 +6,7 @@ topology: ha
 
 image:
   repository: ghcr.io/realtime-solutions-llc/realtime-gateway
-  tag: "1.1.0-beta"
+  tag: "1.1.1-beta"
   digest: ""
   pullPolicy: IfNotPresent
   pullSecretName: ""

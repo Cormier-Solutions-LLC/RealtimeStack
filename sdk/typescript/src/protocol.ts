@@ -1,4 +1,4 @@
-export const SDK_VERSION = "1.1.0-beta" as const;
+export const SDK_VERSION = "1.1.1-beta" as const;
 export const PROTOCOL_VERSION = "1.0" as const;
 export const WEBSOCKET_SUBPROTOCOL = "realtime.v1" as const;
 

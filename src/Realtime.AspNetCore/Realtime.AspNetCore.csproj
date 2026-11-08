@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackageId>RealtimeStack.AspNetCore</PackageId>
-    <Authors>Realtime</Authors>
+    <Authors>RealtimeStack Contributors</Authors>
     <Description>Plug-and-play ASP.NET Core hosting integration for Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

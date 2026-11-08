@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
     <PackageId>RealtimeStack.Client</PackageId>
-    <Authors>Realtime</Authors>
+    <Authors>RealtimeStack Contributors</Authors>
     <Description>Runtime-neutral .NET Standard WebSocket client for Realtime.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.realtime.examples"
-version = "1.1.0-beta"
+version = "1.1.1-beta"
 
 repositories { mavenCentral() }
 

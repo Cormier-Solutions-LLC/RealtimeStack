@@ -2,7 +2,7 @@
 
 ## Product identity (force update)
 
-- Use `Realtime` for the distributable brand and `Realtime` for .NET solution, project, namespace, and assembly identities. Use `RealtimeStack.*` for NuGet package IDs; use the same Realtime identity in CLR namespaces, assembly names, browser assets and documentation.
+- Use `RealtimeStack` for the distributable brand and `Realtime` for .NET solution, project, namespace, and assembly identities. Use `RealtimeStack.*` for NuGet package IDs; use the same Realtime identity in CLR namespaces, assembly names, browser assets and documentation.
 - Treat customer, tenant, environment, and deployment suffixes as configuration. Never encode a customer-specific or legacy brand in source-controlled identifiers.
 - Derive deployable identities through the shared bootstrap configuration and `-NameSuffix` / `--name-suffix` override. Consume `.bootstrap/naming.json` where automation needs those derived names; its Redis prefix already includes the environment. The generated file is local and must not be committed.
 

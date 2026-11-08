@@ -54,7 +54,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Redis / JSON | 6.0.0 / 2.21.2 | Exact locked client and Rails-compatible JSON line |
 | Ruby graph | `Gemfile.lock` | Locked; Brakeman and bundler-audit required |
 | Caddy | 2.11.9 | Digest-pinned WebSocket edge |
-| Realtime SDK / protocol / gateway | 1.1.0-beta / 1.0 / 1.1.0-beta | Canonical assets and external gateway |
+| Realtime SDK / protocol / gateway | 1.1.1-beta / 1.0 / 1.1.1-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has 12 stack-specific Ruby/test files and 563 nonblank lines. Vendored gems, shared assets/fixtures, lock/build metadata, browser harness configuration, and documentation are excluded. Recalculate after changes.
