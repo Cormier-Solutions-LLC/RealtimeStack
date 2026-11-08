@@ -5,8 +5,8 @@ home: https://github.com/Cormier-Solutions-LLC/RealtimeStack
 sources:
   - https://github.com/Cormier-Solutions-LLC/RealtimeStack
 type: application
-version: 2.0.1-beta
-appVersion: "2.0.1-beta"
+version: 2.0.2-beta
+appVersion: "2.0.2-beta"
 kubeVersion: ">=1.29.0-0"
 annotations:
   realtimestack.example/redis-chart: "oci://registry-1.docker.io/bitnamicharts/redis@23.1.1"

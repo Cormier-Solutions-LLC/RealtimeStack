@@ -384,7 +384,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         gateway = urlsplit(configured.GATEWAY_URL)
         browser_authority = browser.headers.get("host", "")
         uri = urlunsplit(
-            ("wss" if gateway.scheme == "https" else "ws", browser_authority, "/realtimestack/ws", browser.url.query, "")
+            (
+                "wss" if gateway.scheme == "https" else "ws",
+                browser_authority,
+                "/realtimestack/ws",
+                browser.url.query,
+                "",
+            )
         )
         headers = {"Cookie": browser.headers.get("cookie", ""), **public_forwarding_headers(configured)}
         try:

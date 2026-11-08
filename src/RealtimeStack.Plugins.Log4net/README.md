@@ -3,7 +3,7 @@
 A simple Log4net adapter for the common RealtimeStack error-reporting interface.
 
 ```text
-dotnet add package RealtimeStack.Plugins.Log4net --version 2.0.1-beta
+dotnet add package RealtimeStack.Plugins.Log4net --version 2.0.2-beta
 ```
 
 ```csharp
@@ -27,4 +27,4 @@ Provider-level filtering still applies. This adapter does not add console/file/n
 
 ## Upgrade to RealtimeStack 2
 
-This is a new package in `2.0.1-beta`. It uses `RealtimeStack.*` namespaces, types, and registration methods. Install matching major versions of the common logging package and adapters. NuGet restores their bounded transitive dependencies automatically; it does not rewrite your application's imports or configuration. Follow the [complete upgrade guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/upgrading-to-realtimestack-2.md) when migrating an existing host. Existing logging configuration remains application-owned.
+This is a new package in `2.0.2-beta`. It uses `RealtimeStack.*` namespaces, types, and registration methods. Install matching major versions of the common logging package and adapters. NuGet restores their bounded transitive dependencies automatically; it does not rewrite your application's imports or configuration. Follow the [complete upgrade guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/upgrading-to-realtimestack-2.md) when migrating an existing host. Existing logging configuration remains application-owned.

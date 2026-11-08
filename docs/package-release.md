@@ -73,8 +73,6 @@ If restore fails, confirm the configured feed contains every dependency version 
 
 ## NuGet ID migration
 
-New candidates use `RealtimeStack.*` package IDs. Replace each legacy prefixed PackageReference with its `RealtimeStack.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names use `RealtimeStack.*`; browser filenames use `realtimestack-*` and static asset URLs use `/_content/RealtimeStack.Browser/`. Update consumer imports and URLs together. Avoid mixing the legacy and current package graphs; their public types now have different assembly identities. Historical published packages remain immutable.
+New candidates use `RealtimeStack.*` package IDs. Replace each legacy prefixed PackageReference with its `RealtimeStack.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names use `RealtimeStack.*`; browser filenames use `realtimestack*.js` and static asset URLs use `/_content/RealtimeStack.Browser/`. Update consumer imports and URLs together. Avoid mixing the legacy and current package graphs; their public types now have different assembly identities. Historical published packages remain immutable.
 
 Before promoting the first renamed candidate, configure NuGet ownership and Trusted Publishing for the `RealtimeStack.*` scope. Deprecate the old package IDs with their corresponding replacement IDs after successful promotion; do not delete historical versions.
-
-The attempted `RealtimeStack.*` NuGet IDs were rejected as reserved. The supported NuGet family is `RealtimeStack.*`; .NET projects, assemblies, namespaces and browser asset paths retain `RealtimeStack.*`, and npm retains `@realtimestack/client`. A package ID reservation is optional for publishing an otherwise available name.

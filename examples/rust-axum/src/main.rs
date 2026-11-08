@@ -388,7 +388,9 @@ async fn logout(
     let mut response = StatusCode::NO_CONTENT.into_response();
     response.headers_mut().insert(
         header::SET_COOKIE,
-        HeaderValue::from_static("realtimestack_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"),
+        HeaderValue::from_static(
+            "realtimestack_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict",
+        ),
     );
     Ok(response)
 }

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.realtimestack.examples"
-version = "2.0.1-beta"
+version = "2.0.2-beta"
 
 repositories { mavenCentral() }
 

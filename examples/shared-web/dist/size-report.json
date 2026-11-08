@@ -7,11 +7,11 @@
   "profiles": {
     "readable": {
       "bytes": 18074,
-      "gzipBytes": 6788
+      "gzipBytes": 6779
     },
     "optimized": {
       "bytes": 14715,
-      "gzipBytes": 6285
+      "gzipBytes": 6294
     }
   }
 }
