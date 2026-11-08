@@ -14,7 +14,7 @@ COPY --from=go-toolchain /usr/local/go /usr/local/go
 WORKDIR /go/src/app/caddy
 RUN go get github.com/caddyserver/caddy/v2@v2.11.9 \
     github.com/getkin/kin-openapi@v0.149.0 \
-    github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 \
+    github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 golang.org/x/net@v0.62.0 \
     && cd frankenphp \
     && GOBIN=/usr/local/bin ../../go.sh install -buildvcs=false -ldflags "-w -s -X 'github.com/caddyserver/caddy/v2.CustomVersion=FrankenPHP v1.13.4 PHP $PHP_VERSION Caddy' -X 'github.com/caddyserver/caddy/v2.CustomBinaryName=frankenphp' -X 'github.com/caddyserver/caddy/v2/modules/caddyhttp.ServerHeader=FrankenPHP Caddy'"
 

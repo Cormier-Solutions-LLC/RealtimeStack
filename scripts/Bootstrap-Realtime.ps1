@@ -35,7 +35,7 @@
     Reports planned external operations without running restore or build.
 
 .NOTES
-    Version: 1.1.1-beta
+    Version: 1.1.2-beta
     Project: Realtime Gateway
     Requires: PowerShell 7.x, .NET SDK 10.x, Git
     Output: .logs/Bootstrap-Realtime-<timestamp>.log
@@ -56,7 +56,7 @@ param(
 
     [Parameter()]
     [ValidatePattern('^[a-z0-9.-]+(?::[0-9]+)?(?:/[a-z0-9._-]+)*$')]
-    [string]$ImageRegistry = 'ghcr.io/realtime-solutions-llc',
+    [string]$ImageRegistry = 'ghcr.io/cormier-solutions-llc',
 
     [Parameter()]
     [switch]$SkipRestore,

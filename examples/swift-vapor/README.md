@@ -52,7 +52,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Vapor / Vapor Redis | 4.121.4 / 4.14.0 | Exact direct dependency pins |
 | Swift dependency graph | `Package.resolved` | Fully resolved transitive graph; locked-resolution and tests required |
 | Caddy | 2.11.9 | Digest-pinned WebSocket edge |
-| Realtime SDK / protocol / gateway | 1.1.1-beta / 1.0 / 1.1.1-beta | Canonical assets and external gateway |
+| Realtime SDK / protocol / gateway | 1.1.2-beta / 1.0 / 1.1.2-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has 5 stack-specific Swift source/test files and 801 nonblank lines. SwiftPM build outputs, shared assets/fixtures, lock/build metadata, browser harness configuration, and documentation are excluded. Recalculate after changes.

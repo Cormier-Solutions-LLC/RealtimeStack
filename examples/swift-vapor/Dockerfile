@@ -16,7 +16,7 @@ FROM ${GO_IMAGE} AS caddy
 WORKDIR /source
 RUN go mod init caddy-build \
     && go get github.com/caddyserver/caddy/v2/cmd/caddy@v2.11.9 \
-    && go get github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 \
+    && go get github.com/go-jose/go-jose/v3@0e502b87c7aa651155b11ae8e195ec33ce10230a github.com/go-jose/go-jose/v4@v4.1.8 golang.org/x/net@v0.62.0 \
     && CGO_ENABLED=0 go build -o /out/caddy github.com/caddyserver/caddy/v2/cmd/caddy
 FROM ${SWIFT_RUNTIME_IMAGE}
 RUN apt-get update \
