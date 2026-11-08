@@ -6,7 +6,7 @@ topology: ha
 
 image:
   repository: ghcr.io/cormier-solutions-llc/realtimestack-gateway
-  tag: "2.0.0-beta"
+  tag: "2.0.1-beta"
   digest: ""
   pullPolicy: IfNotPresent
   pullSecretName: ""

@@ -35,7 +35,7 @@
     Reports planned external operations without running restore or build.
 
 .NOTES
-    Version: 2.0.0-beta
+    Version: 2.0.1-beta
     Project: RealtimeStack Gateway
     Requires: PowerShell 7.x, .NET SDK 10.x, Git
     Output: .logs/Bootstrap-RealtimeStack-<timestamp>.log

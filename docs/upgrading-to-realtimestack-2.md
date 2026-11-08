@@ -1,10 +1,10 @@
 # Upgrade to RealtimeStack 2
 
-Version `2.0.0-beta` completes the public RealtimeStack naming change. Upgrade the gateway, server packages, clients, and generated assets together; the renamed default WebSocket subprotocol and routes require a coordinated rollout.
+Version `2.0.1-beta` completes the public RealtimeStack naming change. Upgrade the gateway, server packages, clients, and generated assets together; the renamed default WebSocket subprotocol and routes require a coordinated rollout.
 
 ## Package and source updates
 
-Keep `RealtimeStack.*` NuGet package IDs and update them to `2.0.0-beta`. If a consumer still uses the older `Cormier.Realtime.*` IDs, replace the prefix with `RealtimeStack.` and remove the old package graph. NuGet restores transitive dependencies automatically within each package's declared `[2.0.0-beta,2.1.0)` internal ranges. NuGet does not rewrite application source files, configuration, or URLs.
+Keep `RealtimeStack.*` NuGet package IDs and update them to `2.0.1-beta`. If a consumer still uses the older `Cormier.Realtime.*` IDs, replace the prefix with `RealtimeStack.` and remove the old package graph. NuGet restores transitive dependencies automatically within each package's declared `[2.0.1-beta,2.1.0)` internal ranges. NuGet does not rewrite application source files, configuration, or URLs.
 
 | Earlier identity | RealtimeStack 2 replacement |
 | --- | --- |

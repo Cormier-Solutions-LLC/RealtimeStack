@@ -59,7 +59,8 @@ public static class RealtimeStackLoggingServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddRealtimeStackErrorHandler<THandler>(this IServiceCollection services)
+    public static IServiceCollection AddRealtimeStackErrorHandler<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services)
         where THandler : class, IRealtimeStackErrorHandler
     {
         services.AddRealtimeStackLogging();

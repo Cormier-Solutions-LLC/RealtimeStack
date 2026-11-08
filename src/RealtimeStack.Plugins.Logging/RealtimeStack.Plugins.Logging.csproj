@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
+    <RuntimeFrameworkVersion Condition="'$(TargetFramework)' == 'net10.0'">10.0.14</RuntimeFrameworkVersion>
+    <IsAotCompatible Condition="'$(TargetFramework)' == 'net10.0'">true</IsAotCompatible>
     <PackageId>RealtimeStack.Plugins.Logging</PackageId>
     <Description>Shared provider-neutral error handling and registration for RealtimeStack logging plugins.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

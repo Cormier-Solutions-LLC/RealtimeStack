@@ -1,6 +1,6 @@
 {
   "name": "@realtimestack/example-node-express",
-  "version": "2.0.0-beta",
+  "version": "2.0.1-beta",
   "private": true,
   "description": "Minimal Node.js and Express reference adapter for RealtimeStack",
   "license": "MIT",

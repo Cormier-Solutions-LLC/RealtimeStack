@@ -1,6 +1,6 @@
 {
   "package": "@realtimestack/client",
-  "version": "2.0.0-beta",
+  "version": "2.0.1-beta",
   "protocolVersion": "1.0",
   "subprotocol": "realtimestack.v1"
 }

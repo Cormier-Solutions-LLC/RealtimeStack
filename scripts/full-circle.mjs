@@ -183,25 +183,25 @@ async function buildPackageConsumer() {
   const consumerLockGraph = JSON.parse(await readFile(consumerLockTemplate, "utf8"));
   const targetGraph = consumerLockGraph.dependencies?.["net10.0"];
   for (const [packageId, packageFile] of [
-    ["RealtimeStack.AspNetCore", "RealtimeStack.AspNetCore.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Browser", "RealtimeStack.Browser.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Contracts", "RealtimeStack.Contracts.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Logging", "RealtimeStack.Plugins.Logging.2.0.0-beta.nupkg"],
-    ["RealtimeStack.HttpFallback", "RealtimeStack.HttpFallback.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Redis", "RealtimeStack.Redis.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Client", "RealtimeStack.Client.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Config", "RealtimeStack.Config.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Persistence", "RealtimeStack.Plugins.Persistence.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.PostgreSql", "RealtimeStack.Plugins.PostgreSql.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.MySql", "RealtimeStack.Plugins.MySql.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.MariaDb", "RealtimeStack.Plugins.MariaDb.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.SqlServer", "RealtimeStack.Plugins.SqlServer.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.AzureSql", "RealtimeStack.Plugins.AzureSql.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Oracle", "RealtimeStack.Plugins.Oracle.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Sqlite", "RealtimeStack.Plugins.Sqlite.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Db2", "RealtimeStack.Plugins.Db2.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.CockroachDb", "RealtimeStack.Plugins.CockroachDb.2.0.0-beta.nupkg"],
-    ["RealtimeStack.Plugins.Snowflake", "RealtimeStack.Plugins.Snowflake.2.0.0-beta.nupkg"],
+    ["RealtimeStack.AspNetCore", "RealtimeStack.AspNetCore.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Browser", "RealtimeStack.Browser.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Contracts", "RealtimeStack.Contracts.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Logging", "RealtimeStack.Plugins.Logging.2.0.1-beta.nupkg"],
+    ["RealtimeStack.HttpFallback", "RealtimeStack.HttpFallback.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Redis", "RealtimeStack.Redis.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Client", "RealtimeStack.Client.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Config", "RealtimeStack.Config.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Persistence", "RealtimeStack.Plugins.Persistence.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.PostgreSql", "RealtimeStack.Plugins.PostgreSql.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.MySql", "RealtimeStack.Plugins.MySql.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.MariaDb", "RealtimeStack.Plugins.MariaDb.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.SqlServer", "RealtimeStack.Plugins.SqlServer.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.AzureSql", "RealtimeStack.Plugins.AzureSql.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Oracle", "RealtimeStack.Plugins.Oracle.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Sqlite", "RealtimeStack.Plugins.Sqlite.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Db2", "RealtimeStack.Plugins.Db2.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.CockroachDb", "RealtimeStack.Plugins.CockroachDb.2.0.1-beta.nupkg"],
+    ["RealtimeStack.Plugins.Snowflake", "RealtimeStack.Plugins.Snowflake.2.0.1-beta.nupkg"],
   ]) {
     if (targetGraph?.[packageId] === undefined) {
       throw new Error(`The committed consumer lock is missing ${packageId}.`);
@@ -238,9 +238,11 @@ try {
     await command(executable("npm"), ["run", "build", "--silent"], { cwd: resolve(repositoryRoot, "sdk/typescript") });
     const projectConfig = await writeProjectReferenceConfig();
     await command("dotnet", ["restore", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
-    // The application selects net10.0 from the multi-targeted contracts project. Build that package
-    // explicitly so its netstandard2.0 asset also exists before the clean local-feed pack.
-    await command("dotnet", ["build", "src/RealtimeStack.Contracts/RealtimeStack.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    // Build every framework of the multi-targeted dependencies before packing with --no-build.
+    // Building the application alone selects only their net10.0 assets.
+    for (const project of ["RealtimeStack.Contracts", "RealtimeStack.Plugins.Logging"]) {
+      await command("dotnet", ["build", `src/${project}/${project}.csproj`, "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    }
     await command("dotnet", ["build", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
     await buildPackageConsumer();
   } else if (action === "validate") {
