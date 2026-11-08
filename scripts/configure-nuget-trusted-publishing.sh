@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository="Cormier-Solutions-LLC/WebSockets-Kubernetes"
+repository="Cormier-Solutions-LLC/RealtimeStack"
 environment="package-production"
 nuget_user=""
 dispatch=false
@@ -15,7 +15,7 @@ Usage:
 
 Options:
   --nuget-user <name>  NuGet.org profile name that owns or created the policy.
-  --repository <name>  GitHub OWNER/REPOSITORY (default: Cormier-Solutions-LLC/WebSockets-Kubernetes).
+  --repository <name>  GitHub OWNER/REPOSITORY (default: Cormier-Solutions-LLC/RealtimeStack).
   --environment <name> GitHub environment (default: package-production).
   --dispatch           Manually dispatch publication for recovery or an operator-selected release.
   --help               Show this help.

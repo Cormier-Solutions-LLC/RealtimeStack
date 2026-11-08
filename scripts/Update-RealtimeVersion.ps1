@@ -7,9 +7,9 @@
     Historical release notes, changelog entries, and files beneath refs are preserved.
     Use -WhatIf to inspect the complete file plan without writing anything.
 .EXAMPLE
-    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.0-beta -WhatIf
+    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.1-beta -WhatIf
 .EXAMPLE
-    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.0-beta
+    ./scripts/Update-RealtimeVersion.ps1 -Version 1.1.1-beta
 #>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
 param(
@@ -191,7 +191,7 @@ foreach ($update in $changelogUpdates) {
 }
 
 $releaseNotes = @"
-# Realtime $Version
+# RealtimeStack $Version
 
 This coordinated release updates the gateway application and container, Helm chart, .NET and browser packages, automation scripts, and reference applications to ``$Version``.
 

@@ -152,7 +152,7 @@ jobs:
             fi
             gh release create "$tag" "$chart" artifacts/release-manifest.json \
               --target "$SOURCE_SHA" \
-              --title "Realtime ${RELEASE_VERSION}" \
+              --title "RealtimeStack ${RELEASE_VERSION}" \
               --notes-file "$notes" \
               "${release_flags[@]}"
           fi

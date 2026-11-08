@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageId>RealtimeStack.Contracts</PackageId>
-    <Authors>Realtime</Authors>
+    <Authors>RealtimeStack Contributors</Authors>
     <Description>Runtime-neutral protocol contracts for Realtime clients and gateways.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

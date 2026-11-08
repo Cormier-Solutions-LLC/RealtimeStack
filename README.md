@@ -1,8 +1,10 @@
-# Realtime Gateway
+# RealtimeStack
 
-Realtime Gateway is an independently deployable .NET 10 Native AOT foundation for the Realtime WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
+RealtimeStack provides an independently deployable .NET 10 Native AOT foundation for the Realtime WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
 
 The repository also contains the shared protocol contracts, Redis integration, .NET and browser clients, Kubernetes and Helm deployment assets, cross-platform lifecycle automation, observability assets, load tooling, and reference applications used to verify the platform end to end.
+
+Repository: [Cormier-Solutions-LLC/RealtimeStack](https://github.com/Cormier-Solutions-LLC/RealtimeStack). NuGet packages use `RealtimeStack.*`; CLR namespaces and assemblies retain `Realtime.*`.
 
 ## Repository map
 
@@ -86,7 +88,7 @@ dotnet publish ./src/Realtime.Gateway -c Release -r $runtimeIdentifier --self-co
 
 CI restores locked dependencies, builds and tests the solution, validates clean package consumers and both bootstrap topologies, checks Helm and Kubernetes output, runs cross-browser and reference-stack scenarios, publishes and smoke-tests a Linux x64 Native AOT executable and rootless read-only OCI image, scans artifacts, and emits an SBOM and immutable build evidence.
 
-Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `1.1.0-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
+Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `1.1.1-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
 
 ## Clients and protocol
 

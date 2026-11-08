@@ -1,9 +1,12 @@
 apiVersion: v2
 name: realtime-gateway
-description: Realtime WebSocket gateway
+description: RealtimeStack WebSocket gateway
+home: https://github.com/Cormier-Solutions-LLC/RealtimeStack
+sources:
+  - https://github.com/Cormier-Solutions-LLC/RealtimeStack
 type: application
-version: 1.1.0-beta
-appVersion: "1.1.0-beta"
+version: 1.1.1-beta
+appVersion: "1.1.1-beta"
 kubeVersion: ">=1.29.0-0"
 annotations:
   realtime.example/redis-chart: "oci://registry-1.docker.io/bitnamicharts/redis@23.1.1"
