@@ -34,7 +34,7 @@ function parse(arguments_) {
   if (!actions.includes(result.action)) throw new Error(`Action must be one of: ${actions.join(", ")}.`);
   result.timeoutSeconds = Number(result.timeoutSeconds);
   if (!Number.isInteger(result.timeoutSeconds) || result.timeoutSeconds < 60 || result.timeoutSeconds > 1800) throw new Error("--timeout-seconds must be an integer from 60 through 1800.");
-  if (result.nameSuffix !== undefined && !/^(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*$/.test(result.nameSuffix)) throw new Error("--name-suffix must be a DNS-label suffix from 1 through 27 characters.");
+  if (result.nameSuffix !== undefined && !/^(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*$/.test(result.nameSuffix)) throw new Error("--name-suffix must be a DNS-label suffix from 1 through 22 characters.");
   return result;
 }
 

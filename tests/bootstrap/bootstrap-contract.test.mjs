@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
 import {
-  buildPlan, fileExists, inlineSecretPaths, loadContract, renderValues, stableJson, useCapturedDeploymentValues, validateConfiguration,
+  buildPlan, fileExists, inlineSecretPaths, loadContract, releaseNames, renderValues, stableJson, useCapturedDeploymentValues, validateConfiguration,
 } from "../../scripts/lib/bootstrap-contract.mjs";
 import { managedRedisChartOutput, patchSentinelService, prepareManagedRedisChart } from "../../scripts/lib/managed-redis-chart.mjs";
 import { buildCertificateManifest, parseCertificateArguments } from "../../scripts/realtimestack-certificate.mjs";
@@ -1458,4 +1458,17 @@ test("persistence rejects invalid provider, credentials, egress and SQLite HA be
   delete legacy.persistence;
   assert.deepEqual(validateConfiguration(legacy), []);
   assert.equal(renderValues(legacy, profiles["non-ha"]).persistence, undefined);
+});
+
+
+test("RealtimeStack suffix limits preserve the longest environment and managed Redis release", () => {
+  for (const topology of ["ha", "non-ha"]) {
+    const config = configuration(topology);
+    config.environment.name = "abcdefghij";
+    config.naming.suffix = "a".repeat(22);
+    assert.deepEqual(validateConfiguration(config), []);
+    assert.equal(releaseNames(config).redisRelease.length, 53);
+    config.naming.suffix += "a";
+    assert.ok(validateConfiguration(config).some(error => error.path === "$.naming.suffix"));
+  }
 });

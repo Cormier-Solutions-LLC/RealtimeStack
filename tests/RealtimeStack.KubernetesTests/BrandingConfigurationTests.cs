@@ -52,7 +52,7 @@ public sealed partial class BrandingConfigurationTests
     {
         var bootstrap = Read("scripts/Bootstrap-RealtimeStack.ps1");
 
-        Assert.Contains("[ValidatePattern('^(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*$')]", bootstrap, StringComparison.Ordinal);
+        Assert.Contains("[ValidatePattern('^(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*$')]", bootstrap, StringComparison.Ordinal);
         Assert.Contains("realtimestack-$NameSuffix", bootstrap, StringComparison.Ordinal);
         Assert.Contains(".bootstrap", bootstrap, StringComparison.Ordinal);
         Assert.Contains("naming.json", bootstrap, StringComparison.Ordinal);

@@ -285,7 +285,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["suffix"],
-      "properties": { "suffix": { "type": "string", "pattern": "^$|^(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*$" } }
+      "properties": { "suffix": { "type": "string", "pattern": "^$|^(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*$" } }
     },
     "paths": {
       "type": "object",

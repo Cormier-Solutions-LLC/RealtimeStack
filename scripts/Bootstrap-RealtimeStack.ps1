@@ -14,7 +14,7 @@
     MSBuild configuration. Defaults to Release.
 
 .PARAMETER NameSuffix
-    Optional DNS-label suffix of at most 27 characters for independently
+    Optional DNS-label suffix of at most 22 characters for independently
     deployed instances. For example, 'customer-a' produces the application
     name 'realtimestack-customer-a'.
 
@@ -51,7 +51,7 @@ param(
     [string]$Configuration = 'Release',
 
     [Parameter()]
-    [ValidatePattern('^(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*$')]
+    [ValidatePattern('^(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*$')]
     [string]$NameSuffix,
 
     [Parameter()]

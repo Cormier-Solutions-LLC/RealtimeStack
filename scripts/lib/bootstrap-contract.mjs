@@ -193,7 +193,7 @@ export function validateConfiguration(input) {
 
   const naming = requireRecord(config.naming, "$.naming", errors);
   requireKeys(naming, "$.naming", ["suffix"], errors);
-  requireString(naming.suffix, "$.naming.suffix", errors, /^(?:|(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*)$/, true);
+  requireString(naming.suffix, "$.naming.suffix", errors, /^(?:|(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*)$/, true);
 
   const paths = requireRecord(config.paths, "$.paths", errors);
   requireKeys(paths, "$.paths", ["generatedDirectory", "backupDirectory", "logDirectory"], errors, ["environmentDirectory"]);
