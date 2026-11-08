@@ -1,10 +1,10 @@
 # Upgrade to RealtimeStack 2
 
-Version `2.0.1-beta` completes the public RealtimeStack naming change. Upgrade the gateway, server packages, clients, and generated assets together; the renamed default WebSocket subprotocol and routes require a coordinated rollout.
+Version `2.0.2-beta` completes the public RealtimeStack naming change. Upgrade the gateway, server packages, clients, and generated assets together; the renamed default WebSocket subprotocol and routes require a coordinated rollout.
 
 ## Package and source updates
 
-Keep `RealtimeStack.*` NuGet package IDs and update them to `2.0.1-beta`. If a consumer still uses the older `Cormier.Realtime.*` IDs, replace the prefix with `RealtimeStack.` and remove the old package graph. NuGet restores transitive dependencies automatically within each package's declared `[2.0.1-beta,2.1.0)` internal ranges. NuGet does not rewrite application source files, configuration, or URLs.
+Keep `RealtimeStack.*` NuGet package IDs and update them to `2.0.2-beta`. If a consumer still uses the older `Cormier.Realtime.*` IDs, replace the prefix with `RealtimeStack.` and remove the old package graph. NuGet restores transitive dependencies automatically within each package's declared `[2.0.2-beta,2.1.0)` internal ranges. NuGet does not rewrite application source files, configuration, or URLs.
 
 | Earlier identity | RealtimeStack 2 replacement |
 | --- | --- |
@@ -28,6 +28,7 @@ Update all C# `using` directives, fully qualified type names, reflection/type st
 - The default session cookie is `realtimestack_session`. Set the cookie option explicitly if the application must preserve an existing cookie name during migration.
 - The Helm chart, generated release/service identities, browser filenames, and metric prefix use `realtimestack`. Update selectors, alert queries, dashboards, scrape configuration, ingress routes, and image references. Publish images use `ghcr.io/cormier-solutions-llc/realtimestack-gateway`.
 - Preserve the existing configured Redis instance/key prefixes when continuity of sessions, tickets, or durable streams is required. Changing a prefix selects a different key space; this release does not move or delete Redis records. Review the generated plan before applying a new release name. Existing installed Helm releases are not renamed automatically.
+- The relational persistence default table is now `realtimestack_records`. To keep existing records, explicitly pass the existing table name (for example, `tableName: "realtime_records"`) when constructing a persistence store, or set `RealtimeStackSetup:Persistence:TableName` to that name when using configuration registration. Keep the existing connection/database/schema settings. Packages do not rename tables or copy rows; any table rename belongs in an explicit, backed-up database migration.
 - Naming suffixes are limited to 22 characters so a ten-character environment plus the longer RealtimeStack and managed-Redis names still fit Helm's 53-character release limit. Shorten longer legacy suffixes or explicitly plan replacement deployment identities.
 - Run the matching renamed bootstrap wrappers and shared Node engine; do not mix scripts, chart values, gateway binaries, or SDK assets from different major versions.
 

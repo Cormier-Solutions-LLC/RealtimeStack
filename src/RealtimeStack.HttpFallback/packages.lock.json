@@ -87,9 +87,9 @@
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.18.0, )",
           "OpenTelemetry.Extensions.Hosting": "[1.18.0, )",
-          "RealtimeStack.Contracts": "[2.0.1-beta, )",
-          "RealtimeStack.Plugins.Logging": "[2.0.1-beta, )",
-          "RealtimeStack.Redis": "[2.0.1-beta, )"
+          "RealtimeStack.Contracts": "[2.0.2-beta, )",
+          "RealtimeStack.Plugins.Logging": "[2.0.2-beta, )",
+          "RealtimeStack.Redis": "[2.0.2-beta, )"
         }
       },
       "realtimestack.contracts": {
@@ -101,7 +101,7 @@
       "realtimestack.redis": {
         "type": "Project",
         "dependencies": {
-          "RealtimeStack.Contracts": "[2.0.1-beta, )",
+          "RealtimeStack.Contracts": "[2.0.2-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

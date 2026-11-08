@@ -4,7 +4,7 @@ defmodule RealtimeStackExample.MixProject do
   def project do
     [
       app: :realtimestack_example,
-      version: "2.0.1-beta",
+      version: "2.0.2-beta",
       elixir: "~> 1.20.4",
       start_permanent: Mix.env() == :prod,
       deps: deps()

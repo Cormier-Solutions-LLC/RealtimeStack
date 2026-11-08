@@ -5,7 +5,7 @@ This package exposes the generated RealtimeStack browser SDK as ASP.NET Core sta
 It targets `net10.0` and references the ASP.NET Core shared framework. Install it in a .NET 10 web host from your configured NuGet source:
 
 ```text
-dotnet add package RealtimeStack.Browser --version 2.0.1-beta
+dotnet add package RealtimeStack.Browser --version 2.0.2-beta
 ```
 
 Enable static file serving in the consuming host, as in the repository's clean-consumer check:
@@ -35,6 +35,6 @@ Serve over HTTPS outside loopback development. Allow the external script/module 
 
 ## Upgrade to RealtimeStack 2
 
-Update `RealtimeStack.Browser` to `2.0.1-beta` together with the other RealtimeStack packages. NuGet restores the matching transitive dependencies automatically; it does not rewrite application code or configuration. Replace `Realtime.Browser` (or its older `Cormier.`-prefixed equivalent) namespace/assembly references with `RealtimeStack.Browser`. Rename product-prefixed types and registration calls from `Realtime...` to `RealtimeStack...`, then rebuild.
+Update `RealtimeStack.Browser` to `2.0.2-beta` together with the other RealtimeStack packages. NuGet restores the matching transitive dependencies automatically; it does not rewrite application code or configuration. Replace `Realtime.Browser` (or its older `Cormier.`-prefixed equivalent) namespace/assembly references with `RealtimeStack.Browser`. Rename product-prefixed types and registration calls from `Realtime...` to `RealtimeStack...`, then rebuild.
 
 Browser consumers must use `@realtimestack/client`, `RealtimeStack.RealtimeStackClient`, and `/_content/RealtimeStack.Browser/realtimestack*.js`. Update configuration sections, routes, cookie options, metrics, scripts, and deployment selectors as described in the [complete upgrade guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/upgrading-to-realtimestack-2.md). Preserve configured Redis prefixes when existing state must remain reachable. Previously published package files are immutable; upgrading installs the new revision.

@@ -1,7 +1,11 @@
 import AsyncHTTPClient
+
 import Foundation
+
 import NIOCore
+
 @preconcurrency import Redis
+
 import Vapor
 
 private let sessionCookie = "realtimestack_session"
@@ -170,7 +174,8 @@ func routes(_ application: Application, settings: ReferenceSettings) {
 
   for endpoint in [
     ["realtimestack", "tickets"], ["realtimestack", "persistence", "records", "read"],
-    ["realtimestack", "persistence", "records", "ack"], ["realtimestack", "persistence", "tasks", "read"],
+    ["realtimestack", "persistence", "records", "ack"],
+    ["realtimestack", "persistence", "tasks", "read"],
   ] {
     application.on(.POST, endpoint.map { PathComponent.constant($0) }) {
       request async -> Response in

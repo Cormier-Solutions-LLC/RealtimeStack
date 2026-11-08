@@ -1,6 +1,6 @@
 # RealtimeStack logging plugins
 
-`RealtimeStack.Plugins.Logging` is the common integration for generic error handlers. `RealtimeStack.Plugins.Bugsnag`, `RealtimeStack.Plugins.Serilog`, and `RealtimeStack.Plugins.Log4net` each depend on it. All four packages target .NET Standard 2.0 and .NET 10 and use coordinated version `2.0.1-beta`.
+`RealtimeStack.Plugins.Logging` is the common integration for generic error handlers. `RealtimeStack.Plugins.Bugsnag`, `RealtimeStack.Plugins.Serilog`, and `RealtimeStack.Plugins.Log4net` each depend on it. All four packages target .NET Standard 2.0 and .NET 10 and use coordinated version `2.0.2-beta`.
 
 ## Register a provider
 
@@ -71,4 +71,4 @@ Disable overlapping BugSnag automatic exception capture if the same exception wo
 
 ## Upgrade to RealtimeStack 2
 
-These four packages are new in `2.0.1-beta`. NuGet automatically resolves their internal dependencies in the declared compatible range. Every NuGet artifact includes a README with setup and upgrade guidance. Existing hosts should follow the [major-version upgrade guide](upgrading-to-realtimestack-2.md) for source, configuration, browser, and deployment changes.
+These four packages are new in `2.0.2-beta`. NuGet automatically resolves their internal dependencies in the declared compatible range. Every NuGet artifact includes a README with setup and upgrade guidance. Existing hosts should follow the [major-version upgrade guide](upgrading-to-realtimestack-2.md) for source, configuration, browser, and deployment changes.

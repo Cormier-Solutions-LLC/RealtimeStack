@@ -167,7 +167,9 @@ async def test_ticket_forwards_the_public_scheme_to_an_internal_gateway() -> Non
     app.state.http = upstream
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="https://public.example.test") as client:
-        response = await client.post("/realtimestack/tickets", headers={"Origin": configured.PUBLIC_ORIGIN}, content=b"{}")
+        response = await client.post(
+            "/realtimestack/tickets", headers={"Origin": configured.PUBLIC_ORIGIN}, content=b"{}"
+        )
 
     assert response.status_code == 202
     assert upstream.calls == 1
@@ -181,7 +183,9 @@ async def test_ticket_rejects_streamed_oversized_upstream_response() -> None:
     app.state.http = Upstream(b"a" * (MAXIMUM_BODY_BYTES + 1))
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
-        response = await client.post("/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
+        response = await client.post(
+            "/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}"
+        )
 
     assert response.status_code == 503
     assert response.json()["code"] == "service_unavailable"
@@ -207,7 +211,9 @@ async def test_ticket_enforces_a_total_streaming_deadline(monkeypatch: pytest.Mo
     app.state.http = SlowUpstream()
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
-        response = await client.post("/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}")
+        response = await client.post(
+            "/realtimestack/tickets", headers={"Origin": "http://127.0.0.1:15500"}, content=b"{}"
+        )
 
     assert response.status_code == 503
     assert response.json()["code"] == "service_unavailable"
