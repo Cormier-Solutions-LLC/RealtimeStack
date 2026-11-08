@@ -1,14 +1,14 @@
 <Project>
   <PropertyGroup>
-    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1.1.1-beta</ApplicationVersion>
-    <ContainerVersion Condition="'$(ContainerVersion)' == ''">1.1.1-beta</ContainerVersion>
-    <ContractsVersion Condition="'$(ContractsVersion)' == ''">1.1.1-beta</ContractsVersion>
-    <RedisAdapterVersion Condition="'$(RedisAdapterVersion)' == ''">1.1.1-beta</RedisAdapterVersion>
-    <AspNetCoreIntegrationVersion Condition="'$(AspNetCoreIntegrationVersion)' == ''">1.1.1-beta</AspNetCoreIntegrationVersion>
-    <DotNetClientVersion Condition="'$(DotNetClientVersion)' == ''">1.1.1-beta</DotNetClientVersion>
-    <BrowserPackageVersion Condition="'$(BrowserPackageVersion)' == ''">1.1.1-beta</BrowserPackageVersion>
-    <HttpFallbackVersion Condition="'$(HttpFallbackVersion)' == ''">1.1.1-beta</HttpFallbackVersion>
-    <HelmChartVersion Condition="'$(HelmChartVersion)' == ''">1.1.1-beta</HelmChartVersion>
+    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1.1.2-beta</ApplicationVersion>
+    <ContainerVersion Condition="'$(ContainerVersion)' == ''">1.1.2-beta</ContainerVersion>
+    <ContractsVersion Condition="'$(ContractsVersion)' == ''">1.1.2-beta</ContractsVersion>
+    <RedisAdapterVersion Condition="'$(RedisAdapterVersion)' == ''">1.1.2-beta</RedisAdapterVersion>
+    <AspNetCoreIntegrationVersion Condition="'$(AspNetCoreIntegrationVersion)' == ''">1.1.2-beta</AspNetCoreIntegrationVersion>
+    <DotNetClientVersion Condition="'$(DotNetClientVersion)' == ''">1.1.2-beta</DotNetClientVersion>
+    <BrowserPackageVersion Condition="'$(BrowserPackageVersion)' == ''">1.1.2-beta</BrowserPackageVersion>
+    <HttpFallbackVersion Condition="'$(HttpFallbackVersion)' == ''">1.1.2-beta</HttpFallbackVersion>
+    <HelmChartVersion Condition="'$(HelmChartVersion)' == ''">1.1.2-beta</HelmChartVersion>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
     <Authors>RealtimeStack Contributors</Authors>

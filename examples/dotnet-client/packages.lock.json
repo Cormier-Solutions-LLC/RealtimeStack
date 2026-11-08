@@ -5,7 +5,7 @@
       "RealtimeStack.Client": {
         "type": "Project",
         "dependencies": {
-          "RealtimeStack.Contracts": "[1.1.1-beta, )"
+          "RealtimeStack.Contracts": "[1.1.2-beta, )"
         }
       },
       "RealtimeStack.Contracts": {

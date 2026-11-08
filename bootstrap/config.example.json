@@ -10,7 +10,7 @@
   },
   "image": {
     "repository": "registry.example.com/realtime/realtime-gateway",
-    "tag": "1.1.1-beta",
+    "tag": "1.1.2-beta",
     "digest": "",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""

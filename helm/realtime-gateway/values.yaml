@@ -5,8 +5,8 @@ fullnameOverride: ""
 topology: ha
 
 image:
-  repository: ghcr.io/realtime-solutions-llc/realtime-gateway
-  tag: "1.1.1-beta"
+  repository: ghcr.io/cormier-solutions-llc/realtimestack-gateway
+  tag: "1.1.2-beta"
   digest: ""
   pullPolicy: IfNotPresent
   pullSecretName: ""
