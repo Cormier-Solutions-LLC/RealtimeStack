@@ -1,6 +1,6 @@
 {
   "name": "@realtimestack/client",
-  "version": "2.0.2-beta",
+  "version": "2.0.3-beta",
   "description": "Browser and TypeScript client for RealtimeStack",
   "repository": {
     "type": "git",

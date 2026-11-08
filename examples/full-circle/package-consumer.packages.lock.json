@@ -21,55 +21,55 @@
       },
       "RealtimeStack.AspNetCore": {
         "type": "Direct",
-        "requested": "[2.0.2-beta, )",
-        "resolved": "2.0.2-beta",
+        "requested": "[2.0.3-beta, )",
+        "resolved": "2.0.3-beta",
         "contentHash": "HllsVIgbXiO0rsY8GNiCs+RfttZglXc4ff11b9Wuu0xPAE1hASY3t8diG7+bQynPJEYf/2AUPib5FGHPtWfFRA==",
         "dependencies": {
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "1.18.0",
           "OpenTelemetry.Extensions.Hosting": "1.18.0",
-          "RealtimeStack.Contracts": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Logging": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Redis": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Contracts": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Logging": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Redis": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Browser": {
         "type": "Direct",
-        "requested": "[2.0.2-beta, )",
-        "resolved": "2.0.2-beta",
+        "requested": "[2.0.3-beta, )",
+        "resolved": "2.0.3-beta",
         "contentHash": "flJOQe8oRmXZj12YEgdYHAziCPr8q1B2M6meIZG+BXStg4nJwCvmBSO4X+GYghxi2rlXJAd69UODxe6r+Z4qcA=="
       },
       "RealtimeStack.Config": {
         "type": "Direct",
-        "requested": "[2.0.2-beta, )",
-        "resolved": "2.0.2-beta",
+        "requested": "[2.0.3-beta, )",
+        "resolved": "2.0.3-beta",
         "contentHash": "pTlhwqMClqv2FA0OtBdRCHUsDJeHXEpAarx4Rph8uiTMOgfxSWchB39sDWXNtGB6Un8qX6wg29tMm509b18N0A==",
         "dependencies": {
-          "RealtimeStack.AspNetCore": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Browser": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Client": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Contracts": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.HttpFallback": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.AzureSql": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.CockroachDb": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Db2": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.MariaDb": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.MySql": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Oracle": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.PostgreSql": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Snowflake": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.SqlServer": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Plugins.Sqlite": "[2.0.2-beta, 2.1.0)",
-          "RealtimeStack.Redis": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.AspNetCore": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Browser": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Client": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Contracts": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.HttpFallback": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.AzureSql": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.CockroachDb": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Db2": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.MariaDb": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.MySql": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Oracle": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.PostgreSql": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Snowflake": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.SqlServer": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Plugins.Sqlite": "[2.0.3-beta, 2.1.0)",
+          "RealtimeStack.Redis": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.HttpFallback": {
         "type": "Direct",
-        "requested": "[2.0.2-beta, )",
-        "resolved": "2.0.2-beta",
+        "requested": "[2.0.3-beta, )",
+        "resolved": "2.0.3-beta",
         "contentHash": "l9TeA52E0o0GsGaFsQc0AZ5VkDsWBRvlBYZmOtttaCVvyNJ912bKCxL5/YdzEGQyHjZzbaCpGOLwFLTjZqjdRA==",
         "dependencies": {
-          "RealtimeStack.AspNetCore": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.AspNetCore": "[2.0.3-beta, 2.1.0)"
         }
       },
       "Microsoft.Data.Sqlite.Core": {
@@ -119,113 +119,113 @@
       },
       "RealtimeStack.Client": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "a36SsGXsh5x5mHCl3gYF4WHmA5fS38iQzkHwiMcAg2wsx7vNGrPorlOS1ceIbsod1COmAF9ynN49tACsB1WzLA==",
         "dependencies": {
-          "RealtimeStack.Contracts": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Contracts": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Contracts": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "4LgiSspSB0p1tvu62DHa9707fVh5vTXWHU1x+KTQCOyhCfEfMEFGQ4HZMDYr0gcVwxrJWZRjEpfu+pOn/KgzSw=="
       },
       "RealtimeStack.Plugins.AzureSql": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "fJAaRxN9Z7YXPT64avOH9pbrl1R99Mqq0b4DVu4skoPkvm5ZYT3cmH+7+aM9yTZb96mkQLNT8+egT0MoU2+LOw==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.CockroachDb": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "CwdY5pXI5PxNQeKezRL9gwG+yBKyeuPk9Pzmfcpb3XZCwKtkwILgc+Bj5xSoCvIYs0M7cen/vlwskjIK+Tl4qQ==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Db2": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "rzaDM1CM+mUJ+1Pud8OwbY0vXL5JGPM+duA8Ooc2e8u6H4bfkc+gDta0M0GkQLiFzog6beUOQHu+H9Fl1DbaUQ==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Logging": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "RH4cw14j8v+kfFmw8C2anzepw9r8A/0LPfNijuTKU6PINHZS01xzGsS2/TNk15/M8N+IHeayh1fDhLRxSE6LHQ=="
       },
       "RealtimeStack.Plugins.MariaDb": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "sVjuCzOuhOmcJlm3L+T6J34NVz6QSMZW16u4qxdljXh7/CqjQQGmW7Wl1dE8ts7NU1Kp7tWfIIFhIaVErRhYHA==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.MySql": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "D0OEHfy6intwHAwrnAE1nRBmZ55r+seVVsSCu2s4KO8pjy1lcDGtrz/uJH7ZbhtM7g22SNw0ysnbpyg/qe9lWw==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Oracle": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "KlrZG0i1SVKzs3s2NKy5ubiSmsTna9f5DpREAD8Ge7x970jFJogY63HcCwQlnimK+6hoTV1eh3oNk1stwL8woQ==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Persistence": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "jIetVibR4ZF84mX/AkyBRdEiNb4YqJhfb33vjtRbaQUlMfSL4kbML8vRp3HWJCULF4mD6ePKVkIFeekW4O7wdw=="
       },
       "RealtimeStack.Plugins.PostgreSql": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "3lJV9onLzQQIECrsBw0xDycGg3kYlVVe48DtRzEKtsG84sLDTNC9qGYWugqV7EagzEplghCyRWTRhoay/lFnrQ==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Snowflake": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "GJu7Np5ZOIKsCg7OZDfbVHU9xeT5slRp7MZbAXMqU7UzBj8aUk6eUCTQ+EQm2It0E6bTDkFZVloDrdVAjjP/rA==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.Sqlite": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "84RxllOlgtB9qU0IHKrhIA/5ioEgzlPDpOzmSEO/P2F4IS5lOsXiBpsIZEHjizG341ZKc+s6/S2KVZBhSYihbA==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Plugins.SqlServer": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "Mc0b5hQMR0DbMP6J/C3Ni+sljH6/MKndnAmAL+SR1jKvgA/c66wUXfaRbU2G8LUGfFy4zkzhIW2tSYJD0zIaPQ==",
         "dependencies": {
-          "RealtimeStack.Plugins.Persistence": "[2.0.2-beta, 2.1.0)"
+          "RealtimeStack.Plugins.Persistence": "[2.0.3-beta, 2.1.0)"
         }
       },
       "RealtimeStack.Redis": {
         "type": "Transitive",
-        "resolved": "2.0.2-beta",
+        "resolved": "2.0.3-beta",
         "contentHash": "NlFvdHTu7E2V1CGrj66b+3Ugeq8a26KpjxrfpDq/yyH6UlFp+AfSKWECd40RM9bNO4rN0L1YJ5CrVhsb3OjW5g==",
         "dependencies": {
-          "RealtimeStack.Contracts": "[2.0.2-beta, 2.1.0)",
+          "RealtimeStack.Contracts": "[2.0.3-beta, 2.1.0)",
           "StackExchange.Redis": "3.1.31"
         }
       },

@@ -41,7 +41,7 @@ var RealtimeStack = (() => {
   });
 
   // src/protocol.ts
-  var SDK_VERSION = "2.0.2-beta";
+  var SDK_VERSION = "2.0.3-beta";
   var PROTOCOL_VERSION = "1.0";
   var WEBSOCKET_SUBPROTOCOL = "realtimestack.v1";
   var messageTypes = {

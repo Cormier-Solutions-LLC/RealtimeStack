@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "pipelineVersion": "1.1.0",
   "package": "@realtimestack/client",
-  "version": "2.0.2-beta",
+  "version": "2.0.3-beta",
   "defaults": {
     "development": "readable",
     "support": "readable",
@@ -39,29 +39,29 @@
         {
           "path": "readable/index.html",
           "bytes": 3181,
-          "gzipBytes": 1357,
-          "sha256": "2aac98483d09c1abf652565d987cdc9aec99b5452d27492697ccf134b420c5dd",
-          "integrity": "sha384-PcyL0WJE/VZxAVDAIud2yJAQAiCV3fgs5Ft9pbB+T8nLizbXHOCq6RNZPQO/Hd86"
+          "gzipBytes": 1358,
+          "sha256": "884e411c8f1603cd662c9888017c078f27cf90a8fbfcfaf72e3dc2280211d435",
+          "integrity": "sha384-cb8/9r+oJtciYI6eek8TObvXUvvOYWBERVlr8drpr70La5X8aqLd/ZQmqN06OJP0"
         },
         {
           "path": "readable/fallback.html",
           "bytes": 3181,
-          "gzipBytes": 1357,
-          "sha256": "2aac98483d09c1abf652565d987cdc9aec99b5452d27492697ccf134b420c5dd",
-          "integrity": "sha384-PcyL0WJE/VZxAVDAIud2yJAQAiCV3fgs5Ft9pbB+T8nLizbXHOCq6RNZPQO/Hd86"
+          "gzipBytes": 1358,
+          "sha256": "884e411c8f1603cd662c9888017c078f27cf90a8fbfcfaf72e3dc2280211d435",
+          "integrity": "sha384-cb8/9r+oJtciYI6eek8TObvXUvvOYWBERVlr8drpr70La5X8aqLd/ZQmqN06OJP0"
         },
         {
           "path": "readable/failover.html",
           "bytes": 3181,
-          "gzipBytes": 1357,
-          "sha256": "2aac98483d09c1abf652565d987cdc9aec99b5452d27492697ccf134b420c5dd",
-          "integrity": "sha384-PcyL0WJE/VZxAVDAIud2yJAQAiCV3fgs5Ft9pbB+T8nLizbXHOCq6RNZPQO/Hd86"
+          "gzipBytes": 1358,
+          "sha256": "884e411c8f1603cd662c9888017c078f27cf90a8fbfcfaf72e3dc2280211d435",
+          "integrity": "sha384-cb8/9r+oJtciYI6eek8TObvXUvvOYWBERVlr8drpr70La5X8aqLd/ZQmqN06OJP0"
         }
       ],
       "sdk": {
         "path": "realtimestack.iife.js",
-        "sha256": "ea113b8eb526bebbd5aeeac19fa1c9d6c9dbf94b30270c1f3d10e7b5bd86bba7",
-        "integrity": "sha384-Pr++jLa2U9aYaF4mL7jYdYolUApufdfWiYdyk6kagPvgGQ/5ez41eHhr1KYcgr4C"
+        "sha256": "809f5aedc93c1dce7b62059a930feda1f310fe58b7984a10da10aed7bbc36258",
+        "integrity": "sha384-E7e+5vrKRNi4Hs5julYzPlMGa6w9MboscwUnQXgJ9IMlSa+Xar7pWevbCxNXWAFh"
       }
     },
     "optimized": {
@@ -83,23 +83,23 @@
         {
           "path": "optimized/index.html",
           "bytes": 2981,
-          "gzipBytes": 1347,
-          "sha256": "ed4afeb891a2df69073388d7de45714a21dbeb0fc3b2df4f2ef5f29b36eca1d4",
-          "integrity": "sha384-cu0nGVfKRWXFy5jq4snnsfrAf5dW6AL//kimstm68hmZDKALEt9wqAKBrkE8G5Rf"
+          "gzipBytes": 1344,
+          "sha256": "d7f79e1c661599a0080073ec620d404f5f37d12333d1f0ef1267399f266a3fa0",
+          "integrity": "sha384-tAn9QuZezogQcgOKzRAcv7RqaCFzycVhx3AiGLDtSmy4KHcYwpia1fvZJ5YEcw28"
         },
         {
           "path": "optimized/fallback.html",
           "bytes": 2981,
-          "gzipBytes": 1347,
-          "sha256": "ed4afeb891a2df69073388d7de45714a21dbeb0fc3b2df4f2ef5f29b36eca1d4",
-          "integrity": "sha384-cu0nGVfKRWXFy5jq4snnsfrAf5dW6AL//kimstm68hmZDKALEt9wqAKBrkE8G5Rf"
+          "gzipBytes": 1344,
+          "sha256": "d7f79e1c661599a0080073ec620d404f5f37d12333d1f0ef1267399f266a3fa0",
+          "integrity": "sha384-tAn9QuZezogQcgOKzRAcv7RqaCFzycVhx3AiGLDtSmy4KHcYwpia1fvZJ5YEcw28"
         },
         {
           "path": "optimized/failover.html",
           "bytes": 2981,
-          "gzipBytes": 1347,
-          "sha256": "ed4afeb891a2df69073388d7de45714a21dbeb0fc3b2df4f2ef5f29b36eca1d4",
-          "integrity": "sha384-cu0nGVfKRWXFy5jq4snnsfrAf5dW6AL//kimstm68hmZDKALEt9wqAKBrkE8G5Rf"
+          "gzipBytes": 1344,
+          "sha256": "d7f79e1c661599a0080073ec620d404f5f37d12333d1f0ef1267399f266a3fa0",
+          "integrity": "sha384-tAn9QuZezogQcgOKzRAcv7RqaCFzycVhx3AiGLDtSmy4KHcYwpia1fvZJ5YEcw28"
         },
         {
           "path": "source-maps/optimized/app.css.map",
@@ -118,8 +118,8 @@
       ],
       "sdk": {
         "path": "realtimestack.iife.min.js",
-        "sha256": "d9c0ec25b5d71d62974c05479477e50227305b46b8e4634f89c18273633533fa",
-        "integrity": "sha384-osC1+EBBkNASaQ8G4gC/YFWMVq5pVcEllZD/4PxW0mvguwTM3uyK6yuUFkn2GLH6"
+        "sha256": "d5ad9193bb240b68ecfbe69ac92118cd6188b137bf59febae618b22d3b69b611",
+        "integrity": "sha384-e0C9y7Db+OdVEhEKlkm0K8lQFobyb7B2ww1epvKHp2GvPRLU/XPTl5nVUeB0CMXP"
       }
     }
   },
