@@ -21,7 +21,7 @@
     "endpointEnvironment": "REDIS_TEST_ENDPOINT",
     "defaultEndpoint": "127.0.0.1:16379",
     "composeFile": "examples/full-circle/compose.yaml",
-    "instancePrefix": "realtime:full-circle-tests"
+    "instancePrefix": "realtimestack:full-circle-tests"
   },
   "timeouts": {
     "commandSeconds": 300,

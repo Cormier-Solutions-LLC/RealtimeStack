@@ -7,7 +7,7 @@
   },
   "metrics": [
     {
-      "name": "realtime_active_connections",
+      "name": "realtimestack_active_connections",
       "description": "Current WebSocket connections.",
       "type": "gauge",
       "unit": "connections",
@@ -21,7 +21,7 @@
       "consumers": ["capacity dashboard", "availability alerts"]
     },
     {
-      "name": "realtime_peak_connections",
+      "name": "realtimestack_peak_connections",
       "description": "Peak WebSocket connections since process start.",
       "type": "gauge",
       "unit": "connections",
@@ -35,7 +35,7 @@
       "consumers": ["capacity dashboard"]
     },
     {
-      "name": "realtime_active_subscriptions",
+      "name": "realtimestack_active_subscriptions",
       "description": "Current authorized subscriptions.",
       "type": "gauge",
       "unit": "subscriptions",
@@ -49,7 +49,7 @@
       "consumers": ["capacity dashboard"]
     },
     {
-      "name": "realtime_queue_depth",
+      "name": "realtimestack_queue_depth",
       "description": "Current queued outbound messages.",
       "type": "gauge",
       "unit": "messages",
@@ -63,7 +63,7 @@
       "consumers": ["backpressure dashboard", "queue alerts"]
     },
     {
-      "name": "realtime_queue_peak_depth",
+      "name": "realtimestack_queue_peak_depth",
       "description": "Peak queued outbound messages since process start.",
       "type": "gauge",
       "unit": "messages",
@@ -77,7 +77,7 @@
       "consumers": ["backpressure dashboard"]
     },
     {
-      "name": "realtime_messages_total",
+      "name": "realtimestack_messages_total",
       "description": "Accepted, sent, and rejected protocol messages.",
       "type": "counter",
       "unit": "messages",
@@ -91,7 +91,7 @@
       "consumers": ["throughput dashboard", "protocol alerts"]
     },
     {
-      "name": "realtime_connections_opened_total",
+      "name": "realtimestack_connections_opened_total",
       "description": "Accepted WebSocket connections.",
       "type": "counter",
       "unit": "connections",
@@ -105,7 +105,7 @@
       "consumers": ["connection dashboard"]
     },
     {
-      "name": "realtime_connections_closed_total",
+      "name": "realtimestack_connections_closed_total",
       "description": "Closed WebSocket connections by bounded reason.",
       "type": "counter",
       "unit": "connections",
@@ -119,13 +119,13 @@
       "consumers": ["connection dashboard", "disconnect alerts"]
     },
     {
-      "name": "realtime_authentication_total",
+      "name": "realtimestack_authentication_total",
       "description": "Authentication outcomes by bounded method.",
       "type": "counter",
       "unit": "attempts",
       "labels": ["method", "outcome"],
       "cardinalityBudget": 8,
-      "source": "realtime authenticator",
+      "source": "realtimestack authenticator",
       "aggregation": "rate of sum across instances",
       "temporality": "cumulative",
       "availability": ["prometheus", "openmetrics", "otlp"],
@@ -133,7 +133,7 @@
       "consumers": ["security dashboard", "authentication alerts"]
     },
     {
-      "name": "realtime_authorization_failures_total",
+      "name": "realtimestack_authorization_failures_total",
       "description": "Authorization failures by bounded operation.",
       "type": "counter",
       "unit": "failures",
@@ -147,7 +147,7 @@
       "consumers": ["security dashboard", "authorization alerts"]
     },
     {
-      "name": "realtime_redis_operations_total",
+      "name": "realtimestack_redis_operations_total",
       "description": "Redis operation outcomes by bounded operation.",
       "type": "counter",
       "unit": "operations",
@@ -161,7 +161,7 @@
       "consumers": ["Redis dashboard", "Redis alerts"]
     },
     {
-      "name": "realtime_redis_operation_duration_seconds",
+      "name": "realtimestack_redis_operation_duration_seconds",
       "description": "Redis operation latency.",
       "type": "histogram",
       "unit": "seconds",
@@ -176,7 +176,7 @@
       "consumers": ["Redis dashboard", "latency alerts"]
     },
     {
-      "name": "realtime_handler_duration_seconds",
+      "name": "realtimestack_handler_duration_seconds",
       "description": "Protocol handler latency.",
       "type": "histogram",
       "unit": "seconds",
@@ -191,7 +191,7 @@
       "consumers": ["latency dashboard", "latency alerts"]
     },
     {
-      "name": "realtime_draining",
+      "name": "realtimestack_draining",
       "description": "Whether the gateway is gracefully draining.",
       "type": "gauge",
       "unit": "state",
@@ -205,7 +205,7 @@
       "consumers": ["rollout dashboard", "drain alerts"]
     },
     {
-      "name": "realtime_redis_subscription_active",
+      "name": "realtimestack_redis_subscription_active",
       "description": "Whether the Redis fan-out subscription is active.",
       "type": "gauge",
       "unit": "state",
@@ -219,7 +219,7 @@
       "consumers": ["Redis dashboard", "availability alerts"]
     },
     {
-      "name": "realtime_process_managed_memory_bytes",
+      "name": "realtimestack_process_managed_memory_bytes",
       "description": "Managed memory allocated by the process.",
       "type": "gauge",
       "unit": "bytes",
@@ -233,7 +233,7 @@
       "consumers": ["resource dashboard"]
     },
     {
-      "name": "realtime_process_cpu_seconds_total",
+      "name": "realtimestack_process_cpu_seconds_total",
       "description": "Total process CPU time.",
       "type": "counter",
       "unit": "seconds",
@@ -247,7 +247,7 @@
       "consumers": ["resource dashboard"]
     },
     {
-      "name": "realtime_build_info",
+      "name": "realtimestack_build_info",
       "description": "Gateway build identity.",
       "type": "gauge",
       "unit": "state",
@@ -261,7 +261,7 @@
       "consumers": ["rollout dashboard"]
     },
     {
-      "name": "realtime_topology_info",
+      "name": "realtimestack_topology_info",
       "description": "Configured deployment topology.",
       "type": "gauge",
       "unit": "state",
@@ -274,19 +274,19 @@
       "stability": "stable",
       "consumers": ["topology dashboard"]
     },
-    { "name": "realtime_health_requests_total", "description": "Health endpoint requests.", "type": "counter", "unit": "requests", "labels": ["endpoint"], "cardinalityBudget": 3, "source": "health endpoints", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["availability dashboard"] },
-    { "name": "realtime_authentication_failures_total", "description": "Aggregate authentication failures.", "type": "counter", "unit": "failures", "labels": [], "cardinalityBudget": 1, "source": "realtime authenticator", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "diagnostics"], "stability": "stable", "consumers": ["security alerts"] },
-    { "name": "realtime_queue_dropped_total", "description": "Messages rejected by bounded queues.", "type": "counter", "unit": "messages", "labels": [], "cardinalityBudget": 1, "source": "bounded outbound queues", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["backpressure alerts"] },
-    { "name": "realtime_slow_consumer_disconnects_total", "description": "Clients disconnected after repeated queue saturation.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "connection registry", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["backpressure alerts"] },
-    { "name": "realtime_heartbeat_timeouts_total", "description": "Connections closed for heartbeat timeout.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection alerts"] },
-    { "name": "realtime_handshakes_total", "description": "WebSocket handshake outcomes.", "type": "counter", "unit": "attempts", "labels": ["outcome", "reason"], "cardinalityBudget": 13, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard", "security alerts"] },
-    { "name": "realtime_redis_errors_total", "description": "Aggregate failed Redis operations.", "type": "counter", "unit": "errors", "labels": [], "cardinalityBudget": 1, "source": "Redis adapter", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "diagnostics"], "stability": "stable", "consumers": ["Redis alerts"] },
-    { "name": "realtime_websocket_closes_total", "description": "WebSocket closes by bounded status code.", "type": "counter", "unit": "connections", "labels": ["code"], "cardinalityBudget": 12, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard"] },
-    { "name": "realtime_abnormal_websocket_closes_total", "description": "Unexpected WebSocket closes.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection alerts"] },
-    { "name": "realtime_handler_cancellations_total", "description": "Cancelled protocol handlers.", "type": "counter", "unit": "operations", "labels": [], "cardinalityBudget": 1, "source": "protocol handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["protocol dashboard"] },
-    { "name": "realtime_connection_duration_seconds", "description": "WebSocket connection lifetime.", "type": "histogram", "unit": "seconds", "buckets": [1, 5, 10, 30, 60, 300, 900, 1800, 3600, 7200, 14400, 28800, 86400, 172800, 604800], "labels": ["reason"], "cardinalityBudget": 17, "source": "connection registry", "aggregation": "merge buckets across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard"] },
-    { "name": "realtime_reconnect_authentications_total", "description": "Successful authentications explicitly marked as reconnect attempts by supported clients.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "realtime authenticator", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["reconnect dashboard"] },
-    { "name": "realtime_drain_transitions_total", "description": "Gateway transitions into drain mode.", "type": "counter", "unit": "transitions", "labels": [], "cardinalityBudget": 1, "source": "gateway lifecycle", "aggregation": "sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["shutdown diagnostics"] }
+    { "name": "realtimestack_health_requests_total", "description": "Health endpoint requests.", "type": "counter", "unit": "requests", "labels": ["endpoint"], "cardinalityBudget": 3, "source": "health endpoints", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["availability dashboard"] },
+    { "name": "realtimestack_authentication_failures_total", "description": "Aggregate authentication failures.", "type": "counter", "unit": "failures", "labels": [], "cardinalityBudget": 1, "source": "realtimestack authenticator", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "diagnostics"], "stability": "stable", "consumers": ["security alerts"] },
+    { "name": "realtimestack_queue_dropped_total", "description": "Messages rejected by bounded queues.", "type": "counter", "unit": "messages", "labels": [], "cardinalityBudget": 1, "source": "bounded outbound queues", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["backpressure alerts"] },
+    { "name": "realtimestack_slow_consumer_disconnects_total", "description": "Clients disconnected after repeated queue saturation.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "connection registry", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["backpressure alerts"] },
+    { "name": "realtimestack_heartbeat_timeouts_total", "description": "Connections closed for heartbeat timeout.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection alerts"] },
+    { "name": "realtimestack_handshakes_total", "description": "WebSocket handshake outcomes.", "type": "counter", "unit": "attempts", "labels": ["outcome", "reason"], "cardinalityBudget": 13, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard", "security alerts"] },
+    { "name": "realtimestack_redis_errors_total", "description": "Aggregate failed Redis operations.", "type": "counter", "unit": "errors", "labels": [], "cardinalityBudget": 1, "source": "Redis adapter", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "diagnostics"], "stability": "stable", "consumers": ["Redis alerts"] },
+    { "name": "realtimestack_websocket_closes_total", "description": "WebSocket closes by bounded status code.", "type": "counter", "unit": "connections", "labels": ["code"], "cardinalityBudget": 12, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard"] },
+    { "name": "realtimestack_abnormal_websocket_closes_total", "description": "Unexpected WebSocket closes.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "WebSocket handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection alerts"] },
+    { "name": "realtimestack_handler_cancellations_total", "description": "Cancelled protocol handlers.", "type": "counter", "unit": "operations", "labels": [], "cardinalityBudget": 1, "source": "protocol handler", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["protocol dashboard"] },
+    { "name": "realtimestack_connection_duration_seconds", "description": "WebSocket connection lifetime.", "type": "histogram", "unit": "seconds", "buckets": [1, 5, 10, 30, 60, 300, 900, 1800, 3600, 7200, 14400, 28800, 86400, 172800, 604800], "labels": ["reason"], "cardinalityBudget": 17, "source": "connection registry", "aggregation": "merge buckets across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["connection dashboard"] },
+    { "name": "realtimestack_reconnect_authentications_total", "description": "Successful authentications explicitly marked as reconnect attempts by supported clients.", "type": "counter", "unit": "connections", "labels": [], "cardinalityBudget": 1, "source": "realtimestack authenticator", "aggregation": "rate of sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp", "diagnostics"], "stability": "stable", "consumers": ["reconnect dashboard"] },
+    { "name": "realtimestack_drain_transitions_total", "description": "Gateway transitions into drain mode.", "type": "counter", "unit": "transitions", "labels": [], "cardinalityBudget": 1, "source": "gateway lifecycle", "aggregation": "sum across instances", "temporality": "cumulative", "availability": ["prometheus", "openmetrics", "otlp"], "stability": "stable", "consumers": ["shutdown diagnostics"] }
   ],
   "prohibitedLabels": [
     "user", "user_id", "tenant", "tenant_id", "session", "session_id", "ticket",

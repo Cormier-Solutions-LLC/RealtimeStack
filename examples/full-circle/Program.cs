@@ -1,15 +1,15 @@
-using Realtime.Config;
+using RealtimeStack.Config;
 using Microsoft.Data.Sqlite;
 using Npgsql;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Realtime.AspNetCore;
-using Realtime.Contracts;
-using Realtime.Example.FullCircle;
-using Realtime.Gateway;
-using Realtime.HttpFallback;
-using Realtime.Redis;
+using RealtimeStack.AspNetCore;
+using RealtimeStack.Contracts;
+using RealtimeStack.Example.FullCircle;
+using RealtimeStack.Gateway;
+using RealtimeStack.HttpFallback;
+using RealtimeStack.Redis;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -48,7 +48,7 @@ builder.Services.AddOptions<FullCircleOptions>()
     .Validate(options => options.AllowedTenants is { Length: > 0 } && options.AllowedTenants.All(IsSafeScope), "FullCircle:AllowedTenants must contain safe fixture identifiers.")
     .Validate(options => options.AllowedUsers is { Length: > 0 } && options.AllowedUsers.All(IsSafeScope), "FullCircle:AllowedUsers must contain safe fixture identifiers.")
     .ValidateOnStart();
-builder.Services.AddRealtimeConfiguration(builder.Configuration, registration => registration
+builder.Services.AddRealtimeStackConfiguration(builder.Configuration, registration => registration
     .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
     .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
     .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
@@ -62,7 +62,7 @@ if (diagnosticsEnabled)
         throw new InvalidOperationException(
             "Enabled full-circle diagnostics require a policy and runtime-provided operator token.");
     }
-    builder.Services.AddRealtimeDiagnosticsBearer(diagnosticsPolicy, diagnosticsToken);
+    builder.Services.AddRealtimeStackDiagnosticsBearer(diagnosticsPolicy, diagnosticsToken);
 }
 builder.Services.AddSingleton<IDistributedCache, RedisDistributedCache>();
 var sessionLifetimeMinutes = builder.Configuration.GetValue<int?>("FullCircle:SessionLifetimeMinutes") ?? 20;
@@ -79,7 +79,7 @@ if (generatedOperatorTokenPath is not null)
 {
     FullCircleLog.DevelopmentOperatorTokenFile(app.Logger, generatedOperatorTokenPath);
 }
-app.UseRealtimeGateway();
+app.UseRealtimeStackGateway();
 app.UseSession();
 if (diagnosticsEnabled)
 {
@@ -95,10 +95,10 @@ if (developmentSharedAssets is null)
 {
     app.MapStaticAssets();
 }
-app.MapRealtimeGateway();
-if (app.Services.GetRequiredService<RealtimeSetupOptions>().HttpFallbackEnabled) app.MapRealtimeHttpFallback();
-app.MapRealtimePersistence(builder.Configuration);
-app.MapRealtimeDiagnostics();
+app.MapRealtimeStackGateway();
+if (app.Services.GetRequiredService<RealtimeStackSetupOptions>().HttpFallbackEnabled) app.MapRealtimeStackHttpFallback();
+app.MapRealtimeStackPersistence(builder.Configuration);
+app.MapRealtimeStackDiagnostics();
 
 app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOptions<FullCircleOptions> settings,
     RedisConnectionProvider connections, RedisOptions redis, CancellationToken cancellationToken) =>
@@ -112,10 +112,10 @@ app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOpt
     var sessionId = Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
     var expiresAt = DateTimeOffset.UtcNow.AddMinutes(settings.Value.SessionLifetimeMinutes);
     var record = new RedisSessionRecord(request.TenantId, request.UserId, ["orders", "notifications"], expiresAt);
-    var json = JsonSerializer.Serialize(record, RealtimeJsonSerializerContext.Default.RedisSessionRecord);
+    var json = JsonSerializer.Serialize(record, RealtimeStackJsonSerializerContext.Default.RedisSessionRecord);
     var database = (await connections.GetConnectionAsync(cancellationToken)).GetDatabase();
     await database.StringSetAsync($"{redis.InstancePrefix}:{redis.SessionKeyPrefix}:{sessionId}", json, expiresAt - DateTimeOffset.UtcNow);
-    context.Session.SetString("Realtime.SessionId", sessionId);
+    context.Session.SetString("RealtimeStack.SessionId", sessionId);
     await context.Session.CommitAsync(cancellationToken);
     return Results.Ok(new { request.TenantId, request.UserId, expiresAt });
 });
@@ -123,7 +123,7 @@ app.MapPost("/api/login", async (LoginRequest request, HttpContext context, IOpt
 app.MapPost("/api/logout", async (HttpContext context, RedisConnectionProvider connections, RedisOptions redis,
     CancellationToken cancellationToken) =>
 {
-    var sessionId = context.Session.GetString("Realtime.SessionId");
+    var sessionId = context.Session.GetString("RealtimeStack.SessionId");
     if (!string.IsNullOrWhiteSpace(sessionId))
     {
         var database = (await connections.GetConnectionAsync(cancellationToken)).GetDatabase();
@@ -134,16 +134,16 @@ app.MapPost("/api/logout", async (HttpContext context, RedisConnectionProvider c
     return Results.NoContent();
 });
 
-app.MapGet("/api/session", async (HttpContext context, IRealtimeSessionStore sessions, CancellationToken cancellationToken) =>
+app.MapGet("/api/session", async (HttpContext context, IRealtimeStackSessionStore sessions, CancellationToken cancellationToken) =>
 {
-    var sessionId = context.Session.GetString("Realtime.SessionId");
+    var sessionId = context.Session.GetString("RealtimeStack.SessionId");
     var identity = string.IsNullOrWhiteSpace(sessionId) ? null : await sessions.ValidateAsync(sessionId, cancellationToken);
     return identity is null
         ? Results.Json(new { authenticated = false }, statusCode: StatusCodes.Status401Unauthorized)
         : Results.Ok(new { authenticated = true, identity.TenantId, identity.UserId, identity.AllowedTopics, identity.ExpiresAt });
 });
 
-app.MapGet("/api/diagnostics", async (IOptions<FullCircleOptions> settings, IOptions<RealtimeOptions> realtime,
+app.MapGet("/api/diagnostics", async (IOptions<FullCircleOptions> settings, IOptions<RealtimeStackOptions> realtimestack,
     IRedisReadinessProbe redis,
     CancellationToken cancellationToken) => Results.Ok(new
     {
@@ -151,7 +151,7 @@ app.MapGet("/api/diagnostics", async (IOptions<FullCircleOptions> settings, IOpt
         topology = settings.Value.Topology,
         instance = settings.Value.InstanceName,
         redis = await redis.IsReadyAsync(cancellationToken) ? "ready" : "unavailable",
-        heartbeatIntervalMilliseconds = checked(realtime.Value.HeartbeatSeconds * 1000),
+        heartbeatIntervalMilliseconds = checked(realtimestack.Value.HeartbeatSeconds * 1000),
         links = new[]
         {
             new { href = "/esm.html", label = "Run the ESM variant" },

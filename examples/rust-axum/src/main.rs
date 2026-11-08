@@ -36,8 +36,8 @@ use tower_http::{
 };
 use tracing::{error, info};
 
-const COOKIE: &str = "realtime_session";
-const PROTOCOL: &str = "realtime.v1";
+const COOKIE: &str = "realtimestack_session";
+const PROTOCOL: &str = "realtimestack.v1";
 const MAXIMUM_REQUEST_BODY_BYTES: usize = 64 * 1_024;
 const MAXIMUM_WEBSOCKET_BYTES: usize = 64 * 1_024;
 const MAXIMUM_TICKET_RESPONSE_BYTES: usize = 64 * 1_024;
@@ -127,18 +127,18 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .route_service("/failover.html", ServeFile::new(config.shared_asset_root.join("failover.html")))
         .route_service("/app.css", ServeFile::new(config.shared_asset_root.join("app.css")))
         .route_service("/app.js", ServeFile::new(config.shared_asset_root.join("app.js")))
-        .nest_service("/_content/Realtime.Browser", ServeDir::new(config.sdk_asset_root.clone()))
+        .nest_service("/_content/RealtimeStack.Browser", ServeDir::new(config.sdk_asset_root.clone()))
         .route("/health", get(health))
         .route("/api/diagnostics", get(diagnostics))
         .route("/api/login", post(login))
         .route("/api/session", get(session))
         .route("/api/logout", post(logout))
-        .route("/realtime/tickets", post(ticket))
-        .route("/realtime/http/{*path}", any(http_fallback))
-        .route("/realtime/persistence/records/read", post(http_fallback))
-        .route("/realtime/persistence/records/ack", post(http_fallback))
-        .route("/realtime/persistence/tasks/read", post(http_fallback))
-        .route("/realtime/ws", get(websocket))
+        .route("/realtimestack/tickets", post(ticket))
+        .route("/realtimestack/http/{*path}", any(http_fallback))
+        .route("/realtimestack/persistence/records/read", post(http_fallback))
+        .route("/realtimestack/persistence/records/ack", post(http_fallback))
+        .route("/realtimestack/persistence/tasks/read", post(http_fallback))
+        .route("/realtimestack/ws", get(websocket))
         .layer(DefaultBodyLimit::max(MAXIMUM_REQUEST_BODY_BYTES))
         .layer(SetResponseHeaderLayer::if_not_present(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff")))
         .layer(SetResponseHeaderLayer::if_not_present(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY")))
@@ -201,8 +201,8 @@ async fn http_fallback(
             outbound = outbound.header(name, value);
         }
     }
-    if let Some(value) = headers.get("x-realtime-connection") {
-        outbound = outbound.header("x-realtime-connection", value);
+    if let Some(value) = headers.get("x-realtimestack-connection") {
+        outbound = outbound.header("x-realtimestack-connection", value);
     }
     outbound = outbound.header("x-forwarded-proto", state.config.public_scheme());
     let upstream = outbound.send().await.map_err(|_| AppError::unavailable())?;
@@ -388,7 +388,7 @@ async fn logout(
     let mut response = StatusCode::NO_CONTENT.into_response();
     response.headers_mut().insert(
         header::SET_COOKIE,
-        HeaderValue::from_static("realtime_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"),
+        HeaderValue::from_static("realtimestack_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"),
     );
     Ok(response)
 }
@@ -402,7 +402,7 @@ async fn ticket(
     let url = state
         .config
         .gateway_url
-        .join("realtime/tickets")
+        .join("realtimestack/tickets")
         .map_err(|_| AppError::unavailable())?;
     let mut request = state.http.post(url).body(body);
     request = request.header("x-forwarded-proto", state.config.public_scheme());
@@ -488,7 +488,7 @@ async fn relay_inner(
     let mut url = state
         .config
         .gateway_url
-        .join("realtime/ws")
+        .join("realtimestack/ws")
         .map_err(|_| AppError::unavailable())?;
     url.set_scheme(if url.scheme() == "https" { "wss" } else { "ws" })
         .map_err(|_| AppError::unavailable())?;
@@ -715,7 +715,7 @@ mod tests {
         assert!(!offers_protocol(&headers));
         headers.insert(
             header::SEC_WEBSOCKET_PROTOCOL,
-            HeaderValue::from_static("example, realtime.v1"),
+            HeaderValue::from_static("example, realtimestack.v1"),
         );
         assert!(offers_protocol(&headers));
     }

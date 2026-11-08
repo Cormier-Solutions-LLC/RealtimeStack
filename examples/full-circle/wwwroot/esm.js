@@ -1,6 +1,6 @@
-import * as Realtime from "/_content/Realtime.Browser/realtime.js";
+import * as RealtimeStack from "/_content/RealtimeStack.Browser/realtimestack.js";
 
-globalThis.RealtimeClient = Realtime.RealtimeClient;
-globalThis.Realtime = Realtime;
+globalThis.RealtimeStackClient = RealtimeStack.RealtimeStackClient;
+globalThis.RealtimeStack = RealtimeStack;
 await import("/app.js");
 document.querySelector("#esm-state").textContent = "ready";

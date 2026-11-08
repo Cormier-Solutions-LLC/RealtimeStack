@@ -26,7 +26,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "dotnet run --project examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
+      command: "dotnet run --project examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-build --no-restore --no-launch-profile",
       cwd: repositoryRoot,
       url: `${gatewayOrigin}/health`,
       timeout: 60_000,
@@ -37,9 +37,9 @@ export default defineConfig({
         FullCircle__Topology: "non-ha",
         FullCircle__InstanceName: "gateway-a",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "realtime:kotlin-ktor-tests",
-        Realtime__SessionSource: "Cookie",
-        Realtime__AllowedOrigins__0: frontendOrigin,
+        Redis__InstancePrefix: "realtimestack:kotlin-ktor-tests",
+        RealtimeStack__SessionSource: "Cookie",
+        RealtimeStack__AllowedOrigins__0: frontendOrigin,
       },
     },
     {
@@ -58,7 +58,7 @@ export default defineConfig({
         HEARTBEAT_INTERVAL_MILLISECONDS: "5000",
         INSTANCE_NAME: "kotlin-ktor-a",
         TOPOLOGY: "non-ha",
-        REDIS_INSTANCE_PREFIX: "realtime:kotlin-ktor-tests",
+        REDIS_INSTANCE_PREFIX: "realtimestack:kotlin-ktor-tests",
         REDIS_SESSION_KEY_PREFIX: "sessions",
         ALLOWED_TENANTS: "tenant-a,tenant-b",
         ALLOWED_USERS: "user-a,user-b",

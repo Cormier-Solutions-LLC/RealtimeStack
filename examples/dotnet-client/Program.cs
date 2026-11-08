@@ -1,12 +1,12 @@
 using System.Text.Json;
-using Realtime.Client;
-using Realtime.Contracts;
+using RealtimeStack.Client;
+using RealtimeStack.Contracts;
 
-var configuredEndpoint = Environment.GetEnvironmentVariable("REALTIME_ENDPOINT");
+var configuredEndpoint = Environment.GetEnvironmentVariable("REALTIMESTACK_ENDPOINT");
 if (!Uri.TryCreate(configuredEndpoint, UriKind.Absolute, out var endpoint)
     || endpoint.Scheme is not ("ws" or "wss"))
 {
-    Console.WriteLine("Set REALTIME_ENDPOINT to a ws:// or wss:// gateway endpoint.");
+    Console.WriteLine("Set REALTIMESTACK_ENDPOINT to a ws:// or wss:// gateway endpoint.");
     return;
 }
 
@@ -14,9 +14,9 @@ if (args.Length == 2 && args[0] == "--task-status")
 {
     var httpEndpoint = new UriBuilder(endpoint) { Scheme = endpoint.Scheme == "wss" ? "https" : "http", Path = "/", Query = "" }.Uri;
     using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = httpEndpoint };
-    http.DefaultRequestHeaders.Add("Origin", Environment.GetEnvironmentVariable("REALTIME_ORIGIN"));
-    http.DefaultRequestHeaders.Add("Cookie", Environment.GetEnvironmentVariable("REALTIME_COOKIE"));
-    var saved = await new RealtimePersistenceClient(http).GetTaskStatusAsync(args[1]);
+    http.DefaultRequestHeaders.Add("Origin", Environment.GetEnvironmentVariable("REALTIMESTACK_ORIGIN"));
+    http.DefaultRequestHeaders.Add("Cookie", Environment.GetEnvironmentVariable("REALTIMESTACK_COOKIE"));
+    var saved = await new RealtimeStackPersistenceClient(http).GetTaskStatusAsync(args[1]);
     Console.WriteLine(saved is null ? "No task found for this account." : $"Task {saved.TaskId}: state={saved.State}; progress={saved.Progress}; error={saved.Error}; finished={saved.FinishedAt}");
     return;
 }
@@ -28,14 +28,14 @@ Console.CancelKeyPress += (_, eventArgs) =>
     stopping.Cancel();
 };
 
-using var client = new RealtimeClient(
-    new RealtimeClientOptions { Endpoint = endpoint },
+using var client = new RealtimeStackClient(
+    new RealtimeStackClientOptions { Endpoint = endpoint },
     new EnvironmentAuthenticationProvider());
 try
 {
     await client.ConnectAsync(stopping.Token);
 
-    var orders = RealtimeRoute.ForTopic("orders");
+    var orders = RealtimeStackRoute.ForTopic("orders");
     await client.SubscribeAsync(orders, cancellationToken: stopping.Token);
     await client.PublishAsync(
         orders,
@@ -53,19 +53,19 @@ catch (OperationCanceledException) when (stopping.IsCancellationRequested)
     // Ctrl+C requests a cooperative, successful shutdown.
 }
 
-internal sealed class EnvironmentAuthenticationProvider : IRealtimeAuthenticationProvider
+internal sealed class EnvironmentAuthenticationProvider : IRealtimeStackAuthenticationProvider
 {
-    public Task<RealtimeAuthenticationMaterial> GetAuthenticationAsync(CancellationToken cancellationToken)
+    public Task<RealtimeStackAuthenticationMaterial> GetAuthenticationAsync(CancellationToken cancellationToken)
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var origin = Environment.GetEnvironmentVariable("REALTIME_ORIGIN");
+        var origin = Environment.GetEnvironmentVariable("REALTIMESTACK_ORIGIN");
         if (!string.IsNullOrWhiteSpace(origin))
         {
             headers["Origin"] = origin;
         }
-        return Task.FromResult(new RealtimeAuthenticationMaterial(
-            connectionTicket: Environment.GetEnvironmentVariable("REALTIME_TICKET"),
-            cookieHeader: Environment.GetEnvironmentVariable("REALTIME_COOKIE"),
+        return Task.FromResult(new RealtimeStackAuthenticationMaterial(
+            connectionTicket: Environment.GetEnvironmentVariable("REALTIMESTACK_TICKET"),
+            cookieHeader: Environment.GetEnvironmentVariable("REALTIMESTACK_COOKIE"),
             headers: headers));
     }
 }

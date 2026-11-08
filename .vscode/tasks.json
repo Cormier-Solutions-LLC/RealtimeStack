@@ -32,7 +32,7 @@
       "label": "build: .NET solution",
       "type": "process",
       "command": "dotnet",
-      "args": ["build", "${workspaceFolder}/Realtime.sln", "-p:RestoreLockedMode=true"],
+      "args": ["build", "${workspaceFolder}/RealtimeStack.sln", "-p:RestoreLockedMode=true"],
       "problemMatcher": "$msCompile",
       "group": "build"
     },
@@ -40,7 +40,7 @@
       "label": "build: load runner",
       "type": "process",
       "command": "dotnet",
-      "args": ["build", "${workspaceFolder}/tools/Realtime.LoadRunner/Realtime.LoadRunner.csproj", "-p:RestoreLockedMode=true"],
+      "args": ["build", "${workspaceFolder}/tools/RealtimeStack.LoadRunner/RealtimeStack.LoadRunner.csproj", "-p:RestoreLockedMode=true"],
       "problemMatcher": "$msCompile"
     },
     {

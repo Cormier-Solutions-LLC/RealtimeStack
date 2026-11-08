@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(web: __DIR__.'/../routes/web.php', commands: __DIR__.'/../routes/console.php')
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['realtime_session']);
-        $middleware->validateCsrfTokens(except: ['api/login', 'api/logout', 'realtime/tickets', 'realtime/persistence/records/read', 'realtime/persistence/records/ack', 'realtime/persistence/tasks/read']);
+        $middleware->encryptCookies(except: ['realtimestack_session']);
+        $middleware->validateCsrfTokens(except: ['api/login', 'api/logout', 'realtimestack/tickets', 'realtimestack/persistence/records/read', 'realtimestack/persistence/records/ack', 'realtimestack/persistence/tasks/read']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request): bool => $request->is('api/*') || $request->is('realtime/*'),
+            fn (Request $request): bool => $request->is('api/*') || $request->is('realtimestack/*'),
         );
     })->create();

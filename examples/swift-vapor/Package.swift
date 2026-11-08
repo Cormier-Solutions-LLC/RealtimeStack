@@ -3,10 +3,10 @@
 import PackageDescription
 
 let package = Package(
-  name: "RealtimeVaporExample",
+  name: "RealtimeStackVaporExample",
   platforms: [.macOS(.v15)],
   products: [
-    .executable(name: "RealtimeVaporExample", targets: ["App"])
+    .executable(name: "RealtimeStackVaporExample", targets: ["App"])
   ],
   dependencies: [
     .package(url: "https://github.com/swift-server/async-http-client.git", exact: "1.36.1"),

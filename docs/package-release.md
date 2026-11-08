@@ -1,6 +1,6 @@
 # Package release policy
 
-Realtime produces eighteen NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
+RealtimeStack produces twenty-two NuGet packages and one npm tarball from one immutable package candidate. Publishing the npm artifact is optional; constructing and verifying it is part of every candidate build.
 
 | Artifact | Version property | Purpose |
 | --- | --- | --- |
@@ -12,8 +12,10 @@ Realtime produces eighteen NuGet packages and one npm tarball from one immutable
 | `RealtimeStack.Browser` | `BrowserPackageVersion` | Razor static web assets generated from the browser SDK |
 | `RealtimeStack.Plugins.Persistence` | `ContractsVersion` | Shared durable stream and task status contracts |
 | `RealtimeStack.Plugins.{PostgreSql,MySql,MariaDb,SqlServer,AzureSql,Oracle,Sqlite,Db2,CockroachDb,Snowflake}` | `ContractsVersion` | Ten database adapters; see [persistence](persistence.md) |
+| `RealtimeStack.Plugins.Logging` | `ContractsVersion` | Provider-neutral error contracts, dispatch, and DI integration |
+| `RealtimeStack.Plugins.{Bugsnag,Serilog,Log4net}` | `ContractsVersion` | Optional logging adapters depending on the common Logging package |
 | `RealtimeStack.Config` | `ContractsVersion` | Registration, first-run setup, and durable HTTP integration |
-| `@realtime/client` | `sdk/typescript/package.json` | Optional npm form of the same browser SDK; publication requires registry-owner approval |
+| `@realtimestack/client` | `sdk/typescript/package.json` | Optional npm form of the same browser SDK; publication requires registry-owner approval |
 
 The NuGet IDs are the supported public identities. The npm name is a candidate identity and the release workflow does not publish it unless an approved registry and npm token are supplied explicitly. The gateway application/container and Helm chart have separate release workflows and are not included in this package candidate. Package IDs, versions, and registry endpoints are release configuration; no customer or deployment name is part of an artifact identity.
 
@@ -32,14 +34,14 @@ Deprecated APIs remain for at least one minor release unless a security correcti
 Use PowerShell 7 and supply network identities as configuration:
 
 ```powershell
-./scripts/Update-RealtimeVersion.ps1 -Version <semantic-version> -WhatIf
-./scripts/Update-RealtimeVersion.ps1 -Version <semantic-version>
+./scripts/Update-RealtimeStackVersion.ps1 -Version <semantic-version> -WhatIf
+./scripts/Update-RealtimeStackVersion.ps1 -Version <semantic-version>
 ```
 
 The updater changes active coordinated-version surfaces and creates new changelog and release-note entries without rewriting historical entries. Review and replace the generated summary placeholders before building the candidate.
 
 ```powershell
-./scripts/Build-RealtimePackages.ps1 `
+./scripts/Build-RealtimeStackPackages.ps1 `
   -UpstreamPackageSource $env:NUGET_UPSTREAM_SOURCE `
   -RedisTestEndpoint $env:REDIS_TEST_ENDPOINT `
   -PackageRepositoryUrl $env:PACKAGE_REPOSITORY_URL `
@@ -47,32 +49,32 @@ The updater changes active coordinated-version surfaces and creates new changelo
   -PackageReleaseNotesUrl $env:PACKAGE_RELEASE_NOTES_URL
 ```
 
-When version parameters are omitted, the build reads `ContractsVersion`, `DotNetClientVersion`, `RedisAdapterVersion`, `AspNetCoreIntegrationVersion`, `HttpFallbackVersion`, and `BrowserPackageVersion` from `Directory.Build.props`. An explicit `BrowserPackageVersion` must match the normalized version in `sdk/typescript/package.json`. The automatic release gate is intentionally stricter: application, container, Helm chart, all eighteen NuGet packages, and npm must contain the same semantic version and must change together, because an official release promotes the complete coordinated set.
+When version parameters are omitted, the build reads `ContractsVersion`, `DotNetClientVersion`, `RedisAdapterVersion`, `AspNetCoreIntegrationVersion`, `HttpFallbackVersion`, and `BrowserPackageVersion` from `Directory.Build.props`. An explicit `BrowserPackageVersion` must match the normalized version in `sdk/typescript/package.json`. The automatic release gate is intentionally stricter: application, container, Helm chart, all twenty-two NuGet packages, and npm must contain the same semantic version and must change together, because an official release promotes the complete coordinated set.
 
-Pull requests build package candidates without publication credentials. Package workflow jobs run on the runner pool configured by `CI_RUNNER_LABEL`. After `Realtime gateway CI` succeeds for a push to `main`, the package workflow checks out that exact CI commit and compares its coordinated version with its first parent. An unchanged version skips package work; a complete coordinated change builds and publishes automatically. The workflow restores locked dependencies, builds, tests, creates browser outputs, packs all artifacts into isolated staging, inspects intended assets and dependency bounds, installs packages into clean consumers, checks reproducibility, and writes SHA-256 and manifest evidence. The protected main-branch publication job attests the exact selected candidate before promotion; branch-selectable build jobs have no OIDC or attestation permission. `-WhatIf` prints the plan without running tools or changing output. A repeated build is `UNCHANGED` only when every artifact hash matches; a different artifact with the same version fails as a version conflict.
+Pull requests build package candidates without publication credentials. Package workflow jobs run on the runner pool configured by `CI_RUNNER_LABEL`. After `RealtimeStack gateway CI` succeeds for a push to `main`, the package workflow checks out that exact CI commit and compares its coordinated version with its first parent. An unchanged version skips package work; a complete coordinated change builds and publishes automatically. The workflow restores locked dependencies, builds, tests, creates browser outputs, packs all artifacts into isolated staging, inspects intended assets and dependency bounds, installs packages into clean consumers, checks reproducibility, and writes SHA-256 and manifest evidence. The protected main-branch publication job attests the exact selected candidate before promotion; branch-selectable build jobs have no OIDC or attestation permission. `-WhatIf` prints the plan without running tools or changing output. A repeated build is `UNCHANGED` only when every artifact hash matches; a different artifact with the same version fails as a version conflict.
 
 ## Promotion and publication
 
 CI uploads an attempt-specific candidate named for the source commit. Promotion downloads that exact artifact rather than rebuilding. Its manifest is deterministic for a given clean commit and artifact set. Partial-promotion evidence records both the original candidate attempt and the evidence attempt: failed-job reruns restore the newest retained state automatically, while a later dispatch with `resume_run_id` downloads the original candidate and matching checkpoint from that run. Promotion verifies the manifest and checksum file before any push, validates every selected registry credential before mutation, requires the exact commit to have successful main-branch CI, uses an environment approval gate restricted to the main branch, serializes promotion runs for each candidate, publishes NuGet packages in dependency order, and records each package and symbol-package upload independently so an interrupted run can resume at the next unrecorded artifact. The protected `package-production` environment owns the `NUGET_SOURCE` and optional `NPM_REGISTRY` variables plus the `NUGET_USER` environment secret; dispatch callers cannot override the endpoints or NuGet identity that receive release credentials. The promotion job exchanges its GitHub OIDC token through the matching NuGet.org Trusted Publishing policy immediately before publication; no long-lived NuGet API key is stored. Automatic version-change releases publish NuGet only; npm remains an explicit manual opt-in until its registry ownership and token are configured. Stable npm versions, including versions with build metadata, use the `latest` distribution tag; prerelease versions use `next`. Resume state is bound to the exact manifest hash and a canonical, path-case-sensitive registry identity. An unproven duplicate reported by a registry fails the run; it is never silently skipped. The optional npm token remains secret-backed and is never printed; the temporary npm configuration is owner-only on Unix hosts.
 
-NuGet publication uses `Publish-RealtimePackages.ps1 -NuGetSource <configured source>`. Its `NUGET_API_KEY` process environment value is the short-lived output of `NuGet/login`, not a GitHub secret. The NuGet.org policy must match repository owner `Cormier-Solutions-LLC`, repository `RealtimeStack`, workflow file `packages.yml`, environment `package-production`, and the intended `RealtimeStack.*` push scope. Add `-PublishNpm` only after ownership of the configured npm registry/name is approved. Use `-WhatIf` to rehearse commands without credentials or network mutation. Signing remains disabled until a signing identity and trust policy are approved; provenance attestations and SBOMs are produced by CI for the immutable candidate.
+NuGet publication uses `Publish-RealtimeStackPackages.ps1 -NuGetSource <configured source>`. Its `NUGET_API_KEY` process environment value is the short-lived output of `NuGet/login`, not a GitHub secret. The NuGet.org policy must match repository owner `Cormier-Solutions-LLC`, repository `RealtimeStack`, workflow file `packages.yml`, environment `package-production`, and the intended `RealtimeStack.*` push scope. Add `-PublishNpm` only after ownership of the configured npm registry/name is approved. Use `-WhatIf` to rehearse commands without credentials or network mutation. Signing remains disabled until a signing identity and trust policy are approved; provenance attestations and SBOMs are produced by CI for the immutable candidate.
 
-Rollback never replaces package bytes. Deprecate the bad immutable version in the registry, publish a corrected patch, restore the previous compatible version range in consumers, and retain the failed candidate, checksums, manifest, scan results, SBOM, provenance, release notes, and redacted logs for audit. If automatic or manual publication partially fails, rerun that workflow attempt or start a manual dispatch for the same commit and supply the failed workflow's `resume_run_id`; the workflow validates and restores its retained promotion state. Only pushes already recorded for that exact manifestâ€”and, for npm, the same registryâ€”are skipped. Without that evidence, a duplicate-version response stops the run for operator verification.
+Rollback never replaces package bytes. Deprecate the bad immutable version in the registry, publish a corrected patch, restore the previous compatible version range in consumers, and retain the failed candidate, checksums, manifest, scan results, SBOM, provenance, release notes, and redacted logs for audit. If automatic or manual publication partially fails, rerun that workflow attempt or start a manual dispatch for the same commit and supply the failed workflow's `resume_run_id`; the workflow validates and restores its retained promotion state. Only pushes already recorded for that exact manifest—and, for npm, the same registry—are skipped. Without that evidence, a duplicate-version response stops the run for operator verification.
 
 ## Consumer paths
 
-- ASP.NET Core: install `RealtimeStack.AspNetCore`; configure Redis and realtime options at runtime.
-- HTTP fallback: additionally install `RealtimeStack.HttpFallback`, register it with `AddRealtimeHttpFallback`, and map it with `MapRealtimeHttpFallback`.
+- ASP.NET Core: install `RealtimeStack.AspNetCore`; configure Redis and realtimestack options at runtime.
+- HTTP fallback: additionally install `RealtimeStack.HttpFallback`, register it with `AddRealtimeStackHttpFallback`, and map it with `MapRealtimeStackHttpFallback`.
 - .NET Standard: install `RealtimeStack.Client`; it contains no ASP.NET Core dependency.
-- Browser through NuGet: install `RealtimeStack.Browser` and load `/_content/Realtime.Browser/realtime.iife.min.js` or the ESM equivalent.
+- Browser through NuGet: install `RealtimeStack.Browser` and load `/_content/RealtimeStack.Browser/realtimestack.iife.min.js` or the ESM equivalent.
 - Raw JavaScript: use the inspected npm tarball, or extract the same files from the candidate's `RealtimeStack.Browser` NuGet package under `staticwebassets/`.
 
 If restore fails, confirm the configured feed contains every dependency version in the recorded ranges and that no package source mapping excludes the local/test feed. For static assets, confirm `UseStaticFiles` is enabled and inspect the generated `staticwebassets.*.json` manifest. For duplicate-version errors, compare the candidate checksum with retained promotion evidence; never use `--skip-duplicate` as proof that bytes match.
 
 ## NuGet ID migration
 
-New candidates use `RealtimeStack.*` package IDs. Replace each legacy prefixed PackageReference with its `RealtimeStack.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names use `Realtime.*`; browser filenames use `realtime-*` and static asset URLs use `/_content/Realtime.Browser/`. Update consumer imports and URLs together. Avoid mixing the legacy and current package graphs; their public types now have different assembly identities. Historical published packages remain immutable.
+New candidates use `RealtimeStack.*` package IDs. Replace each legacy prefixed PackageReference with its `RealtimeStack.*` equivalent and migrate the complete dependency graph together. CLR namespaces and assembly names use `RealtimeStack.*`; browser filenames use `realtimestack-*` and static asset URLs use `/_content/RealtimeStack.Browser/`. Update consumer imports and URLs together. Avoid mixing the legacy and current package graphs; their public types now have different assembly identities. Historical published packages remain immutable.
 
 Before promoting the first renamed candidate, configure NuGet ownership and Trusted Publishing for the `RealtimeStack.*` scope. Deprecate the old package IDs with their corresponding replacement IDs after successful promotion; do not delete historical versions.
 
-The attempted `Realtime.*` NuGet IDs were rejected as reserved. The supported NuGet family is `RealtimeStack.*`; .NET projects, assemblies, namespaces and browser asset paths retain `Realtime.*`, and npm retains `@realtime/client`. A package ID reservation is optional for publishing an otherwise available name.
+The attempted `RealtimeStack.*` NuGet IDs were rejected as reserved. The supported NuGet family is `RealtimeStack.*`; .NET projects, assemblies, namespaces and browser asset paths retain `RealtimeStack.*`, and npm retains `@realtimestack/client`. A package ID reservation is optional for publishing an otherwise available name.

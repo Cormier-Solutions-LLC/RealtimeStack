@@ -7,7 +7,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $feed = (Resolve-Path -LiteralPath $PackageSource).Path
-$scratch = Join-Path ([IO.Path]::GetTempPath()) ("realtime-persistence-consumer-" + [guid]::NewGuid().ToString('N'))
+$scratch = Join-Path ([IO.Path]::GetTempPath()) ("realtimestack-persistence-consumer-" + [guid]::NewGuid().ToString('N'))
 $names = @('Persistence', 'PostgreSql', 'MySql', 'MariaDb', 'SqlServer', 'AzureSql', 'Oracle', 'Sqlite', 'Db2', 'CockroachDb', 'Snowflake')
 try {
     New-Item -ItemType Directory -Path $scratch | Out-Null
@@ -20,19 +20,19 @@ try {
 </Project>
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'Consumer.csproj')
     $constructors = ($names | Where-Object { $_ -ne 'Persistence' } | ForEach-Object {
-        "new Realtime.Plugins.$_.${_}PersistenceStore(() => throw new InvalidOperationException()),"
+        "new RealtimeStack.Plugins.$_.${_}PersistenceStore(() => throw new InvalidOperationException()),"
     }) -join "`n"
     @"
-using Realtime.Plugins.Persistence;
-using Realtime.Config;
+using RealtimeStack.Plugins.Persistence;
+using RealtimeStack.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 RelationalPersistenceStore[] stores = [$constructors];
 foreach (var store in stores) {
     if (!store.CreateTableSql.Contains("PRIMARY KEY")) throw new InvalidOperationException();
 }
-using var services = new ServiceCollection().AddRealtimeConfiguration(new ConfigurationBuilder().Build()).BuildServiceProvider();
-if ((await services.GetRequiredService<RealtimeSetupManager>().InspectAsync()).Count != 0) throw new InvalidOperationException();
+using var services = new ServiceCollection().AddRealtimeStackConfiguration(new ConfigurationBuilder().Build()).BuildServiceProvider();
+if ((await services.GetRequiredService<RealtimeStackSetupManager>().InspectAsync()).Count != 0) throw new InvalidOperationException();
 Console.WriteLine("Config and all ten packaged database adapters loaded.");
 "@ | Set-Content -LiteralPath (Join-Path $scratch 'Program.cs')
     $escapedFeed = [Security.SecurityElement]::Escape($feed)

@@ -14,4 +14,4 @@ Release qualification should compare the candidate with the previous supported c
 
 Routes, environment variables, dependency/runtime ranges, shared assets, protocol/gateway compatibility, and the example itself must not disappear silently. A deprecation entry must name the old behavior and replacement, first warning release, migration steps, verification and rollback commands, security impact, and removal version or approved support window. The replacement must exist before removal. Until a separate support window is published, removal may occur only in a documented breaking release and the immediately previous repository version is the rollback target.
 
-There are no active deprecations. Changes to Redis record shape, the `realtime_session` cookie, Origin behavior, or ticket/WebSocket routes are breaking and require coordinated gateway migration and explicit changelog/operator actions.
+There are no active deprecations. Changes to Redis record shape, the `realtimestack_session` cookie, Origin behavior, or ticket/WebSocket routes are breaking and require coordinated gateway migration and explicit changelog/operator actions.

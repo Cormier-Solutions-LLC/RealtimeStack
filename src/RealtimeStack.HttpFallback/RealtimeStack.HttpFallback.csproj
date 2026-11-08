@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <VersionPrefix>$(HttpFallbackVersion)</VersionPrefix>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>RealtimeStack.HttpFallback</PackageId>
+    <Authors>RealtimeStack Contributors</Authors>
+    <Description>Optional HTTP streaming fallback transport for RealtimeStack ASP.NET Core gateways.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>realtimestack;http-streaming;fallback;aspnetcore</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RealtimeStack.AspNetCore\RealtimeStack.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>

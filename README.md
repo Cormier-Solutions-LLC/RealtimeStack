@@ -1,20 +1,21 @@
 # RealtimeStack
 
-RealtimeStack provides an independently deployable .NET 10 Native AOT foundation for the Realtime WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
+RealtimeStack provides an independently deployable .NET 10 Native AOT foundation for the RealtimeStack WebSocket platform. It can run as a standalone gateway or be embedded in an existing ASP.NET Core application through the reusable hosting package.
 
 The repository also contains the shared protocol contracts, Redis integration, .NET and browser clients, Kubernetes and Helm deployment assets, cross-platform lifecycle automation, observability assets, load tooling, and reference applications used to verify the platform end to end.
 
-Repository: [Cormier-Solutions-LLC/RealtimeStack](https://github.com/Cormier-Solutions-LLC/RealtimeStack). NuGet packages use `RealtimeStack.*`; CLR namespaces and assemblies retain `Realtime.*`.
+Repository: [Cormier-Solutions-LLC/RealtimeStack](https://github.com/Cormier-Solutions-LLC/RealtimeStack). NuGet packages, CLR namespaces, and assemblies use `RealtimeStack.*`. See the [major-version upgrade guide](docs/upgrading-to-realtimestack-2.md).
 
 ## Repository map
 
-- `src/Realtime.Gateway` — standalone Native AOT ASP.NET Core gateway host.
-- `src/Realtime.AspNetCore` — reusable hosting, endpoint, diagnostics, and session integration.
-- `src/Realtime.Contracts` — source-generated JSON wire contracts targeting .NET 10 and .NET Standard 2.0.
-- `src/Realtime.Redis` — Redis session, ticket, pub/sub, and optional durable-stream integration.
-- `src/Realtime.Client` — runtime-neutral .NET Standard 2.0 WebSocket client.
-- `src/Realtime.Browser` and `sdk/typescript` — NuGet-packaged browser assets and the canonical TypeScript/npm client.
-- `src/Realtime.HttpFallback` — optional HTTP fallback endpoints for environments where WebSockets cannot initialize.
+- `src/RealtimeStack.Gateway` — standalone Native AOT ASP.NET Core gateway host.
+- `src/RealtimeStack.AspNetCore` — reusable hosting, endpoint, diagnostics, and session integration.
+- `src/RealtimeStack.Contracts` — source-generated JSON wire contracts targeting .NET 10 and .NET Standard 2.0.
+- `src/RealtimeStack.Redis` — Redis session, ticket, pub/sub, and optional durable-stream integration.
+- `src/RealtimeStack.Client` — runtime-neutral .NET Standard 2.0 WebSocket client.
+- `src/RealtimeStack.Browser` and `sdk/typescript` — NuGet-packaged browser assets and the canonical TypeScript/npm client.
+- `src/RealtimeStack.Plugins.Logging` — common error-handler interface, dispatch, and registration, with optional Bugsnag, Serilog, and Log4net adapters. See [logging plugins](docs/logging-plugins.md).
+- `src/RealtimeStack.HttpFallback` — optional HTTP fallback endpoints for environments where WebSockets cannot initialize.
 - `protocol/fixtures` — language-neutral protocol and compatibility fixtures.
 - `examples` — .NET consumers, browser assets, a full-circle test application, and ten alternative web-stack adapters.
 - `bootstrap`, `scripts`, `helm`, and `cluster` — versioned lifecycle configuration, cross-shell automation, chart, and cluster assets.
@@ -34,10 +35,10 @@ Git is required by the lifecycle automation. Docker is optional for normal build
 Restore, build, test, and start the standalone gateway:
 
 ```powershell
-dotnet restore ./Realtime.sln --locked-mode
-dotnet build ./Realtime.sln -c Release --no-restore
-dotnet test ./Realtime.sln -c Release --no-build
-dotnet run --project ./src/Realtime.Gateway
+dotnet restore ./RealtimeStack.sln --locked-mode
+dotnet build ./RealtimeStack.sln -c Release --no-restore
+dotnet test ./RealtimeStack.sln -c Release --no-build
+dotnet run --project ./src/RealtimeStack.Gateway
 ```
 
 The development profile listens on `http://localhost:5097`. Redis is optional for process startup in the default development configuration; configure `Redis__Endpoint` when exercising distributed sessions, tickets, pub/sub, streams, or multi-instance behavior. The [developer guide](docs/developer-guide.md) documents the pinned Redis fixture and the broader local verification workflow.
@@ -48,8 +49,8 @@ The standalone gateway exposes these default routes:
 - `/health/live` — process liveness.
 - `/health/ready` — traffic readiness, including shutdown draining and configured dependencies.
 - `/metrics` — Prometheus/OpenMetrics-compatible telemetry.
-- `/realtime/ws` — authenticated WebSocket endpoint using `realtime.v1`.
-- `/realtime/tickets` — same-origin issuance of short-lived, single-use connection tickets.
+- `/realtimestack/ws` — authenticated WebSocket endpoint using `realtimestack.v1`.
+- `/realtimestack/tickets` — same-origin issuance of short-lived, single-use connection tickets.
 
 Diagnostics endpoints are disabled by default and have separate production, authorization, origin, and network controls. See the [diagnostics runbook](docs/runbooks/diagnostics.md) before enabling them.
 
@@ -60,7 +61,7 @@ Copy `bootstrap/config.example.json` to an ignored or external location, replace
 ```powershell
 New-Item -ItemType Directory -Force ./.bootstrap/env/dev | Out-Null
 Copy-Item ./bootstrap/config.example.json ./.bootstrap/env/dev/config.json
-pwsh ./scripts/Realtime-Bootstrap.ps1 -Action plan -Config ./.bootstrap/env/dev/config.json -Profile non-ha
+pwsh ./scripts/RealtimeStack-Bootstrap.ps1 -Action plan -Config ./.bootstrap/env/dev/config.json -Profile non-ha
 ```
 
 The equivalent Bash command is:
@@ -68,12 +69,12 @@ The equivalent Bash command is:
 ```bash
 mkdir -p ./.bootstrap/env/dev
 cp ./bootstrap/config.example.json ./.bootstrap/env/dev/config.json
-bash ./scripts/realtime-bootstrap.sh plan --config ./.bootstrap/env/dev/config.json --profile non-ha
+bash ./scripts/realtimestack-bootstrap.sh plan --config ./.bootstrap/env/dev/config.json --profile non-ha
 ```
 
 Both wrappers call the same Node.js engine, validate the same versioned schema, and produce deterministic secret-redacted plans and Helm values. The supported actions cover prerequisites, planning, build bootstrap, backup, install, update, validation, rollback, recovery, and guarded teardown. Review the [bootstrap guide](docs/bootstrap.md) and [bootstrap contract](docs/bootstrap-contract.md) before applying a plan. The older PowerShell-only bootstrap and deployment scripts remain compatibility entry points during the version 1 transition.
 
-Managed Redis credentials are prepared separately through `scripts/realtime-redis-secret.sh` or `scripts/Set-RealtimeRedisSecret.ps1`; configuration mode derives every target/key identity from the deployment file while password values remain file-only and are never printed. `scripts/realtime-certificate.sh` and `scripts/Set-RealtimeCertificate.ps1` likewise apply and wait for the configured cert-manager Certificate. Managed Redis install/validation verifies the configured chart archive, applies the reviewed Sentinel bootstrap patch, and renders immutable Redis/Sentinel/exporter image digests plus the HA DNS/TILT controls. See the [managed Redis HA runbook](docs/runbooks/managed-redis-ha.md) for the complete HTTP/WSS deployment and recovery sequence.
+Managed Redis credentials are prepared separately through `scripts/realtimestack-redis-secret.sh` or `scripts/Set-RealtimeStackRedisSecret.ps1`; configuration mode derives every target/key identity from the deployment file while password values remain file-only and are never printed. `scripts/realtimestack-certificate.sh` and `scripts/Set-RealtimeStackCertificate.ps1` likewise apply and wait for the configured cert-manager Certificate. Managed Redis install/validation verifies the configured chart archive, applies the reviewed Sentinel bootstrap patch, and renders immutable Redis/Sentinel/exporter image digests plus the HA DNS/TILT controls. See the [managed Redis HA runbook](docs/runbooks/managed-redis-ha.md) for the complete HTTP/WSS deployment and recovery sequence.
 
 Domains, origins, host names, addresses, CIDRs, ports, Redis endpoints, image repositories, Kubernetes identities, and Secret names are configuration inputs. Override development examples through `appsettings`, environment variables (double underscores separate .NET configuration keys), bootstrap configuration, Helm values, or deployment parameters. Never compile environment-specific network identities into the application or commit credentials, tokens, private keys, rendered Secrets, or production values.
 
@@ -83,18 +84,18 @@ Publish the gateway for the runtime identifier matching the build host:
 
 ```powershell
 $runtimeIdentifier = 'win-x64' # or linux-x64, osx-x64, osx-arm64
-dotnet publish ./src/Realtime.Gateway -c Release -r $runtimeIdentifier --self-contained
+dotnet publish ./src/RealtimeStack.Gateway -c Release -r $runtimeIdentifier --self-contained
 ```
 
 CI restores locked dependencies, builds and tests the solution, validates clean package consumers and both bootstrap topologies, checks Helm and Kubernetes output, runs cross-browser and reference-stack scenarios, publishes and smoke-tests a Linux x64 Native AOT executable and rootless read-only OCI image, scans artifacts, and emits an SBOM and immutable build evidence.
 
-Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `1.1.2-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
+Application, container, NuGet package, npm package, Helm chart, scripts, and reference applications are coordinated at `2.0.0-beta`. The authoritative .NET and chart properties are controlled in `Directory.Build.props`; the TypeScript package version is in `sdk/typescript/package.json`. See the [package release policy](docs/package-release.md) for compatibility, reproducible package candidates, guarded promotion, and rollback.
 
 ## Clients and protocol
 
 The TypeScript client produces deterministic ESM and direct-browser IIFE artifacts, readable and optimized web profiles, declarations, source maps, and integrity metadata. The .NET client targets .NET Standard 2.0. Both clients implement the versioned envelope, single-use ticket flow, bounded command handling, heartbeats, reconnect with fresh authentication, and duplicate-free subscription restoration.
 
-Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/typescript-sdk.md), [.NET client guide](src/Realtime.Client/README.md), and [optimized-assets guide](docs/optimized-assets.md). Applications embedding the gateway should use the [ASP.NET Core package guide](src/Realtime.AspNetCore/README.md) and [minimal host example](examples/aspnet-core/README.md).
+Start with the [wire protocol](docs/protocol.md), [TypeScript SDK guide](docs/typescript-sdk.md), [.NET client guide](src/RealtimeStack.Client/README.md), and [optimized-assets guide](docs/optimized-assets.md). Applications embedding the gateway should use the [ASP.NET Core package guide](src/RealtimeStack.AspNetCore/README.md) and [minimal host example](examples/aspnet-core/README.md).
 
 ## Further documentation
 

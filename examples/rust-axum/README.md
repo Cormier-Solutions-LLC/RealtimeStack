@@ -1,19 +1,19 @@
 # Rust and Axum reference application
 
-This non-production adapter demonstrates an Axum front end for Realtime. Explicit application state holds typed configuration, a Redis session store, and a bounded HTTP client. The adapter forwards tickets and WebSockets while preserving Host/Origin/cookies/query parameters, caps browser WebSocket frames and messages at 64 KiB before relay, and serves the canonical SDK and UI without copies. `LISTEN_HOST` and `PORT` select the listener explicitly.
+This non-production adapter demonstrates an Axum front end for RealtimeStack. Explicit application state holds typed configuration, a Redis session store, and a bounded HTTP client. The adapter forwards tickets and WebSockets while preserving Host/Origin/cookies/query parameters, caps browser WebSocket frames and messages at 64 KiB before relay, and serves the canonical SDK and UI without copies. `LISTEN_HOST` and `PORT` select the listener explicitly.
 
 ## Prerequisites and local run
 
 - Rust 1.98.1 (pinned by `rust-toolchain.toml`)
-- Redis 7.4 and a Realtime 0.1.x gateway using the same Redis prefixes and trusted `PUBLIC_ORIGIN`
+- Redis 7.4 and a RealtimeStack 0.1.x gateway using the same Redis prefixes and trusted `PUBLIC_ORIGIN`
 
 For ticket and WebSocket relays, the adapter forwards the scheme from validated `PUBLIC_ORIGIN` in `X-Forwarded-Proto`. Configure the gateway's `Proxy:TrustedNetworks` with only the adapter network CIDR so it accepts that single forwarding hop; never trust public or broader ranges.
-- WebSocket clients must offer the `realtime.v1` subprotocol
+- WebSocket clients must offer the `realtimestack.v1` subprotocol
 - Canonical shared UI files (`examples/shared-web/wwwroot`) and generated SDK assets (`sdk/typescript/dist`)
 
 Supply every `.env.example` value externally; the application does not load the fixture. From `examples/rust-axum`, run `cargo run --locked`. Run the repeatable gate with:
 
-Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `Realtime:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
+Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
 
 ```text
 cargo fmt --check
@@ -24,8 +24,8 @@ cargo clippy --locked --all-targets -- -D warnings
 Build/run the digest-pinned container from the repository root:
 
 ```text
-docker build -f examples/rust-axum/Dockerfile -t realtime-rust-axum:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15400:15400 --env-file examples/rust-axum/.env.example --env GATEWAY_URL=http://host.docker.internal:15401 --env REDIS_URL=redis://host.docker.internal:16379 realtime-rust-axum:local
+docker build -f examples/rust-axum/Dockerfile -t realtimestack-rust-axum:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15400:15400 --env-file examples/rust-axum/.env.example --env GATEWAY_URL=http://host.docker.internal:15401 --env REDIS_URL=redis://host.docker.internal:16379 realtimestack-rust-axum:local
 ```
 
 Configuration fails before binding on unsafe origins, Redis schemes, identifiers, topology, TTL, ports, or allowlists. Both `redis://` and CA-verified `rediss://` connections are supported. Redis connect/readiness, HTTP forwarding, and WebSocket connection have 5–15 second bounds. SIGINT/SIGTERM initiates graceful shutdown with a 15-second completion bound. Logs contain structural event names, never error text or configured dependency details.
@@ -53,7 +53,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Axum | 0.8.9 | Supported framework |
 | Redis crate | 1.7.0 | Supported async session client |
 | Cargo graph | 219 locked packages | `Cargo.lock` required on every build |
-| Realtime SDK / protocol / gateway | 1.1.2-beta / 1.0 / 1.1.2-beta | Canonical assets and external gateway |
+| RealtimeStack SDK / protocol / gateway | 2.0.0-beta / 1.0 / 2.0.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 | Container bases | Rust 1.98.1 Alpine / Alpine 3.24 | Digest-pinned |
 
@@ -65,4 +65,4 @@ Open a repository issue for non-sensitive defects with Rust/Axum/Cargo, SDK/prot
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.

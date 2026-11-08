@@ -1,8 +1,8 @@
-defmodule RealtimeExample.ConfigTest do
+defmodule RealtimeStackExample.ConfigTest do
   use ExUnit.Case, async: true
-  alias RealtimeExample.Config
-  alias RealtimeExample.Application, as: ReferenceApplication
-  alias RealtimeExample.Web
+  alias RealtimeStackExample.Config
+  alias RealtimeStackExample.Application, as: ReferenceApplication
+  alias RealtimeStackExample.Web
 
   defp values,
     do: %{
@@ -15,7 +15,7 @@ defmodule RealtimeExample.ConfigTest do
       "HEARTBEAT_INTERVAL_MILLISECONDS" => "5000",
       "INSTANCE_NAME" => "elixir-phoenix-a",
       "TOPOLOGY" => "non-ha",
-      "REDIS_INSTANCE_PREFIX" => "realtime:elixir-test",
+      "REDIS_INSTANCE_PREFIX" => "realtimestack:elixir-test",
       "REDIS_SESSION_KEY_PREFIX" => "sessions",
       "ALLOWED_TENANTS" => "tenant-a",
       "ALLOWED_USERS" => "user-a"
@@ -66,8 +66,8 @@ defmodule RealtimeExample.ConfigTest do
 
   test "requires the exact websocket subprotocol" do
     refute Web.offers_protocol?([])
-    refute Web.offers_protocol?(["other, realtime.v10"])
-    assert Web.offers_protocol?(["other", " realtime.v1"])
+    refute Web.offers_protocol?(["other, realtimestack.v10"])
+    assert Web.offers_protocol?(["other", " realtimestack.v1"])
   end
 
   test "bounds streamed ticket responses" do
@@ -87,7 +87,7 @@ defmodule RealtimeExample.ConfigTest do
   end
 
   test "rejects and drains oversized request bodies" do
-    conn = Plug.Test.conn(:post, "/realtime/tickets", :binary.copy("a", 65_537))
+    conn = Plug.Test.conn(:post, "/realtimestack/tickets", :binary.copy("a", 65_537))
     assert {:error, :too_large, drained} = Web.read_bounded_body(conn)
     assert {:ok, "", _conn} = Plug.Conn.read_body(drained)
   end
@@ -107,13 +107,13 @@ defmodule RealtimeExample.ConfigTest do
   end
 
   test "caps upstream websocket frames" do
-    assert RealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_536))
-    refute RealtimeExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_537))
+    assert RealtimeStackExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_536))
+    refute RealtimeStackExample.UpstreamSocket.frame_allowed?(:binary.copy("a", 65_537))
   end
 
   test "initiates a going-away handshake during shutdown" do
     {:ok, upstream} = __MODULE__.FakeUpstream.start_link(self())
-    assert :ok = RealtimeExample.ProxySocket.terminate(:shutdown, %{upstream: upstream})
+    assert :ok = RealtimeStackExample.ProxySocket.terminate(:shutdown, %{upstream: upstream})
     assert_receive {:closed, 1001, ""}
     GenServer.stop(upstream)
   end

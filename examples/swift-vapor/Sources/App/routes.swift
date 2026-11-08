@@ -4,7 +4,7 @@ import NIOCore
 @preconcurrency import Redis
 import Vapor
 
-private let sessionCookie = "realtime_session"
+private let sessionCookie = "realtimestack_session"
 private let maximumBodyBytes = 64 * 1_024
 struct LoginInput: Content {
   let tenantId: String
@@ -55,7 +55,7 @@ func routes(_ application: Application, settings: ReferenceSettings) {
       request, path: "\(settings.sharedAssetRoot)/app.js",
       type: HTTPMediaType(type: "text", subType: "javascript", parameters: ["charset": "utf-8"]))
   }
-  application.get("_content", "Realtime.Browser", "**") { request -> Response in
+  application.get("_content", "RealtimeStack.Browser", "**") { request -> Response in
     let name = request.parameters.getCatchall().joined(separator: "/")
     guard name.range(of: #"^[A-Za-z0-9._-]+$"#, options: .regularExpression) != nil else {
       throw Abort(.notFound)
@@ -169,8 +169,8 @@ func routes(_ application: Application, settings: ReferenceSettings) {
   }
 
   for endpoint in [
-    ["realtime", "tickets"], ["realtime", "persistence", "records", "read"],
-    ["realtime", "persistence", "records", "ack"], ["realtime", "persistence", "tasks", "read"],
+    ["realtimestack", "tickets"], ["realtimestack", "persistence", "records", "read"],
+    ["realtimestack", "persistence", "records", "ack"], ["realtimestack", "persistence", "tasks", "read"],
   ] {
     application.on(.POST, endpoint.map { PathComponent.constant($0) }) {
       request async -> Response in

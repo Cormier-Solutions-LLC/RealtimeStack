@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+  <ItemGroup><Using Include="Xunit" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Logging/RealtimeStack.Plugins.Logging.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Bugsnag/RealtimeStack.Plugins.Bugsnag.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Serilog/RealtimeStack.Plugins.Serilog.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Log4net/RealtimeStack.Plugins.Log4net.csproj" />
+
+    <ProjectReference Include="../../src/RealtimeStack.Config/RealtimeStack.Config.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Persistence/RealtimeStack.Plugins.Persistence.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.PostgreSql/RealtimeStack.Plugins.PostgreSql.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.MySql/RealtimeStack.Plugins.MySql.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.MariaDb/RealtimeStack.Plugins.MariaDb.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.SqlServer/RealtimeStack.Plugins.SqlServer.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.AzureSql/RealtimeStack.Plugins.AzureSql.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Oracle/RealtimeStack.Plugins.Oracle.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Sqlite/RealtimeStack.Plugins.Sqlite.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Db2/RealtimeStack.Plugins.Db2.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.CockroachDb/RealtimeStack.Plugins.CockroachDb.csproj" />
+    <ProjectReference Include="../../src/RealtimeStack.Plugins.Snowflake/RealtimeStack.Plugins.Snowflake.csproj" />
+  </ItemGroup>
+</Project>

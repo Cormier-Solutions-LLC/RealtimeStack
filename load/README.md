@@ -1,6 +1,6 @@
 # Production-readiness load testing
 
-`scripts/Invoke-RealtimeLoad.ps1` runs `tools/Realtime.LoadRunner/Realtime.LoadRunner.csproj` with caller-supplied endpoint, origin, session ID, session-cookie name, subprotocol, topic, concurrency, duration, and output path. Supported scenarios are `connection`, `fanout`, `burst`, `large-message`, `slow-client`, and `soak` (matching `profiles/production-readiness.json`). The harness sets `REALTIME_LOAD_SESSION_ID` from `-SessionId`, so no production address, credential, or secret is stored in this repository.
+`scripts/Invoke-RealtimeStackLoad.ps1` runs `tools/RealtimeStack.LoadRunner/RealtimeStack.LoadRunner.csproj` with caller-supplied endpoint, origin, session ID, session-cookie name, subprotocol, topic, concurrency, duration, and output path. Supported scenarios are `connection`, `fanout`, `burst`, `large-message`, `slow-client`, and `soak` (matching `profiles/production-readiness.json`). The harness sets `REALTIMESTACK_LOAD_SESSION_ID` from `-SessionId`, so no production address, credential, or secret is stored in this repository.
 
 Each connection uses an asynchronous receive loop and workload task. The result JSON reports connection latency and acknowledged publish latency separately, and the `connection` scenario sends periodic `ping` commands for the full configured duration.
 
@@ -19,5 +19,5 @@ Retained baseline evidence for harness validation is tracked in [`results/local-
 Example (all environment identities remain caller supplied):
 
 ```powershell
-./scripts/Invoke-RealtimeLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario burst -Connections 250 -MessagesPerConnection 1000 -OutputPath artifacts/load/burst.json
+./scripts/Invoke-RealtimeStackLoad.ps1 -Endpoint $webSocketEndpoint -Origin $allowedOrigin -SessionId $testSession -Scenario burst -Connections 250 -MessagesPerConnection 1000 -OutputPath artifacts/load/burst.json
 ```

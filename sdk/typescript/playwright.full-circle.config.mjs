@@ -16,7 +16,7 @@ const instances = selectedPlan.instances;
 const entryPort = selectedPlan.entryPort;
 const readinessTimeout = plan.timeouts.readinessSeconds * 1000;
 const packagedApplicationDirectory = resolve(repositoryRoot, "artifacts/full-circle/consumer-bin/Release/net10.0");
-const packagedApplication = "Realtime.Example.FullCircle.dll";
+const packagedApplication = "RealtimeStack.Example.FullCircle.dll";
 const forwardedRedisConfiguration = Object.fromEntries([
   "Redis__User",
   "Redis__Password",
@@ -38,10 +38,10 @@ const appServers = instances.map(instance => ({
     FullCircle__InstanceName: instance.name,
     Redis__Endpoint: redis,
     Redis__InstancePrefix: plan.redis.instancePrefix,
-    Realtime__AllowedOrigins__0: `http://127.0.0.1:${entryPort}`,
+    RealtimeStack__AllowedOrigins__0: `http://127.0.0.1:${entryPort}`,
     Diagnostics__Enabled: "true",
     Diagnostics__ProductionEnabled: "true",
-    Diagnostics__AuthorizationPolicy: "Realtime.Diagnostics.Operator",
+    Diagnostics__AuthorizationPolicy: "RealtimeStack.Diagnostics.Operator",
     Diagnostics__OperatorToken: diagnosticsToken,
     Diagnostics__AllowedOrigins__0: `http://127.0.0.1:${entryPort}`,
     Diagnostics__AllowedNetworks__0: "127.0.0.0/8",
@@ -54,8 +54,8 @@ if (profile === "ha") {
     timeout: readinessTimeout,
     reuseExistingServer: false,
     env: {
-      REALTIME_BROWSER_PROXY_PORT: String(entryPort),
-      REALTIME_BROWSER_BACKENDS: instances.map(instance => `http://127.0.0.1:${instance.port}`).join(","),
+      REALTIMESTACK_BROWSER_PROXY_PORT: String(entryPort),
+      REALTIMESTACK_BROWSER_BACKENDS: instances.map(instance => `http://127.0.0.1:${instance.port}`).join(","),
     },
   });
 }

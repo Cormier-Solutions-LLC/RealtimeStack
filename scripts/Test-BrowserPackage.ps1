@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Packs and validates the Realtime.Browser static-web-asset package.
+    Packs and validates the RealtimeStack.Browser static-web-asset package.
 .NOTES
-    Version: 1.1.2-beta
+    Version: 2.0.0-beta
     Requires: PowerShell 7 and .NET SDK 10
     Outputs: Isolated temporary package feed and clean consumer; removed after validation.
 #>
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$BrowserPackageVersion = '1.1.2-beta',
+    [string]$BrowserPackageVersion = '2.0.0-beta',
     [string]$PackageSource,
     [string]$UpstreamPackageSource = $env:NUGET_UPSTREAM_SOURCE
 )
@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($UpstreamPackageSource)) {
 }
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtime-browser-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("realtimestack-browser-" + [guid]::NewGuid().ToString('N'))
 $feedPath = Join-Path $scratchRoot 'feed'
 $packagesPath = Join-Path $scratchRoot 'packages'
 $consumerPath = Join-Path $scratchRoot 'consumer'
@@ -47,7 +47,7 @@ try {
 "@ | Set-Content -LiteralPath $nugetConfigPath -Encoding utf8NoBOM
 
     if ([string]::IsNullOrWhiteSpace($PackageSource)) {
-        dotnet pack (Join-Path $repositoryRoot 'src/Realtime.Browser/Realtime.Browser.csproj') `
+        dotnet pack (Join-Path $repositoryRoot 'src/RealtimeStack.Browser/RealtimeStack.Browser.csproj') `
             --configuration Release --no-build --output $feedPath `
             -p:BrowserPackageVersion=$BrowserPackageVersion
         if ($LASTEXITCODE -ne 0) { throw 'Packing the browser package failed.' }
@@ -67,10 +67,10 @@ try {
     try {
         $entries = @($archive.Entries | ForEach-Object FullName)
         foreach ($required in @(
-            'staticwebassets/realtime.js',
-            'staticwebassets/realtime.min.js',
-            'staticwebassets/realtime.iife.js',
-            'staticwebassets/realtime.iife.min.js',
+            'staticwebassets/realtimestack.js',
+            'staticwebassets/realtimestack.min.js',
+            'staticwebassets/realtimestack.iife.js',
+            'staticwebassets/realtimestack.iife.min.js',
             'staticwebassets/types/index.d.ts',
             'staticwebassets/version.json',
             'buildTransitive/RealtimeStack.Browser.props'
@@ -100,9 +100,9 @@ try {
     $webRoot = Join-Path $consumerPath 'wwwroot'
     New-Item -ItemType Directory -Path $webRoot -Force | Out-Null
     $exampleHtml = (Get-Content -LiteralPath (Join-Path $repositoryRoot 'examples/browser/index.html') -Raw).
-        Replace('../../sdk/typescript/dist/realtime.iife.min.js', '/_content/Realtime.Browser/realtime.iife.min.js')
+        Replace('../../sdk/typescript/dist/realtimestack.iife.min.js', '/_content/RealtimeStack.Browser/realtimestack.iife.min.js')
     Set-Content -LiteralPath (Join-Path $webRoot 'index.html') -Value $exampleHtml -Encoding utf8NoBOM
-    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'examples/browser/realtime-example.js') -Destination $webRoot
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'examples/browser/realtimestack-example.js') -Destination $webRoot
 
     dotnet restore (Join-Path $consumerPath 'Consumer.csproj') --configfile $nugetConfigPath
     if ($LASTEXITCODE -ne 0) { throw 'Clean browser consumer restore failed.' }
@@ -110,12 +110,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Clean browser consumer build failed.' }
     $manifests = @(Get-ChildItem (Join-Path $consumerPath 'obj') -Filter '*staticwebassets*.json' -Recurse)
     $assetManifest = $manifests | Where-Object {
-        (Get-Content -LiteralPath $_.FullName -Raw) -match 'realtime\.iife\.min\.js'
+        (Get-Content -LiteralPath $_.FullName -Raw) -match 'realtimestack\.iife\.min\.js'
     } | Select-Object -First 1
     if ($null -eq $assetManifest) {
         throw 'The clean consumer static-web-asset manifest does not expose the browser package.'
     }
-    if ((Get-Content -LiteralPath (Join-Path $webRoot 'index.html') -Raw) -notmatch '/_content/Realtime\.Browser/realtime\.iife\.min\.js') {
+    if ((Get-Content -LiteralPath (Join-Path $webRoot 'index.html') -Raw) -notmatch '/_content/RealtimeStack\.Browser/realtimestack\.iife\.min\.js') {
         throw 'The browser example does not consume the packaged production asset.'
     }
 }

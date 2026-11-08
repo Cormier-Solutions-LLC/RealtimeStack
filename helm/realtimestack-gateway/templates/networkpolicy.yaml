@@ -1,0 +1,97 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- if and .Values.observability.otlp.enabled (empty .Values.observability.otlp.egressNamespaceSelector) (empty .Values.observability.otlp.egressCidrs) }}
+{{- fail "observability.otlp requires an egress namespace selector or CIDR when NetworkPolicy is enabled" }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "realtimestack-gateway.fullname" . }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "realtimestack-gateway.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: {{ toYaml .Values.networkPolicy.ingressNamespaceSelector | nindent 12 }}
+          podSelector: {{ toYaml .Values.networkPolicy.ingressPodSelector | nindent 12 }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.service.targetPort }} }
+    {{- if and .Values.metrics.enabled .Values.observability.serviceMonitor.enabled }}
+    - from:
+        - namespaceSelector: {{ toYaml .Values.networkPolicy.monitoringNamespaceSelector | nindent 12 }}
+          podSelector: {{ toYaml .Values.networkPolicy.monitoringPodSelector | nindent 12 }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.service.targetPort }} }
+    {{- end }}
+    {{- if and .Values.persistence.enabled .Values.persistence.api.enabled (not (empty .Values.persistence.api.workerNamespaceSelector)) }}
+    - from:
+        - namespaceSelector: {{ toYaml .Values.persistence.api.workerNamespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.persistence.api.workerPodSelector) }}
+          podSelector: {{ toYaml .Values.persistence.api.workerPodSelector | nindent 12 }}
+          {{- end }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.service.targetPort }} }
+    {{- end }}
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    {{- if eq .Values.redis.mode "managed" }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Values.redis.managedReleaseName }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.redis.port }} }
+        {{- if eq .Values.topology "ha" }}
+        - { protocol: TCP, port: {{ .Values.redis.sentinelPort }} }
+        {{- end }}
+    {{- else if .Values.networkPolicy.allowExternalRedisEgress }}
+    - to:
+        {{- range .Values.networkPolicy.externalRedisCidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.redis.port }} }
+    {{- end }}
+    {{- if and .Values.persistence.enabled (ne .Values.persistence.provider "Sqlite") }}
+    - to:
+        {{- if not (empty .Values.persistence.egress.namespaceSelector) }}
+        - namespaceSelector: {{ toYaml .Values.persistence.egress.namespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.persistence.egress.podSelector) }}
+          podSelector: {{ toYaml .Values.persistence.egress.podSelector | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- range .Values.persistence.egress.cidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports:
+        {{- range .Values.persistence.egress.ports }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- end }}
+    {{- if .Values.observability.otlp.enabled }}
+    - to:
+        {{- if not (empty .Values.observability.otlp.egressNamespaceSelector) }}
+        - namespaceSelector: {{ toYaml .Values.observability.otlp.egressNamespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.observability.otlp.egressPodSelector) }}
+          podSelector: {{ toYaml .Values.observability.otlp.egressPodSelector | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- range .Values.observability.otlp.egressCidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports:
+        {{- range .Values.observability.otlp.egressPorts }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- end }}
+{{- end }}

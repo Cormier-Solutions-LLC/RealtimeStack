@@ -1,1 +1,1 @@
-"""Realtime FastAPI reference adapter."""
+"""RealtimeStack FastAPI reference adapter."""

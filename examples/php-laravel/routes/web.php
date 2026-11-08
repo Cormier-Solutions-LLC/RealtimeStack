@@ -18,7 +18,7 @@ Route::get('/fallback.html', $asset('fallback.html', 'text/html; charset=utf-8')
 Route::get('/failover.html', $asset('failover.html', 'text/html; charset=utf-8'));
 Route::get('/app.css', $asset('app.css', 'text/css; charset=utf-8'));
 Route::get('/app.js', $asset('app.js', 'text/javascript; charset=utf-8'));
-Route::get('/_content/Realtime.Browser/{asset}', function (ReferenceConfig $config, string $asset) {
+Route::get('/_content/RealtimeStack.Browser/{asset}', function (ReferenceConfig $config, string $asset) {
     abort_unless((bool) preg_match('/^[A-Za-z0-9._-]+$/D', $asset), 404);
     $path = $config->sdkAssetRoot.DIRECTORY_SEPARATOR.$asset;
     abort_unless(is_file($path), 404);
@@ -30,8 +30,8 @@ Route::get('/api/diagnostics', [ReferenceController::class, 'diagnostics']);
 Route::post('/api/login', [ReferenceController::class, 'login']);
 Route::get('/api/session', [ReferenceController::class, 'session']);
 Route::post('/api/logout', [ReferenceController::class, 'logout']);
-Route::post('/realtime/tickets', [ReferenceController::class, 'ticket']);
+Route::post('/realtimestack/tickets', [ReferenceController::class, 'ticket']);
 
-Route::post('/realtime/persistence/records/read', [ReferenceController::class, 'ticket']);
-Route::post('/realtime/persistence/records/ack', [ReferenceController::class, 'ticket']);
-Route::post('/realtime/persistence/tasks/read', [ReferenceController::class, 'ticket']);
+Route::post('/realtimestack/persistence/records/read', [ReferenceController::class, 'ticket']);
+Route::post('/realtimestack/persistence/records/ack', [ReferenceController::class, 'ticket']);
+Route::post('/realtimestack/persistence/tasks/read', [ReferenceController::class, 'ticket']);

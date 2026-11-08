@@ -18,7 +18,7 @@ def values() -> dict[str, object]:
         "HEARTBEAT_INTERVAL_MILLISECONDS": 5000,
         "INSTANCE_NAME": "python-fastapi-a",
         "TOPOLOGY": "non-ha",
-        "REDIS_INSTANCE_PREFIX": "realtime:test",
+        "REDIS_INSTANCE_PREFIX": "realtimestack:test",
         "REDIS_SESSION_KEY_PREFIX": "sessions",
         "ALLOWED_TENANTS": "tenant-a",
         "ALLOWED_USERS": "user-a",
@@ -30,7 +30,7 @@ def test_typed_configuration() -> None:
     assert settings.PORT == 15500
     assert settings.LISTEN_HOST == "127.0.0.1"
     assert settings.tenants == frozenset({"tenant-a"})
-    assert settings.session_key("id") == "realtime:test:sessions:id"
+    assert settings.session_key("id") == "realtimestack:test:sessions:id"
 
 
 def test_unsafe_origin_is_rejected() -> None:

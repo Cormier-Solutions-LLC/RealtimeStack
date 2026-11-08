@@ -27,7 +27,7 @@ test('isolated adapter changes do not run unrelated adapters', () => {
 
 test('shared runtime and browser changes exercise every downstream adapter', () => {
   for (const path of [
-    'src/Realtime.Contracts/ProtocolContracts.cs',
+    'src/RealtimeStack.Contracts/ProtocolContracts.cs',
     'protocol/fixtures/v1/envelopes.json',
     'sdk/typescript/src/client.ts',
     'examples/shared-web/wwwroot/app.js',
@@ -40,7 +40,7 @@ test('shared runtime and browser changes exercise every downstream adapter', () 
 });
 
 test('deployment changes retain topology, cross-shell, runtime contract, and full-circle coverage', () => {
-  for (const path of ['bootstrap/config.schema.json', 'helm/realtime-gateway/values.yaml', 'cluster/redis/managed-values.yaml']) {
+  for (const path of ['bootstrap/config.schema.json', 'helm/realtimestack-gateway/values.yaml', 'cluster/redis/managed-values.yaml']) {
     assert.deepEqual(selectJobs([path]), [
       'helm-and-automation', 'bootstrap-powershell-windows', 'bootstrap-lifecycle-parity', 'build-test-aot', 'full-circle',
     ], path);
@@ -50,13 +50,13 @@ test('deployment changes retain topology, cross-shell, runtime contract, and ful
   assert.deepEqual(selectJobs(['tests/bootstrap/branch-sync.test.mjs']), [
     'helm-and-automation', 'bootstrap-powershell-windows', 'bootstrap-lifecycle-parity',
   ]);
-  assert.deepEqual(selectJobs(['tests/Realtime.UnitTests/ProtocolTests.cs']), ['build-test-aot']);
+  assert.deepEqual(selectJobs(['tests/RealtimeStack.UnitTests/ProtocolTests.cs']), ['build-test-aot']);
 });
 
 test('shared automation, CI, root build inputs, and unknown surfaces conservatively run all jobs', () => {
   for (const path of [
     'scripts/ci-impact.mjs', 'scripts/setup-ci-node-prerequisites.sh',
-    '.github/workflows/ci.yml', '.github/actions/setup-realtime-runner/action.yml',
+    '.github/workflows/ci.yml', '.github/actions/setup-realtimestack-runner/action.yml',
     'Directory.Build.props', 'global.json', '.dockerignore', 'new-component/source.ts',
     'examples/new-adapter/source.ts',
   ]) assert.deepEqual(selectJobs([path]), validationJobs, path);

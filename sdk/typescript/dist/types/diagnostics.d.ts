@@ -33,7 +33,7 @@ export interface DiagnosticsSnapshot {
     uptimeSeconds: number;
     readiness: string;
     endpoints: {
-        realtimePath: string;
+        realtimestackPath: string;
         ticketPath: string;
         metricsPath: string;
         diagnosticsPath: string;

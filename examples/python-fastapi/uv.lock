@@ -150,8 +150,8 @@ wheels = [
 ]
 
 [[package]]
-name = "realtime-example-fastapi"
-version = "1.1.2b0"
+name = "realtimestack-example-fastapi"
+version = "2.0.0b0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },

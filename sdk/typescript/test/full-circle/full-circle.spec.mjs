@@ -18,13 +18,13 @@ async function connectAndSubscribe(page) {
 test("packaged browser assets expose both direct-script and ESM consumers", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#diagnostics")).toContainText(`Topology: ${process.env.FULL_CIRCLE_PROFILE}`);
-  expect(await page.evaluate(() => typeof window.Realtime?.RealtimeClient)).toBe("function");
+  expect(await page.evaluate(() => typeof window.RealtimeStack?.RealtimeStackClient)).toBe("function");
   await page.goto("/esm.html");
   await expect(page.locator("#esm-state")).toHaveText("ready");
   await expect(page.locator("#state")).toHaveText("idle");
   await expect(page.locator("#login")).toBeVisible();
-  expect(await page.evaluate(() => typeof window.RealtimeClient)).toBe("function");
-  expect(await page.evaluate(() => typeof window.Realtime?.RealtimePersistenceClient)).toBe("function");
+  expect(await page.evaluate(() => typeof window.RealtimeStackClient)).toBe("function");
+  expect(await page.evaluate(() => typeof window.RealtimeStack?.RealtimeStackPersistenceClient)).toBe("function");
   await expect(page.locator("#durable-stream")).toHaveCount(1);
 });
 
@@ -37,7 +37,7 @@ test("operator view exposes diagnostics controls separately from ordinary roles"
   await expect(page.locator("#token")).toHaveAttribute("type", "password");
   await expect(page.locator("#countdown")).toHaveText("not active");
   await expect(page.locator("#revert")).toBeDisabled();
-  expect(await page.evaluate(() => typeof window.Realtime?.DiagnosticsClient)).toBe("function");
+  expect(await page.evaluate(() => typeof window.RealtimeStack?.DiagnosticsClient)).toBe("function");
 
   await page.fill("#token", process.env.FULL_CIRCLE_DIAGNOSTICS_TOKEN);
   await page.click("#snapshot");

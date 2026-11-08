@@ -6,7 +6,7 @@ The diagnostics API is an operator-only, live troubleshooting surface. It is dis
 
 Set `Diagnostics__Enabled=true`, a registered `Diagnostics__AuthorizationPolicy`, at least one `Diagnostics__AllowedNetworks__N` CIDR, and every browser origin as `Diagnostics__AllowedOrigins__N`. Production also requires the separate acknowledgement `Diagnostics__ProductionEnabled=true`. Keep the API behind TLS, an operator identity provider, a dedicated ingress route, and a Kubernetes NetworkPolicy. Do not expose it through the public application route.
 
-The standalone gateway can register its built-in bearer policy from a strong `Diagnostics__OperatorToken` supplied only at runtime. The Helm chart maps this value from `diagnostics.operatorTokenSecret`, which must reference an existing Secret. Package consumers may call `AddRealtimeDiagnosticsBearer(policyName, token)` or register a custom operator policy backed by their identity provider. Rotate a bearer token by updating the Secret and restarting the Deployment; active requests keep no server-side token session.
+The standalone gateway can register its built-in bearer policy from a strong `Diagnostics__OperatorToken` supplied only at runtime. The Helm chart maps this value from `diagnostics.operatorTokenSecret`, which must reference an existing Secret. Package consumers may call `AddRealtimeStackDiagnosticsBearer(policyName, token)` or register a custom operator policy backed by their identity provider. Rotate a bearer token by updating the Secret and restarting the Deployment; active requests keep no server-side token session.
 
 The authorization policy must identify the operator and reject ordinary application identities. Requests without a valid policy identity fail before a handler runs. Requests from a disallowed network or browser Origin receive `403`. An empty Origin is permitted for non-browser operator tools, but it does not bypass policy or network checks.
 
@@ -17,7 +17,7 @@ Emergency disablement is `Diagnostics__Enabled=false` followed by a normal rollo
 - `GET /diagnostics/v1/snapshot` returns a cheap, aggregate snapshot: build, uptime, instance, readiness/drain, connection/subscription/queue/message/Redis state, memory, CPU, and active logging overrides.
 - `GET /diagnostics/v1/connections?offset=0&limit=25` returns capped per-connection timing and counts. Connection references are one-way hashes; tenant, user, session, ticket, topic, and payload values are never returned.
 - `GET /diagnostics/v1/events?durationSeconds=300` streams versioned aggregate operational events as server-sent events.
-- `GET /diagnostics/v1/logs/tail?level=Warning&category=Realtime&durationSeconds=300` tails new log records only. Optional `instance` and `correlation` filters are exact matches. There is no historical-download endpoint.
+- `GET /diagnostics/v1/logs/tail?level=Warning&category=RealtimeStack&durationSeconds=300` tails new log records only. Optional `instance` and `correlation` filters are exact matches. There is no historical-download endpoint.
 - `POST /diagnostics/v1/logging/overrides` applies a temporary capture-level change. Supply `category`, `level`, `durationSeconds`, `reason`, and `scope` (`all` or `instance`).
 - `DELETE /diagnostics/v1/logging/overrides/{id}` rolls an active override back. `GET /diagnostics/v1/logging/overrides` and `GET /diagnostics/v1/logging/audit?offset=0&limit=25` show active overrides and paginated, bounded audit state.
 
@@ -25,7 +25,7 @@ Example request body:
 
 ```json
 {
-  "category": "Realtime.Redis",
+  "category": "RealtimeStack.Redis",
   "level": "Debug",
   "durationSeconds": 300,
   "reason": "investigate elevated publish latency",

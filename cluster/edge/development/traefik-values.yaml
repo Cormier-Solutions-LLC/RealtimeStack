@@ -1,7 +1,7 @@
 deployment:
   replicas: 3
   podLabels:
-    realtime.example/edge: realtime
+    realtimestack.example/edge: realtimestack
 
 updateStrategy:
   type: RollingUpdate
@@ -42,14 +42,14 @@ service:
   type: LoadBalancer
   annotations:
     metallb.io/address-pool: development-traefik
-    external-dns.alpha.kubernetes.io/hostname: realtime.example.test
+    external-dns.alpha.kubernetes.io/hostname: realtimestack.example.test
   spec:
     externalTrafficPolicy: Local
 
 providers:
   kubernetesCRD:
     namespaces:
-      - development-realtime
+      - development-realtimestack
 
 logs:
   access:

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Runs the Realtime full-circle lifecycle through the shared cross-platform engine.
+    Runs the RealtimeStack full-circle lifecycle through the shared cross-platform engine.
 .PARAMETER Action
     plan, bootstrap, run, validate, cleanup, update, rollback, or recover.
 .PARAMETER Profile

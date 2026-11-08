@@ -1,8 +1,8 @@
 import { createServer } from "node:http";
 
-const port = Number.parseInt(process.env.REALTIME_BROWSER_STATIC_PORT ?? "14173", 10);
+const port = Number.parseInt(process.env.REALTIMESTACK_BROWSER_STATIC_PORT ?? "14173", 10);
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) {
-  throw new RangeError("REALTIME_BROWSER_STATIC_PORT must be between 1024 and 65535.");
+  throw new RangeError("REALTIMESTACK_BROWSER_STATIC_PORT must be between 1024 and 65535.");
 }
 
 const server = createServer((request, response) => {

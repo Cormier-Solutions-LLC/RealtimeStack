@@ -1,6 +1,6 @@
 # Update, deprecation, and rollback procedure
 
-1. Inventory the currently locked PHP, Laravel, Predis, Composer, FrankenPHP, Redis, Realtime SDK/protocol/gateway, and canonical asset versions. Record the deployed configuration names and persistent Redis compatibility without recording values.
+1. Inventory the currently locked PHP, Laravel, Predis, Composer, FrankenPHP, Redis, RealtimeStack SDK/protocol/gateway, and canonical asset versions. Record the deployed configuration names and persistent Redis compatibility without recording values.
 2. Review official release notes, security advisories, support policies, deprecations, and breaking changes for every changed component. Confirm PHP extensions, Composer platform requirements, container architectures, and gateway protocol compatibility before editing pins.
 3. Preserve mutable deployment configuration and data outside the source tree. Back up Redis according to the deployment runbook when an update can affect record formats; never copy secrets into build context or logs.
 4. Update explicit constraints and image digests, run `composer update --with-all-dependencies`, review the entire lock diff, and rebuild the canonical TypeScript assets. Never hand-edit `composer.lock` or copy generated/vendor output into this example.

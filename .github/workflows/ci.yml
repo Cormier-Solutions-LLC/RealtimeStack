@@ -1,4 +1,4 @@
-name: Realtime gateway CI
+name: RealtimeStack gateway CI
 
 on:
   workflow_dispatch:
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
       - name: Install Node runtime prerequisites
         if: runner.os == 'Linux'
         run: bash scripts/setup-ci-node-prerequisites.sh
@@ -79,7 +79,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
           shellcheck: 'true'
@@ -120,58 +120,58 @@ jobs:
             Install-Module PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force
           }
           Import-Module PSScriptAnalyzer -RequiredVersion 1.24.0 -Force
-          $findings = Invoke-ScriptAnalyzer -Path ./scripts/Realtime-Bootstrap.ps1 -Severity Error,Warning
+          $findings = Invoke-ScriptAnalyzer -Path ./scripts/RealtimeStack-Bootstrap.ps1 -Severity Error,Warning
           if ($findings) { $findings | Format-Table -AutoSize; exit 1 }
           if (-not (Get-Module Pester -ListAvailable | Where-Object Version -EQ '5.7.1')) {
             Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force
           }
           Import-Module Pester -RequiredVersion 5.7.1 -Force
-          Invoke-Pester ./tests/bootstrap/Realtime-Bootstrap.Tests.ps1 -CI
+          Invoke-Pester ./tests/bootstrap/RealtimeStack-Bootstrap.Tests.ps1 -CI
       - name: Validate Bash syntax and static analysis
         run: |
-          bash -n scripts/realtime-bootstrap.sh
-          bash -n scripts/realtime-redis-secret.sh
-          bash -n scripts/realtime-certificate.sh
+          bash -n scripts/realtimestack-bootstrap.sh
+          bash -n scripts/realtimestack-redis-secret.sh
+          bash -n scripts/realtimestack-certificate.sh
           bash -n scripts/prepare-managed-redis-chart.sh
-          shellcheck scripts/realtime-bootstrap.sh scripts/realtime-redis-secret.sh scripts/realtime-certificate.sh scripts/prepare-managed-redis-chart.sh
+          shellcheck scripts/realtimestack-bootstrap.sh scripts/realtimestack-redis-secret.sh scripts/realtimestack-certificate.sh scripts/prepare-managed-redis-chart.sh
       - name: Test bootstrap contract and cross-shell parity
         env:
           BOOTSTRAP_SKIP_LIFECYCLE: '1'
         run: node --test tests/bootstrap/*.test.mjs
       - name: Render both explicit bootstrap topology profiles
         run: |
-          node scripts/realtime-bootstrap.mjs plan --config bootstrap/config.example.json --profile non-ha
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-non-ha helm/realtime-gateway --namespace ci-realtime --values .bootstrap/env/dev/lifecycle/dev-realtime/values.json > /tmp/non-ha.yaml
+          node scripts/realtimestack-bootstrap.mjs plan --config bootstrap/config.example.json --profile non-ha
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-non-ha helm/realtimestack-gateway --namespace ci-realtimestack --values .bootstrap/env/dev/lifecycle/dev-realtimestack/values.json > /tmp/non-ha.yaml
           jq '.topology = "ha" | .kubernetes.failureDomains = 3' bootstrap/config.example.json > /tmp/bootstrap-ha.json
-          node scripts/realtime-bootstrap.mjs plan --config /tmp/bootstrap-ha.json --profile ha
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-ha helm/realtime-gateway --namespace ci-realtime --values .bootstrap/env/dev/lifecycle/dev-realtime/values.json > /tmp/ha.yaml
+          node scripts/realtimestack-bootstrap.mjs plan --config /tmp/bootstrap-ha.json --profile ha
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-ha helm/realtimestack-gateway --namespace ci-realtimestack --values .bootstrap/env/dev/lifecycle/dev-realtimestack/values.json > /tmp/ha.yaml
           grep --quiet 'replicas: 1' /tmp/non-ha.yaml
           if grep --quiet 'kind: PodDisruptionBudget' /tmp/non-ha.yaml; then exit 1; fi
           grep --quiet 'Gateway__Topology: "non-ha"' /tmp/non-ha.yaml
-          grep --quiet 'Redis__Endpoint: "dev-realtime-redis-master:6379"' /tmp/non-ha.yaml
+          grep --quiet 'Redis__Endpoint: "dev-realtimestack-redis-master:6379"' /tmp/non-ha.yaml
           if grep --quiet 'Redis__SentinelPassword' /tmp/non-ha.yaml; then exit 1; fi
           grep --quiet 'replicas: 3' /tmp/ha.yaml
           grep --quiet 'kind: PodDisruptionBudget' /tmp/ha.yaml
           grep --quiet 'topologySpreadConstraints:' /tmp/ha.yaml
           grep --quiet 'whenUnsatisfiable: DoNotSchedule' /tmp/ha.yaml
           grep --quiet 'Gateway__Topology: "ha"' /tmp/ha.yaml
-          grep --quiet 'Redis__Endpoint: "dev-realtime-redis:26379,sentinelUser=default"' /tmp/ha.yaml
+          grep --quiet 'Redis__Endpoint: "dev-realtimestack-redis:26379,sentinelUser=default"' /tmp/ha.yaml
           grep --quiet 'Redis__SentinelPassword' /tmp/ha.yaml
           grep --quiet 'port: 6379' /tmp/ha.yaml
           grep --quiet 'port: 26379' /tmp/ha.yaml
       - name: Helm lint, schema, and render validation
         run: |
           node scripts/test-persistence-chart.mjs --docker-image="$CI_HELM_IMAGE"
-          jq --exit-status '.templating.list | map(.name) == ["environment","cluster","namespace","instance","pod"]' helm/realtime-gateway/dashboards/realtime-gateway.json
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" lint helm/realtime-gateway --strict
-          if docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template invalid-ip helm/realtime-gateway --set observability.prometheusRule.ingressEnabled=true --set-string observability.platformMetrics.metalLbAddress=':::' >/tmp/invalid-ip.yaml 2>/tmp/invalid-ip.err; then
+          jq --exit-status '.templating.list | map(.name) == ["environment","cluster","namespace","instance","pod"]' helm/realtimestack-gateway/dashboards/realtimestack-gateway.json
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" lint helm/realtimestack-gateway --strict
+          if docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template invalid-ip helm/realtimestack-gateway --set observability.prometheusRule.ingressEnabled=true --set-string observability.platformMetrics.metalLbAddress=':::' >/tmp/invalid-ip.yaml 2>/tmp/invalid-ip.err; then
             echo 'Helm schema accepted an invalid IPv6 MetalLB address.' >&2
             exit 1
           fi
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtime helm/realtime-gateway --namespace ci-realtime > /tmp/external.yaml
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtime helm/realtime-gateway --namespace ci-realtime --values cluster/redis/managed-gateway-values.example.yaml > /tmp/managed.yaml
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtime helm/realtime-gateway --namespace ci-realtime --api-versions monitoring.coreos.com/v1/ServiceMonitor --api-versions monitoring.coreos.com/v1/PrometheusRule --api-versions monitoring.coreos.com/v1alpha1/AlertmanagerConfig --set observability.alertmanagerConfig.enabled=true --set observability.alertmanagerConfig.webhookSecret.name=ci-alert-webhook --set autoscaling.connectionsMetric.enabled=true --set autoscaling.queueDepthMetric.enabled=true --set metrics.authorizationPolicy=ci-metrics --set metrics.scrapeTokenSecret.name=ci-metrics > /tmp/observability.yaml
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtime helm/realtime-gateway --namespace ci-realtime --set diagnostics.enabled=true --set diagnostics.productionEnabled=true --set diagnostics.authorizationPolicy=ci-operator --set diagnostics.operatorTokenSecret.name=ci-diagnostics --set 'diagnostics.allowedNetworks[0]=192.0.2.0/24' --set observability.otlp.enabled=true --set observability.otlp.endpoint=https://otel.example --set 'observability.otlp.egressCidrs[0]=192.0.2.0/24' --set observability.otlp.headersSecret.name=ci-otel > /tmp/diagnostics.yaml
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtimestack helm/realtimestack-gateway --namespace ci-realtimestack > /tmp/external.yaml
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtimestack helm/realtimestack-gateway --namespace ci-realtimestack --values cluster/redis/managed-gateway-values.example.yaml > /tmp/managed.yaml
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtimestack helm/realtimestack-gateway --namespace ci-realtimestack --api-versions monitoring.coreos.com/v1/ServiceMonitor --api-versions monitoring.coreos.com/v1/PrometheusRule --api-versions monitoring.coreos.com/v1alpha1/AlertmanagerConfig --set observability.alertmanagerConfig.enabled=true --set observability.alertmanagerConfig.webhookSecret.name=ci-alert-webhook --set autoscaling.connectionsMetric.enabled=true --set autoscaling.queueDepthMetric.enabled=true --set metrics.authorizationPolicy=ci-metrics --set metrics.scrapeTokenSecret.name=ci-metrics > /tmp/observability.yaml
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template ci-realtimestack helm/realtimestack-gateway --namespace ci-realtimestack --set diagnostics.enabled=true --set diagnostics.productionEnabled=true --set diagnostics.authorizationPolicy=ci-operator --set diagnostics.operatorTokenSecret.name=ci-diagnostics --set 'diagnostics.allowedNetworks[0]=192.0.2.0/24' --set observability.otlp.enabled=true --set observability.otlp.endpoint=https://otel.example --set 'observability.otlp.egressCidrs[0]=192.0.2.0/24' --set observability.otlp.headersSecret.name=ci-otel > /tmp/diagnostics.yaml
           grep --quiet 'kind: Deployment' /tmp/external.yaml
           grep --quiet 'kind: NetworkPolicy' /tmp/managed.yaml
           grep --quiet 'kind: ServiceMonitor' /tmp/observability.yaml
@@ -179,7 +179,7 @@ jobs:
           grep --quiet 'name: ci-metrics' /tmp/observability.yaml
           grep --quiet 'kind: PrometheusRule' /tmp/observability.yaml
           grep --quiet 'kind: AlertmanagerConfig' /tmp/observability.yaml
-          grep --quiet 'realtime_active_connections' /tmp/observability.yaml
+          grep --quiet 'realtimestack_active_connections' /tmp/observability.yaml
           grep --quiet 'Diagnostics__ProductionEnabled: "true"' /tmp/diagnostics.yaml
           grep --quiet 'Diagnostics__OperatorToken' /tmp/diagnostics.yaml
           grep --quiet 'name: ci-diagnostics' /tmp/diagnostics.yaml
@@ -193,17 +193,17 @@ jobs:
         run: |
           helm_container=$(docker create "$CI_HELM_IMAGE")
           trap 'docker rm -f "$helm_container" >/dev/null 2>&1 || true' EXIT
-          docker cp "$helm_container:/usr/bin/helm" /tmp/realtime-helm
+          docker cp "$helm_container:/usr/bin/helm" /tmp/realtimestack-helm
           docker rm "$helm_container" >/dev/null
           trap - EXIT
-          chmod +x /tmp/realtime-helm
+          chmod +x /tmp/realtimestack-helm
           node scripts/prepare-managed-redis-chart.mjs \
             --chart oci://registry-1.docker.io/bitnamicharts/redis \
             --version 23.1.1 \
             --archive-sha256 sha256:05665707e771f9ed843842d3ebacb992ef1c4089f138b9711446b37db76ad60a \
             --output .bootstrap/ci-redis-chart \
-            --helm /tmp/realtime-helm
-          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template dev-realtime-redis .bootstrap/ci-redis-chart/redis --namespace ci-realtime --values cluster/redis/managed-values.yaml --values .bootstrap/env/dev/lifecycle/dev-realtime/redis-values.json > /tmp/redis.yaml
+            --helm /tmp/realtimestack-helm
+          docker run --rm -v "$PWD:/work" -w /work "$CI_HELM_IMAGE" template dev-realtimestack-redis .bootstrap/ci-redis-chart/redis --namespace ci-realtimestack --values cluster/redis/managed-values.yaml --values .bootstrap/env/dev/lifecycle/dev-realtimestack/redis-values.json > /tmp/redis.yaml
           grep --quiet 'kind: StatefulSet' /tmp/redis.yaml
           grep --quiet 'kind: PodDisruptionBudget' /tmp/redis.yaml
           grep --quiet 'kind: NetworkPolicy' /tmp/redis.yaml
@@ -244,7 +244,7 @@ jobs:
             Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force
           }
           Import-Module Pester -RequiredVersion 5.7.1 -Force
-          Invoke-Pester ./tests/bootstrap/Realtime-Bootstrap.Tests.ps1 -CI
+          Invoke-Pester ./tests/bootstrap/RealtimeStack-Bootstrap.Tests.ps1 -CI
 
   bootstrap-lifecycle-parity:
     needs: changes
@@ -258,7 +258,7 @@ jobs:
         profile: [non-ha, ha]
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
       - name: Install Node runtime prerequisites
         if: runner.os == 'Linux'
         run: bash scripts/setup-ci-node-prerequisites.sh
@@ -282,7 +282,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
           native-aot: 'true'
@@ -321,9 +321,9 @@ jobs:
         working-directory: sdk/typescript
         run: npm ci
       - name: Restore locked dependencies
-        run: dotnet restore Realtime.sln --runtime linux-x64 --locked-mode
+        run: dotnet restore RealtimeStack.sln --runtime linux-x64 --locked-mode
       - name: Build
-        run: dotnet build Realtime.sln --configuration Release --no-restore
+        run: dotnet build RealtimeStack.sln --configuration Release --no-restore
       - name: Validate clean ASP.NET Core package consumer
         shell: pwsh
         env:
@@ -342,7 +342,7 @@ jobs:
       - name: Test
         env:
           REDIS_TEST_ENDPOINT: localhost:6379
-        run: dotnet test Realtime.sln --configuration Release --no-build --logger trx --results-directory artifacts/test-results
+        run: dotnet test RealtimeStack.sln --configuration Release --no-build --logger trx --results-directory artifacts/test-results
       - name: Verify OTLP and Prometheus ingestion
         run: bash scripts/verify-observability.sh
       - name: Validate TypeScript SDK and reproducible browser artifacts
@@ -360,15 +360,15 @@ jobs:
           REDIS_TEST_ENDPOINT: localhost:6379
         run: npm run test:browser
       - name: Native AOT publish
-        run: dotnet publish src/Realtime.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore --output artifacts/native
+        run: dotnet publish src/RealtimeStack.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore --output artifacts/native
       - name: Smoke-test Native AOT executable
         env:
           ASPNETCORE_URLS: http://127.0.0.1:8080
           Gateway__ShutdownDrainSeconds: '1'
           Redis__Endpoint: localhost:6379
-          Realtime__AllowedOrigins__0: http://127.0.0.1:8080
+          RealtimeStack__AllowedOrigins__0: http://127.0.0.1:8080
         run: |
-          artifacts/native/Realtime.Gateway > artifacts/native-smoke.log 2>&1 &
+          artifacts/native/RealtimeStack.Gateway > artifacts/native-smoke.log 2>&1 &
           gateway_pid=$!
           trap 'kill "$gateway_pid" 2>/dev/null || true; wait "$gateway_pid" 2>/dev/null || true' EXIT
           ready=false
@@ -385,17 +385,17 @@ jobs:
           fi
           curl --fail --silent http://127.0.0.1:8080/health/startup >/dev/null
           curl --fail --silent http://127.0.0.1:8080/health/live >/dev/null
-          curl --fail --silent http://127.0.0.1:8080/metrics | grep --quiet realtime_health_requests_total
+          curl --fail --silent http://127.0.0.1:8080/metrics | grep --quiet realtimestack_health_requests_total
           curl --fail --silent http://127.0.0.1:8080/metrics | docker run --rm --interactive --entrypoint promtool "$CI_PROMETHEUS_IMAGE" check metrics
           curl --fail --silent --header 'Accept: application/openmetrics-text; version=1.0.0' http://127.0.0.1:8080/metrics | tee /tmp/openmetrics.txt | docker run --rm --interactive --entrypoint promtool "$CI_PROMETHEUS_IMAGE" check metrics
           tail --lines 1 /tmp/openmetrics.txt | grep --quiet '^# EOF$'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/diagnostics/v1/snapshot)" = "404"
       - name: Create OCI archive with .NET SDK
-        run: dotnet publish src/Realtime.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore /t:PublishContainer /p:ContainerArchiveOutputPath=${{ github.workspace }}/artifacts/realtime-gateway.tar.gz
+        run: dotnet publish src/RealtimeStack.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore /t:PublishContainer /p:ContainerArchiveOutputPath=${{ github.workspace }}/artifacts/realtimestack-gateway.tar.gz
       - name: Smoke-test rootless read-only OCI image
         id: container-smoke
         run: |
-          load_output=$(docker load --input artifacts/realtime-gateway.tar.gz)
+          load_output=$(docker load --input artifacts/realtimestack-gateway.tar.gz)
           printf '%s\n' "$load_output"
           image_ref=$(printf '%s\n' "$load_output" | sed -n 's/^Loaded image: //p' | tail -n 1)
           if [ -z "$image_ref" ]; then
@@ -406,7 +406,7 @@ jobs:
           configured_user=$(docker image inspect --format '{{.Config.User}}' "$image_ref")
           test "$configured_user" = "1654"
 
-          container_name="realtime-${GITHUB_RUN_ID}"
+          container_name="realtimestack-${GITHUB_RUN_ID}"
           cleanup() {
             docker rm --force "$container_name" >/dev/null 2>&1 || true
           }
@@ -420,7 +420,7 @@ jobs:
             --security-opt no-new-privileges:true \
             --add-host host.docker.internal:host-gateway \
             --env Redis__Endpoint=host.docker.internal:6379 \
-            --env Realtime__AllowedOrigins__0=http://127.0.0.1:18080 \
+            --env RealtimeStack__AllowedOrigins__0=http://127.0.0.1:18080 \
             --publish 127.0.0.1:18080:8080 \
             "$image_ref"
 
@@ -438,7 +438,7 @@ jobs:
           fi
           curl --fail --silent http://127.0.0.1:18080/health/startup >/dev/null
           curl --fail --silent http://127.0.0.1:18080/health/live >/dev/null
-          curl --fail --silent http://127.0.0.1:18080/metrics | grep --quiet realtime_health_requests_total
+          curl --fail --silent http://127.0.0.1:18080/metrics | grep --quiet realtimestack_health_requests_total
       - name: Scan source and artifacts
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
@@ -450,10 +450,10 @@ jobs:
           limit-severities-for-sarif: true
           exit-code: '1'
       - name: Scan deployable OCI archive
-        if: ${{ always() && hashFiles('artifacts/realtime-gateway.tar.gz') != '' }}
+        if: ${{ always() && hashFiles('artifacts/realtimestack-gateway.tar.gz') != '' }}
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          input: artifacts/realtime-gateway.tar.gz
+          input: artifacts/realtimestack-gateway.tar.gz
           format: sarif
           output: artifacts/trivy-image.sarif
           severity: HIGH,CRITICAL
@@ -476,22 +476,22 @@ jobs:
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: ${{ steps.container-smoke.outputs.image_ref }}
-          artifact-name: realtime-gateway-sbom.spdx.json
-          output-file: artifacts/realtime-gateway.spdx.json
+          artifact-name: realtimestack-gateway-sbom.spdx.json
+          output-file: artifacts/realtimestack-gateway.spdx.json
           format: spdx-json
       - name: Upload immutable build evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: realtime-${{ github.sha }}
+          name: realtimestack-${{ github.sha }}
           path: |
             artifacts/native
-            artifacts/realtime-gateway.tar.gz
+            artifacts/realtimestack-gateway.tar.gz
             artifacts/test-results
             artifacts/trivy-filesystem.sarif
             artifacts/trivy-image.sarif
             artifacts/native-smoke.log
-            artifacts/realtime-gateway.spdx.json
+            artifacts/realtimestack-gateway.spdx.json
 
   dependency-review:
     needs: changes
@@ -503,7 +503,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
       - uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
@@ -515,7 +515,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -547,8 +547,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -561,11 +561,11 @@ jobs:
       - name: Build the Express reference container
         run: >-
           docker build --build-arg NODE_IMAGE="$CI_NODE_IMAGE"
-          --file examples/node-express/Dockerfile --tag realtime-node-express:${{ github.sha }} .
+          --file examples/node-express/Dockerfile --tag realtimestack-node-express:${{ github.sha }} .
       - name: Scan the Express reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-node-express:${{ github.sha }}
+          image-ref: realtimestack-node-express:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -589,7 +589,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -625,8 +625,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -636,11 +636,11 @@ jobs:
       - name: Build the Spring Boot reference container
         run: >-
           docker build --build-arg MAVEN_IMAGE="$CI_MAVEN_IMAGE" --build-arg JAVA_IMAGE="$CI_JAVA_IMAGE"
-          --file examples/java-spring-boot/Dockerfile --tag realtime-java-spring:${{ github.sha }} .
+          --file examples/java-spring-boot/Dockerfile --tag realtimestack-java-spring:${{ github.sha }} .
       - name: Scan the Spring Boot reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-java-spring:${{ github.sha }}
+          image-ref: realtimestack-java-spring:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -664,7 +664,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -699,8 +699,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -710,11 +710,11 @@ jobs:
       - name: Build the Ktor reference container
         run: >-
           docker build --build-arg GRADLE_IMAGE="$CI_GRADLE_IMAGE" --build-arg JAVA_IMAGE="$CI_JAVA_IMAGE"
-          --file examples/kotlin-ktor/Dockerfile --tag realtime-kotlin-ktor:${{ github.sha }} .
+          --file examples/kotlin-ktor/Dockerfile --tag realtimestack-kotlin-ktor:${{ github.sha }} .
       - name: Scan the Ktor reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-kotlin-ktor:${{ github.sha }}
+          image-ref: realtimestack-kotlin-ktor:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -738,7 +738,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
           build-tools: 'true'
@@ -773,8 +773,8 @@ jobs:
           components: rustfmt, clippy
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -787,11 +787,11 @@ jobs:
       - name: Build the Axum reference container
         run: >-
           docker build --build-arg RUST_IMAGE="$CI_RUST_IMAGE" --build-arg ALPINE_IMAGE="$CI_ALPINE_IMAGE"
-          --file examples/rust-axum/Dockerfile --tag realtime-rust-axum:${{ github.sha }} .
+          --file examples/rust-axum/Dockerfile --tag realtimestack-rust-axum:${{ github.sha }} .
       - name: Scan the Axum reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-rust-axum:${{ github.sha }}
+          image-ref: realtimestack-rust-axum:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -815,7 +815,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -849,8 +849,8 @@ jobs:
           cache-dependency-path: examples/go-gin/go.sum
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -863,11 +863,11 @@ jobs:
       - name: Build the Gin reference container
         run: >-
           docker build --build-arg GO_IMAGE="$CI_GO_IMAGE" --build-arg ALPINE_IMAGE="$CI_ALPINE_IMAGE"
-          --file examples/go-gin/Dockerfile --tag realtime-go-gin:${{ github.sha }} .
+          --file examples/go-gin/Dockerfile --tag realtimestack-go-gin:${{ github.sha }} .
       - name: Scan the Gin reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-go-gin:${{ github.sha }}
+          image-ref: realtimestack-go-gin:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -891,7 +891,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -925,8 +925,8 @@ jobs:
           otp-version: 29.0.6
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -941,11 +941,11 @@ jobs:
       - name: Build the Phoenix reference container
         run: >-
           docker build --build-arg ELIXIR_IMAGE="$CI_ELIXIR_IMAGE"
-          --file examples/elixir-phoenix/Dockerfile --tag realtime-elixir-phoenix:${{ github.sha }} .
+          --file examples/elixir-phoenix/Dockerfile --tag realtimestack-elixir-phoenix:${{ github.sha }} .
       - name: Scan the Phoenix reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-elixir-phoenix:${{ github.sha }}
+          image-ref: realtimestack-elixir-phoenix:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -972,7 +972,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -1002,8 +1002,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -1018,11 +1018,11 @@ jobs:
           --build-arg FRANKENPHP_BUILDER_IMAGE="$CI_FRANKENPHP_BUILDER_IMAGE"
           --build-arg FRANKENPHP_IMAGE="$CI_FRANKENPHP_IMAGE"
           --build-arg GO_IMAGE="$CI_GO_CADDY_IMAGE"
-          --file examples/php-laravel/Dockerfile --tag realtime-php-laravel:${{ github.sha }} .
+          --file examples/php-laravel/Dockerfile --tag realtimestack-php-laravel:${{ github.sha }} .
       - name: Scan the Laravel reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-php-laravel:${{ github.sha }}
+          image-ref: realtimestack-php-laravel:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -1035,7 +1035,7 @@ jobs:
       - name: Run the shared browser smoke scenarios
         working-directory: sdk/typescript
         env:
-          PHP_LARAVEL_IMAGE: realtime-php-laravel:${{ github.sha }}
+          PHP_LARAVEL_IMAGE: realtimestack-php-laravel:${{ github.sha }}
         run: npx playwright test --config playwright.php-laravel.config.mjs
       - name: Upload Laravel failure evidence
         if: failure()
@@ -1051,7 +1051,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -1081,8 +1081,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -1094,11 +1094,11 @@ jobs:
       - name: Build the FastAPI reference container
         run: >-
           docker build --build-arg UV_IMAGE="$CI_UV_IMAGE" --build-arg PYTHON_IMAGE="$CI_PYTHON_IMAGE"
-          --file examples/python-fastapi/Dockerfile --tag realtime-python-fastapi:${{ github.sha }} .
+          --file examples/python-fastapi/Dockerfile --tag realtimestack-python-fastapi:${{ github.sha }} .
       - name: Scan the FastAPI reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-python-fastapi:${{ github.sha }}
+          image-ref: realtimestack-python-fastapi:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -1108,7 +1108,7 @@ jobs:
       - name: Run the shared browser smoke scenarios
         working-directory: sdk/typescript
         env:
-          PYTHON_FASTAPI_IMAGE: realtime-python-fastapi:${{ github.sha }}
+          PYTHON_FASTAPI_IMAGE: realtimestack-python-fastapi:${{ github.sha }}
         run: npx playwright test --config playwright.python-fastapi.config.mjs
       - name: Upload FastAPI failure evidence
         if: failure()
@@ -1124,7 +1124,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -1154,8 +1154,8 @@ jobs:
         run: node scripts/setup-ci-npm.mjs
       - name: Build the gateway fixture
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         working-directory: sdk/typescript
         run: npm ci --ignore-scripts && npm run build --silent
@@ -1167,11 +1167,11 @@ jobs:
       - name: Build the Rails reference container
         run: >-
           docker build --build-arg RUBY_IMAGE="$CI_RUBY_IMAGE" --build-arg GO_IMAGE="$CI_GO_CADDY_IMAGE"
-          --file examples/ruby-rails/Dockerfile --tag realtime-ruby-rails:${{ github.sha }} .
+          --file examples/ruby-rails/Dockerfile --tag realtimestack-ruby-rails:${{ github.sha }} .
       - name: Scan the Rails reference container
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-ruby-rails:${{ github.sha }}
+          image-ref: realtimestack-ruby-rails:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -1181,7 +1181,7 @@ jobs:
       - name: Run the shared browser smoke scenarios
         working-directory: sdk/typescript
         env:
-          RUBY_RAILS_IMAGE: realtime-ruby-rails:${{ github.sha }}
+          RUBY_RAILS_IMAGE: realtimestack-ruby-rails:${{ github.sha }}
         run: npx playwright test --config playwright.ruby-rails.config.mjs
       - name: Upload Rails failure evidence
         if: failure()
@@ -1203,7 +1203,7 @@ jobs:
         part: [adapter, container]
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -1244,8 +1244,8 @@ jobs:
       - name: Build the gateway fixture
         if: matrix.part == 'container'
         run: |
-          dotnet restore examples/full-circle/Realtime.Example.FullCircle.csproj --locked-mode
-          dotnet build examples/full-circle/Realtime.Example.FullCircle.csproj --configuration Release --no-restore
+          dotnet restore examples/full-circle/RealtimeStack.Example.FullCircle.csproj --locked-mode
+          dotnet build examples/full-circle/RealtimeStack.Example.FullCircle.csproj --configuration Release --no-restore
       - name: Build the canonical browser SDK
         if: matrix.part == 'container'
         working-directory: sdk/typescript
@@ -1266,7 +1266,7 @@ jobs:
             SWIFT_BUILD_IMAGE=${{ env.CI_SWIFT_IMAGE }}
             GO_IMAGE=${{ env.CI_GO_CADDY_IMAGE }}
             SWIFT_RUNTIME_IMAGE=${{ env.CI_SWIFT_RUNTIME_IMAGE }}
-          tags: realtime-swift-vapor:${{ github.sha }}
+          tags: realtimestack-swift-vapor:${{ github.sha }}
           load: true
           provenance: false
           sbom: false
@@ -1276,7 +1276,7 @@ jobs:
         if: matrix.part == 'container'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: realtime-swift-vapor:${{ github.sha }}
+          image-ref: realtimestack-swift-vapor:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: '1'
@@ -1288,7 +1288,7 @@ jobs:
         if: matrix.part == 'container'
         working-directory: sdk/typescript
         env:
-          SWIFT_VAPOR_IMAGE: realtime-swift-vapor:${{ github.sha }}
+          SWIFT_VAPOR_IMAGE: realtimestack-swift-vapor:${{ github.sha }}
         run: npx playwright test --config playwright.swift-vapor.config.mjs
       - name: Upload Vapor failure evidence
         if: failure()
@@ -1311,7 +1311,7 @@ jobs:
         profile: [non-ha, ha]
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
         with:
           docker: 'true'
       - name: Authenticate to configured image registry
@@ -1397,7 +1397,7 @@ jobs:
       - full-circle
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-realtime-runner
+      - uses: ./.github/actions/setup-realtimestack-runner
       - name: Install Node runtime prerequisites
         if: runner.os == 'Linux'
         run: bash scripts/setup-ci-node-prerequisites.sh

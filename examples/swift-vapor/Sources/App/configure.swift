@@ -165,8 +165,8 @@ private func validateAssets(_ settings: ReferenceSettings) throws {
     "\(settings.sharedAssetRoot)/failover.html",
     "\(settings.sharedAssetRoot)/app.css",
     "\(settings.sharedAssetRoot)/app.js",
-    "\(settings.sdkAssetRoot)/realtime.iife.js",
-    "\(settings.sdkAssetRoot)/realtime.iife.min.js",
+    "\(settings.sdkAssetRoot)/realtimestack.iife.js",
+    "\(settings.sdkAssetRoot)/realtimestack.iife.min.js",
   ]
   guard required.allSatisfy(FileManager.default.fileExists(atPath:)) else {
     throw SettingsError.invalid

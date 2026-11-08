@@ -1,4 +1,4 @@
-const MARKER = 'realtime-ci-autofix';
+const MARKER = 'realtimestack-ci-autofix';
 const AGGREGATE_JOB = 'ci-failed';
 const MAX_EXCERPT_LINES = 15;
 

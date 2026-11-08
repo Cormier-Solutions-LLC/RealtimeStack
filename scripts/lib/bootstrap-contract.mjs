@@ -193,7 +193,7 @@ export function validateConfiguration(input) {
 
   const naming = requireRecord(config.naming, "$.naming", errors);
   requireKeys(naming, "$.naming", ["suffix"], errors);
-  requireString(naming.suffix, "$.naming.suffix", errors, /^(?:|(?=.{1,27}$)[a-z0-9]+(?:-[a-z0-9]+)*)$/, true);
+  requireString(naming.suffix, "$.naming.suffix", errors, /^(?:|(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*)$/, true);
 
   const paths = requireRecord(config.paths, "$.paths", errors);
   requireKeys(paths, "$.paths", ["generatedDirectory", "backupDirectory", "logDirectory"], errors, ["environmentDirectory"]);
@@ -284,7 +284,7 @@ export function validateConfiguration(input) {
   const fallbackPath = typeof ingress.httpFallbackPath === "string" ? ingress.httpFallbackPath.toLowerCase() : "";
   if (webSocketPath && webSocketPath === fallbackPath) errors.push(problem("$.ingress.httpFallbackPath", "must differ case-insensitively from the WebSocket path"));
   const reservedWebSocketPaths = new Set([
-    "/realtime/tickets",
+    "/realtimestack/tickets",
     "/health/startup",
     "/health/live",
     "/health/ready",
@@ -438,7 +438,7 @@ export async function loadContract(repositoryRoot, configPath, requestedProfile)
 }
 
 export function releaseNames(config) {
-  const application = config.naming.suffix ? `realtime-${config.naming.suffix}` : "realtime";
+  const application = config.naming.suffix ? `realtimestack-${config.naming.suffix}` : "realtimestack";
   const release = `${config.environment.name}-${application}`;
   const redisRelease = `${release}-redis`;
   if (release.length > 53 || redisRelease.length > 53) throw new Error("Derived Helm release name exceeds 53 characters; shorten the environment or naming suffix.");
@@ -519,7 +519,7 @@ function renderManagedRedis(config, profile) {
     chartArchiveSha256: config.redis.managedChartArchiveSha256,
     chartVersion: config.redis.managedChartVersion,
     values: {
-      commonAnnotations: { "realtime.example/managed-chart": config.redis.managedChart },
+      commonAnnotations: { "realtimestack.example/managed-chart": config.redis.managedChart },
       architecture: profile.redis.managedArchitecture,
       global: {
         imagePullSecrets: config.redis.managedImagePullSecrets ?? [],

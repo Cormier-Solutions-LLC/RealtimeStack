@@ -14,16 +14,16 @@ export interface DurableTaskStatus {
   finishedAt: string | null;
 }
 
-export class RealtimePersistenceError extends Error {
+export class RealtimeStackPersistenceError extends Error {
   constructor(readonly status: number) {
     super(`Persistence request failed (${status}).`);
-    this.name = "RealtimePersistenceError";
+    this.name = "RealtimeStackPersistenceError";
   }
 }
 
 /** Session-scoped durable reads. Never accepts tenant IDs, owner IDs, or worker credentials. */
-export class RealtimePersistenceClient {
-  constructor(private readonly basePath = "/realtime/persistence", private readonly request: typeof fetch = globalThis.fetch.bind(globalThis)) {
+export class RealtimeStackPersistenceClient {
+  constructor(private readonly basePath = "/realtimestack/persistence", private readonly request: typeof fetch = globalThis.fetch.bind(globalThis)) {
     if (!basePath.startsWith("/") || basePath.startsWith("//") || /[?#{}\\]/u.test(basePath) || basePath.endsWith("/")) {
       throw new TypeError("Persistence basePath must be a same-origin absolute route prefix.");
     }
@@ -54,7 +54,7 @@ export class RealtimePersistenceClient {
       method: "POST", credentials: "same-origin", redirect: "error", cache: "no-store",
       headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), ...(signal ? { signal } : {}),
     });
-    if (!response.ok && !(allowMissing && response.status === 404)) throw new RealtimePersistenceError(response.status);
+    if (!response.ok && !(allowMissing && response.status === 404)) throw new RealtimeStackPersistenceError(response.status);
     return response;
   }
 

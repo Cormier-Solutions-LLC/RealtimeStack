@@ -179,7 +179,7 @@ mod tests {
             ("HEARTBEAT_INTERVAL_MILLISECONDS", "5000".into()),
             ("INSTANCE_NAME", "rust-axum-a".into()),
             ("TOPOLOGY", "non-ha".into()),
-            ("REDIS_INSTANCE_PREFIX", "realtime:rust-test".into()),
+            ("REDIS_INSTANCE_PREFIX", "realtimestack:rust-test".into()),
             ("REDIS_SESSION_KEY_PREFIX", "sessions".into()),
             ("ALLOWED_TENANTS", "tenant-a".into()),
             ("ALLOWED_USERS", "user-a".into()),

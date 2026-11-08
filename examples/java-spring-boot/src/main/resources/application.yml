@@ -1,13 +1,13 @@
 server:
   address: ${LISTEN_HOST}
-  port: ${realtime.reference.port}
+  port: ${realtimestack.reference.port}
   shutdown: graceful
 spring:
   http:
     codecs:
       max-in-memory-size: 64KB
   application:
-    name: realtime-java-spring-boot-example
+    name: realtimestack-java-spring-boot-example
   data:
     redis:
       url: ${REDIS_URL}
@@ -23,7 +23,7 @@ management:
   endpoint:
     health:
       show-details: never
-realtime:
+realtimestack:
   reference:
     listen-host: ${LISTEN_HOST}
     port: ${PORT}

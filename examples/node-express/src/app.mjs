@@ -3,9 +3,9 @@ import express from "express";
 import { rateLimit } from "express-rate-limit";
 import session from "express-session";
 
-const gatewayCookieName = "realtime_session";
+const gatewayCookieName = "realtimestack_session";
 const rfc3339Timestamp = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
-const exampleCookieName = "realtime_example_session";
+const exampleCookieName = "realtimestack_example_session";
 
 function parseRfc3339(value) {
   if (typeof value !== "string") return Number.NaN;
@@ -70,8 +70,8 @@ export function createApp({
     next();
   });
   const parseLoginJson = express.json({ limit: "8kb", strict: true });
-  const isFallbackReceiver = request => request.get("x-realtime-connection") !== undefined
-    && /^\/realtime\/http\/connections\/[^/]+\/(?:poll|stream)$/u.test(request.path);
+  const isFallbackReceiver = request => request.get("x-realtimestack-connection") !== undefined
+    && /^\/realtimestack\/http\/connections\/[^/]+\/(?:poll|stream)$/u.test(request.path);
   const fallbackReceiverLimiter = rateLimit({
     windowMs: 60_000,
     limit: fallbackReceiverLimit,
@@ -219,7 +219,7 @@ export function createApp({
     }
   });
 
-  app.post("/realtime/tickets", requireOrigin(config), requireSession, (request, response) => {
+  app.post("/realtimestack/tickets", requireOrigin(config), requireSession, (request, response) => {
     let upstreamRequest;
     const finish = () => {
       clearTimeout(deadline);
@@ -252,8 +252,8 @@ export function createApp({
     }
   });
 
-  app.use(["/realtime/http", "/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read"], (request, response) => {
-    if (request.originalUrl.startsWith("/realtime/persistence/") && (request.method !== "POST" || !["/realtime/persistence/records/read", "/realtime/persistence/records/ack", "/realtime/persistence/tasks/read"].includes(request.originalUrl.split("?")[0]))) return response.sendStatus(404);
+  app.use(["/realtimestack/http", "/realtimestack/persistence/records/read", "/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read"], (request, response) => {
+    if (request.originalUrl.startsWith("/realtimestack/persistence/") && (request.method !== "POST" || !["/realtimestack/persistence/records/read", "/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read"].includes(request.originalUrl.split("?")[0]))) return response.sendStatus(404);
     try {
       request.url = request.originalUrl;
       proxy.web(request, response, {
@@ -268,7 +268,7 @@ export function createApp({
     }
   });
 
-  app.use("/_content/Realtime.Browser", express.static(config.sdkAssetRoot, { index: false, fallthrough: false }));
+  app.use("/_content/RealtimeStack.Browser", express.static(config.sdkAssetRoot, { index: false, fallthrough: false }));
   app.use(express.static(config.sharedAssetRoot, { index: false, fallthrough: true }));
   app.get("/", (_request, response) => response.sendFile("index.html", { root: config.sharedAssetRoot }));
 

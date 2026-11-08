@@ -99,7 +99,7 @@ cat <<EOF
 GitHub configuration is ready.
 
 Create this policy at https://www.nuget.org/account/trustedpublishing:
-  Policy name:      Realtime GitHub Actions
+  Policy name:      RealtimeStack GitHub Actions
   Package owner:    the NuGet.org user or organization that will own the packages
   Repository owner: ${owner}
   Repository:       ${name}

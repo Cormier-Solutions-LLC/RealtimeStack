@@ -1,6 +1,6 @@
 # Managed Redis HA installation and recovery
 
-This runbook records the complete supported path for a three-member Redis/Sentinel deployment used by the Realtime gateway. It applies to Kubernetes clusters with at least three schedulable, zone-labeled failure domains and a dynamic `ReadWriteOnce` storage class. Commands may run from any secured administrator workstation or controller that has the intended kubeconfig; Kubernetes acts on the selected context, not on the machine where `kubectl` runs.
+This runbook records the complete supported path for a three-member Redis/Sentinel deployment used by the RealtimeStack gateway. It applies to Kubernetes clusters with at least three schedulable, zone-labeled failure domains and a dynamic `ReadWriteOnce` storage class. Commands may run from any secured administrator workstation or controller that has the intended kubeconfig; Kubernetes acts on the selected context, not on the machine where `kubectl` runs.
 
 ## Inputs and safety boundary
 
@@ -36,39 +36,39 @@ Generate two different, high-entropy passwords. Do not use `echo` without `-n`, 
 install -d -m 700 /secure
 umask 077
 printf '%s' "$(openssl rand -hex 32)" > /secure/redis-admin-password.txt
-printf '%s' "$(openssl rand -hex 32)" > /secure/realtime-password.txt
+printf '%s' "$(openssl rand -hex 32)" > /secure/realtimestack-password.txt
 ```
 
 PowerShell example:
 
 ```powershell
-$directory = 'C:\secure\realtime'
+$directory = 'C:\secure\realtimestack'
 New-Item -ItemType Directory -Force $directory | Out-Null
 $adminBytes = [byte[]]::new(32)
-$realtimeBytes = [byte[]]::new(32)
+$realtimestackBytes = [byte[]]::new(32)
 [Security.Cryptography.RandomNumberGenerator]::Fill($adminBytes)
-[Security.Cryptography.RandomNumberGenerator]::Fill($realtimeBytes)
+[Security.Cryptography.RandomNumberGenerator]::Fill($realtimestackBytes)
 $admin = [Convert]::ToHexString($adminBytes).ToLowerInvariant()
-$realtime = [Convert]::ToHexString($realtimeBytes).ToLowerInvariant()
+$realtimestack = [Convert]::ToHexString($realtimestackBytes).ToLowerInvariant()
 [IO.File]::WriteAllText((Join-Path $directory 'redis-admin-password.txt'), $admin)
-[IO.File]::WriteAllText((Join-Path $directory 'realtime-password.txt'), $realtime)
+[IO.File]::WriteAllText((Join-Path $directory 'realtimestack-password.txt'), $realtimestack)
 ```
 
 Use the repository helper to remove trailing CR/LF bytes, reject embedded newlines or identical passwords, and submit the Secret through standard input.
 
 ```bash
-bash ./scripts/realtime-redis-secret.sh \
-  --config /secure/realtime-prod.json \
+bash ./scripts/realtimestack-redis-secret.sh \
+  --config /secure/realtimestack-prod.json \
   --admin-password-file /secure/redis-admin-password.txt \
-  --realtime-password-file /secure/realtime-password.txt \
+  --realtimestack-password-file /secure/realtimestack-password.txt \
   --create-namespace
 ```
 
 ```powershell
-./scripts/Set-RealtimeRedisSecret.ps1 `
-  -Config C:\secure\realtime-prod.json `
-  -AdminInputFile C:\secure\realtime\redis-admin-password.txt `
-  -RealtimeInputFile C:\secure\realtime\realtime-password.txt `
+./scripts/Set-RealtimeStackRedisSecret.ps1 `
+  -Config C:\secure\realtimestack-prod.json `
+  -AdminInputFile C:\secure\realtimestack\redis-admin-password.txt `
+  -RealtimeStackInputFile C:\secure\realtimestack\realtimestack-password.txt `
   -CreateNamespace
 ```
 
@@ -79,16 +79,16 @@ Configuration mode derives context, namespace, Secret name, and both keys from t
 When cert-manager owns TLS, apply the `Certificate` from the same config before gateway validation. The issuer must already exist. The helper waits for `Ready=True`, which guarantees the referenced TLS Secret exists before Helm checks it.
 
 ```bash
-bash ./scripts/realtime-certificate.sh \
-  --config /secure/realtime-prod.json \
+bash ./scripts/realtimestack-certificate.sh \
+  --config /secure/realtimestack-prod.json \
   --issuer-name letsencrypt-prod \
   --issuer-kind ClusterIssuer \
   --timeout-seconds 600
 ```
 
 ```powershell
-./scripts/Set-RealtimeCertificate.ps1 `
-  -Config C:\secure\realtime-prod.json `
+./scripts/Set-RealtimeStackCertificate.ps1 `
+  -Config C:\secure\realtimestack-prod.json `
   -IssuerName letsencrypt-prod `
   -IssuerKind ClusterIssuer `
   -TimeoutSeconds 600
@@ -99,15 +99,15 @@ If another system owns the TLS Secret, do not run this helper; leave `ingress.ce
 ## 4. Plan and validate
 
 ```bash
-bash ./scripts/realtime-bootstrap.sh plan --config /secure/realtime-prod.json --profile ha
-bash ./scripts/realtime-bootstrap.sh prerequisites --config /secure/realtime-prod.json --profile ha
-bash ./scripts/realtime-bootstrap.sh validate --config /secure/realtime-prod.json --profile ha --timeout-seconds 1200
+bash ./scripts/realtimestack-bootstrap.sh plan --config /secure/realtimestack-prod.json --profile ha
+bash ./scripts/realtimestack-bootstrap.sh prerequisites --config /secure/realtimestack-prod.json --profile ha
+bash ./scripts/realtimestack-bootstrap.sh validate --config /secure/realtimestack-prod.json --profile ha --timeout-seconds 1200
 ```
 
 ```powershell
-./scripts/Realtime-Bootstrap.ps1 -Action plan -Config C:\secure\realtime-prod.json -Topology ha
-./scripts/Realtime-Bootstrap.ps1 -Action prerequisites -Config C:\secure\realtime-prod.json -Topology ha
-./scripts/Realtime-Bootstrap.ps1 -Action validate -Config C:\secure\realtime-prod.json -Topology ha -TimeoutSeconds 1200
+./scripts/RealtimeStack-Bootstrap.ps1 -Action plan -Config C:\secure\realtimestack-prod.json -Topology ha
+./scripts/RealtimeStack-Bootstrap.ps1 -Action prerequisites -Config C:\secure\realtimestack-prod.json -Topology ha
+./scripts/RealtimeStack-Bootstrap.ps1 -Action validate -Config C:\secure\realtimestack-prod.json -Topology ha -TimeoutSeconds 1200
 ```
 
 Review `.bootstrap/env/<environment>/lifecycle/<release>/plan.json`, `values.json`, and `redis-values.json`. The HA Redis render must contain:
@@ -125,21 +125,21 @@ Review `.bootstrap/env/<environment>/lifecycle/<release>/plan.json`, `values.jso
 ## 5. Install and validate both transports
 
 ```bash
-bash ./scripts/realtime-bootstrap.sh install \
-  --config /secure/realtime-prod.json \
+bash ./scripts/realtimestack-bootstrap.sh install \
+  --config /secure/realtimestack-prod.json \
   --profile ha \
   --timeout-seconds 1200
 ```
 
 ```powershell
-./scripts/Realtime-Bootstrap.ps1 `
+./scripts/RealtimeStack-Bootstrap.ps1 `
   -Action install `
-  -Config C:\secure\realtime-prod.json `
+  -Config C:\secure\realtimestack-prod.json `
   -Topology ha `
   -TimeoutSeconds 1200
 ```
 
-The gateway IngressRoute sends both the configured WebSocket path and HTTP fallback path to the same sticky backend. The paths must differ case-insensitively, and the WebSocket path cannot reuse the gateway's fixed ticket, health, or metrics endpoints. WebSockets require connection upgrade support; HTTP fallback requests require cookie affinity so all requests for one fallback connection reach the same gateway replica. The managed-HA Redis endpoint includes `sentinelUser=default`: Sentinel uses the administrator credential while Redis data traffic uses the restricted `realtime` ACL identity.
+The gateway IngressRoute sends both the configured WebSocket path and HTTP fallback path to the same sticky backend. The paths must differ case-insensitively, and the WebSocket path cannot reuse the gateway's fixed ticket, health, or metrics endpoints. WebSockets require connection upgrade support; HTTP fallback requests require cookie affinity so all requests for one fallback connection reach the same gateway replica. The managed-HA Redis endpoint includes `sentinelUser=default`: Sentinel uses the administrator credential while Redis data traffic uses the restricted `realtimestack` ACL identity.
 
 Verify Redis first:
 
@@ -157,7 +157,7 @@ kubectl exec --context CONTEXT --namespace NAMESPACE REDIS_RELEASE-node-0 --cont
 
 The Redis command must return `PONG`; the Sentinel command must return `TILT-TRIGGER` followed by `10000` on every member. Verify `SENTINEL CKQUORUM mymaster` reports three usable Sentinels, then force one controlled nonproduction failover and compare the complete hostname returned by `SENTINEL get-master-addr-by-name mymaster`. Sentinel can acknowledge `FAILOVER` before promotion completes, so poll until the hostname changes instead of assuming a fixed sleep is sufficient.
 
-Use `scripts/Test-RealtimeEdge.ps1` with the configured host/path and a fresh single-use ticket to verify HTTPS and authenticated WSS routing. Exercise an HTTP fallback client against the configured fallback base path and confirm the Traefik affinity cookie remains stable across connect, stream/poll, message, and close requests. Without a ticket, `POST /realtime/tickets` and a syntactically valid WebSocket upgrade should return `401`; a plain GET to the WebSocket route commonly returns `400`. Those responses prove routing reached Kestrel but do not prove authenticated transport. `X-Realtime-Origin-Validated: true` on the unauthenticated upgrade confirms the Origin passed validation.
+Use `scripts/Test-RealtimeStackEdge.ps1` with the configured host/path and a fresh single-use ticket to verify HTTPS and authenticated WSS routing. Exercise an HTTP fallback client against the configured fallback base path and confirm the Traefik affinity cookie remains stable across connect, stream/poll, message, and close requests. Without a ticket, `POST /realtimestack/tickets` and a syntactically valid WebSocket upgrade should return `401`; a plain GET to the WebSocket route commonly returns `400`. Those responses prove routing reached Kestrel but do not prove authenticated transport. `X-RealtimeStack-Origin-Validated: true` on the unauthenticated upgrade confirms the Origin passed validation.
 
 ## Failure signatures and recovery
 

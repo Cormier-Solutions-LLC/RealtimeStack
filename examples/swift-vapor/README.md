@@ -1,17 +1,17 @@
 # Swift Vapor reference application
 
-This non-production adapter demonstrates a compact Vapor front end for Realtime. Vapor provides strict configuration, an opaque cookie backed by a gateway-compatible Redis session, ticket forwarding, health/diagnostics, and canonical asset delivery. Caddy relays only the raw WebSocket route. Shared HTML, CSS, generated JavaScript, schema, fixtures, and browser tests remain external sources of truth.
+This non-production adapter demonstrates a compact Vapor front end for RealtimeStack. Vapor provides strict configuration, an opaque cookie backed by a gateway-compatible Redis session, ticket forwarding, health/diagnostics, and canonical asset delivery. Caddy relays only the raw WebSocket route. Shared HTML, CSS, generated JavaScript, schema, fixtures, and browser tests remain external sources of truth.
 
 ## Prerequisites and local run
 
 - Swift 6.3.3
 - Vapor 4.121.4 and Vapor Redis 4.14.0 from `Package.resolved`
-- Redis 7.4 and a Realtime 0.1.x gateway sharing the configured prefixes and trusted `PUBLIC_ORIGIN`
+- Redis 7.4 and a RealtimeStack 0.1.x gateway sharing the configured prefixes and trusted `PUBLIC_ORIGIN`
 - Generated `sdk/typescript/dist` assets
 
 Supply every `.env.example` value externally and adjust all network values for the target environment; the application does not load the fixture. From this directory run this repeatable gate:
 
-Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `Realtime:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
+Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack:HeartbeatSeconds` multiplied by 1000. The adapter publishes this value through `/api/diagnostics` so the shared browser client uses the same heartbeat cadence.
 
 ```text
 swift package resolve --disable-sandbox
@@ -23,8 +23,8 @@ swift test --disable-sandbox
 Build and run the digest-pinned container from the repository root:
 
 ```text
-docker build -f examples/swift-vapor/Dockerfile -t realtime-swift-vapor:local .
-docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15500:15500 --env-file examples/swift-vapor/.env.example -e GATEWAY_URL=http://host.docker.internal:15501 -e REDIS_URL=redis://host.docker.internal:16379 realtime-swift-vapor:local
+docker build -f examples/swift-vapor/Dockerfile -t realtimestack-swift-vapor:local .
+docker run --rm --add-host host.docker.internal:host-gateway -p 127.0.0.1:15500:15500 --env-file examples/swift-vapor/.env.example -e GATEWAY_URL=http://host.docker.internal:15501 -e REDIS_URL=redis://host.docker.internal:16379 realtimestack-swift-vapor:local
 ```
 
 Configuration, Redis, and canonical assets are checked before the public listener is considered ready. Vapor binds only to the configured private application listener; Caddy exposes the configured public `LISTEN_HOST` and port. The ticket and WebSocket relays forward browser authority and the scheme derived from validated `PUBLIC_ORIGIN`; configure the gateway to trust only the adapter network. Redis commands have five-second response deadlines. Logs contain structural lifecycle/failure events and error types only. Tini supervises graceful shutdown, and the image runs as numeric user/group 65532.
@@ -52,7 +52,7 @@ This is a teaching adapter, not a production identity system or general reverse 
 | Vapor / Vapor Redis | 4.121.4 / 4.14.0 | Exact direct dependency pins |
 | Swift dependency graph | `Package.resolved` | Fully resolved transitive graph; locked-resolution and tests required |
 | Caddy | 2.11.9 | Digest-pinned WebSocket edge |
-| Realtime SDK / protocol / gateway | 1.1.2-beta / 1.0 / 1.1.2-beta | Canonical assets and external gateway |
+| RealtimeStack SDK / protocol / gateway | 2.0.0-beta / 1.0 / 2.0.0-beta | Canonical assets and external gateway |
 | Redis | 7.4 | Tested dependency |
 
 The adapter has 5 stack-specific Swift source/test files and 801 nonblank lines. SwiftPM build outputs, shared assets/fixtures, lock/build metadata, browser harness configuration, and documentation are excluded. Recalculate after changes.
@@ -67,6 +67,6 @@ Open a repository issue for non-sensitive defects with Swift, Vapor, Vapor Redis
 
 ## Saved messages and background tasks
 
-See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [Realtime.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
+See [durable integration](../../docs/persistence-integrations.md) for session-scoped replay, notifications, task status, and private server-worker writes. Enable and initialize persistence on the gateway using [RealtimeStack.Config](../../docs/configuration.md). The browser examples include optional saved-item and task lookup controls. Persistence does not itself execute import jobs.
 
 The final runtime image removes APT after installing its runtime dependencies. Package updates are applied by rebuilding the image; runtime package installation is unavailable.

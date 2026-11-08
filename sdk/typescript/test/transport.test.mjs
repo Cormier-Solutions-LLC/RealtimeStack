@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PROTOCOL_VERSION, RealtimeClient, createTransportSocket } from "../dist/realtime.js";
+import { PROTOCOL_VERSION, RealtimeStackClient, createTransportSocket } from "../dist/realtimestack.js";
 
 function httpHarness() {
   const messages = [];
@@ -36,10 +36,10 @@ function httpHarness() {
 
 test("HTTP streaming can be the primary transport", async () => {
   const harness = httpHarness();
-  const client = new RealtimeClient({
-    url: "https://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "https://gateway.example/realtimestack/ws",
     transports: ["http-streaming"],
-    httpStreaming: { url: "https://gateway.example/realtime/http", fetch: harness.fetch },
+    httpStreaming: { url: "https://gateway.example/realtimestack/http", fetch: harness.fetch },
     heartbeatIntervalMilliseconds: 60_000,
   });
   await client.connect();
@@ -58,10 +58,10 @@ test("HTTP streaming binds the native Fetch API to the global object", async () 
   };
 
   try {
-    const client = new RealtimeClient({
-      url: "https://gateway.example/realtime/ws",
+    const client = new RealtimeStackClient({
+      url: "https://gateway.example/realtimestack/ws",
       transports: ["http-streaming"],
-      httpStreaming: { url: "https://gateway.example/realtime/http" },
+      httpStreaming: { url: "https://gateway.example/realtimestack/http" },
       heartbeatIntervalMilliseconds: 60_000,
     });
     await client.connect();
@@ -74,11 +74,11 @@ test("HTTP streaming binds the native Fetch API to the global object", async () 
 
 test("initial WebSocket failure falls through to HTTP streaming", async () => {
   const harness = httpHarness();
-  const client = new RealtimeClient({
-    url: "https://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "https://gateway.example/realtimestack/ws",
     transports: ["websocket", "http-streaming"],
     webSocketFactory: () => { throw new Error("disabled for test"); },
-    httpStreaming: { url: "https://gateway.example/realtime/http", fetch: harness.fetch },
+    httpStreaming: { url: "https://gateway.example/realtimestack/http", fetch: harness.fetch },
     heartbeatIntervalMilliseconds: 60_000,
   });
   await client.connect();
@@ -89,8 +89,8 @@ test("initial WebSocket failure falls through to HTTP streaming", async () => {
 test("ticket failover obtains a fresh single-use ticket for the next transport", async () => {
   const harness = httpHarness();
   let ticketRequests = 0;
-  const client = new RealtimeClient({
-    url: "https://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "https://gateway.example/realtimestack/ws",
     authentication: {
       kind: "ticket",
       fetch: async () => Response.json({
@@ -100,7 +100,7 @@ test("ticket failover obtains a fresh single-use ticket for the next transport",
     },
     transports: ["websocket", "http-streaming"],
     webSocketFactory: () => { throw new Error("disabled for test"); },
-    httpStreaming: { url: "https://gateway.example/realtime/http", fetch: harness.fetch },
+    httpStreaming: { url: "https://gateway.example/realtimestack/http", fetch: harness.fetch },
     heartbeatIntervalMilliseconds: 60_000,
   });
 
@@ -115,13 +115,13 @@ test("cancelling a pending fallback ticket refresh emits only the requested clos
   const ticketStarted = Promise.withResolvers();
   const ticket = Promise.withResolvers();
   const socket = createTransportSocket(
-    "wss://gateway.example/realtime/ws?ticket=initial",
-    "realtime.v1",
+    "wss://gateway.example/realtimestack/ws?ticket=initial",
+    "realtimestack.v1",
     {
       transports: ["websocket", "http-streaming"],
       webSocketFactory: () => { throw new Error("disabled for test"); },
       httpStreaming: {
-        url: "https://gateway.example/realtime/http",
+        url: "https://gateway.example/realtimestack/http",
         fetch: async () => new Response(null, { status: 503 }),
       },
     },
@@ -144,11 +144,11 @@ test("cancelling a pending fallback ticket refresh emits only the requested clos
 });
 
 test("a synchronous HTTP fetch failure is observed after handlers are attached", async () => {
-  const client = new RealtimeClient({
-    url: "https://gateway.example/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "https://gateway.example/realtimestack/ws",
     transports: ["http-streaming"],
     httpStreaming: {
-      url: "https://gateway.example/realtime/http",
+      url: "https://gateway.example/realtimestack/http",
       fetch: () => { throw new Error("synchronous fetch failure"); },
     },
     heartbeatIntervalMilliseconds: 60_000,
@@ -159,7 +159,7 @@ test("a synchronous HTTP fetch failure is observed after handlers are attached",
 
 test("HTTP streaming selection requires explicit endpoint configuration", () => {
   assert.throws(
-    () => new RealtimeClient({ url: "https://gateway.example/realtime/ws", transports: ["http-streaming"] }),
+    () => new RealtimeStackClient({ url: "https://gateway.example/realtimestack/ws", transports: ["http-streaming"] }),
     /httpStreaming is required/,
   );
 });

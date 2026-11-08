@@ -1,0 +1,759 @@
+#!/usr/bin/env node
+import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
+import { hostname } from "node:os";
+import { basename, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  actions, assertPathInside, atomicWrite, buildPlan, fileExists, inlineSecretPaths, loadContract, readJson, releaseNames, stableJson, useCapturedDeploymentValues,
+} from "./lib/bootstrap-contract.mjs";
+import { copyCachedManagedRedisChart, legacyManagedRedisChartOutput, managedRedisChartOutput, prepareManagedRedisChart } from "./lib/managed-redis-chart.mjs";
+import { expandEnvironmentPath, organizeBootstrapEnvironment, restoreBootstrapEnvironment } from "./lib/bootstrap-environment.mjs";
+
+const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+const repositoryRoot = resolve(scriptDirectory, "..");
+const events = [];
+let activeLogPath = resolve(repositoryRoot, ".logs", `RealtimeStack-Bootstrap-${new Date().toISOString().replaceAll(":", "-")}.jsonl`);
+let logPersistenceEnabled = true;
+
+function parse(arguments_) {
+  if (["help", "--help", "-h"].includes(arguments_[0])) return { action: "help" };
+  const result = { action: arguments_[0], config: process.env.REALTIMESTACK_BOOTSTRAP_CONFIG ?? "bootstrap/config.example.json", timeoutSeconds: 300 };
+  for (let index = 1; index < arguments_.length; index++) {
+    const argument = arguments_[index];
+    if (argument === "--dry-run") result.dryRun = true;
+    else if (argument === "--confirm-topology-change") result.confirmTopologyChange = true;
+    else if (argument === "--force") result.force = true;
+    else if (["--config", "--profile", "--timeout-seconds", "--backup", "--name-suffix", "--manifest"].includes(argument)) {
+      const value = arguments_[++index];
+      if (!value || value.startsWith("--")) throw new Error(`${argument} requires a value.`);
+      result[argument.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = value;
+    } else throw new Error(`Unknown argument '${argument}'.`);
+  }
+  if (!actions.includes(result.action)) throw new Error(`Action must be one of: ${actions.join(", ")}.`);
+  result.timeoutSeconds = Number(result.timeoutSeconds);
+  if (!Number.isInteger(result.timeoutSeconds) || result.timeoutSeconds < 60 || result.timeoutSeconds > 1800) throw new Error("--timeout-seconds must be an integer from 60 through 1800.");
+  if (result.nameSuffix !== undefined && !/^(?=.{1,22}$)[a-z0-9]+(?:-[a-z0-9]+)*$/.test(result.nameSuffix)) throw new Error("--name-suffix must be a DNS-label suffix from 1 through 22 characters.");
+  return result;
+}
+
+const usage = `RealtimeStack bootstrap
+
+Usage:
+  realtimestack-bootstrap.sh ACTION --config FILE [options]
+  RealtimeStack-Bootstrap.ps1 -Action ACTION -Config FILE [options]
+
+Actions:
+  prerequisites, plan, bootstrap, backup, install, update, validate,
+  rollback, recover, teardown, organize, restore-layout, help
+
+Common options:
+  --profile ha|non-ha       Assert the topology selected by the config
+  --name-suffix VALUE       Override the deployable instance suffix
+  --timeout-seconds VALUE   Bound cluster commands from 60 through 1800
+  --dry-run                 Render and classify without external operations
+  --confirm-topology-change Confirm a reviewed HA/non-HA conversion
+  --backup DIRECTORY        Select a captured rollback snapshot
+  --force                   Confirm a guarded non-production teardown
+  --manifest FILE           Select an organization manifest to restore
+
+All domains, origins, image/chart versions and digests, Kubernetes identities,
+storage, resource bounds, Redis identities, and observability targets live in
+the versioned JSON configuration. Start HA deployments from
+bootstrap/config.ha.example.json. Passwords and cert-manager Certificates are
+supplied through the configuration-driven Bash or PowerShell helpers; see
+docs/runbooks/managed-redis-ha.md for the complete order and remediations.
+`;
+
+function emit(level, phase, message, fields = {}) {
+  const event = { timestamp: new Date().toISOString(), level, phase, message, ...fields };
+  events.push(event);
+  process.stdout.write(`${JSON.stringify(event)}\n`);
+}
+
+async function flushLog() {
+  if (!logPersistenceEnabled) return;
+  await atomicWrite(activeLogPath, events.map(event => JSON.stringify(event)).join("\n") + "\n");
+}
+
+function assertRollbackSource(planTarget, options, backup) {
+  try {
+    assertPathInside(options.backupRoot, backup, "rollback source");
+  } catch (error) {
+    const legacyReleaseRoot = resolve(repositoryRoot, ".backups", "bootstrap", planTarget.release);
+    try { assertPathInside(legacyReleaseRoot, backup, "legacy rollback source"); }
+    catch { throw error; }
+  }
+}
+
+async function archiveOldLogs(logRoot) {
+  if (!await fileExists(logRoot)) return;
+  const archiveRoot = resolve(logRoot, "Archive");
+  assertPathInside(logRoot, archiveRoot, "log archive");
+  const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  for (const entry of await readdir(logRoot, { withFileTypes: true })) {
+    if (!entry.isFile() || !/^RealtimeStack-Bootstrap-.*\.jsonl$/.test(entry.name)) continue;
+    const source = resolve(logRoot, entry.name);
+    if ((await stat(source)).mtimeMs >= cutoff) continue;
+    await mkdir(archiveRoot, { recursive: true });
+    await rename(source, resolve(archiveRoot, entry.name));
+  }
+}
+
+async function command(file, args, description, options) {
+  const arguments_ = [...args];
+  if (options.kubeContext && /(?:^|[\\/])kubectl(?:\.exe)?$/i.test(file) && !(args[0] === "config" && args[1] === "current-context")) arguments_.push("--context", options.kubeContext);
+  if (options.kubeContext && /(?:^|[\\/])helm(?:\.exe)?$/i.test(file) && ["list", "get", "upgrade", "uninstall", "rollback"].includes(args[0])) arguments_.push("--kube-context", options.kubeContext);
+  emit("info", options.action, description, { executable: file, arguments: arguments_ });
+  let output = "";
+  await new Promise((accept, reject) => {
+    const child = spawn(file, arguments_, { cwd: repositoryRoot, env: process.env, shell: process.platform === "win32" && /\.cmd$/i.test(file) });
+    let timedOut = false;
+    let escalation;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+      escalation = setTimeout(() => child.kill("SIGKILL"), 5000);
+    }, options.timeoutSeconds * 1000);
+    child.stdout.on("data", data => { output += data; if (!options.capture) process.stdout.write(data); });
+    child.stderr.on("data", data => { if (!options.capture) process.stderr.write(data); });
+    child.on("error", error => { clearTimeout(timer); clearTimeout(escalation); reject(error); });
+    child.on("close", code => {
+      clearTimeout(timer);
+      clearTimeout(escalation);
+      if (timedOut) reject(new Error(`${description} exceeded ${options.timeoutSeconds} seconds and the child process was terminated.`));
+      else code === 0 ? accept() : reject(new Error(`${description} failed with exit code ${code}.`));
+    });
+  });
+  return output.trim();
+}
+
+async function currentContext(options) {
+  return command("kubectl", ["config", "current-context"], "Read current Kubernetes context", { ...options, capture: true });
+}
+
+function targetReleaseListArguments(target) {
+  return ["list", "--namespace", target.namespace, "--filter", `^(${target.release}|${target.redisRelease})$`, "--max", "2", "--output", "json"];
+}
+
+async function assertTarget(plan, config, options, mutation) {
+  const context = await currentContext(options);
+  if (context !== plan.target.context) throw new Error(`Target mismatch: expected Kubernetes context '${plan.target.context}', found '${context}'.`);
+  await command("kubectl", ["cluster-info", "--request-timeout=15s"], "Reach Kubernetes API", options);
+  if (options.action !== "rollback") await command("helm", ["lint", "helm/realtimestack-gateway", "--strict", "--values", options.valuesPath], "Lint rendered gateway configuration", options);
+  if (config.redis.mode === "managed") await command("kubectl", ["get", "storageclass", config.kubernetes.storageClass, "--request-timeout=15s"], "Validate storage class", options);
+  if (config.ingress.enabled) {
+    await command("kubectl", ["get", "namespace", config.networking.traefikNamespace, "--request-timeout=15s"], "Validate ingress namespace", options);
+    await command("kubectl", ["get", "service", config.networking.traefikService, "--namespace", config.networking.traefikNamespace, "--request-timeout=15s"], "Validate ingress service", options);
+  }
+  if (config.ingress.enabled) await command("kubectl", ["get", "namespace", config.networking.metalLbNamespace, "--request-timeout=15s"], "Validate MetalLB namespace", options);
+  if (config.ingress.enabled) await command("kubectl", ["get", "secret", config.ingress.tlsSecretName, "--namespace", plan.target.namespace, "--request-timeout=15s"], "Validate ingress TLS Secret reference", options);
+  if (config.observability.serviceMonitor) await command("kubectl", ["get", "customresourcedefinition", "servicemonitors.monitoring.coreos.com", "--request-timeout=15s"], "Validate ServiceMonitor support", options);
+  if (config.observability.otlpHeadersSecret) {
+    const otlpSecret = await command("kubectl", ["get", "secret", config.observability.otlpHeadersSecret, "--namespace", plan.target.namespace, "--ignore-not-found", "-o", "name"], "Validate OTLP headers Secret reference", { ...options, capture: true });
+    if (!otlpSecret) throw new Error(`OTLP headers Secret '${config.observability.otlpHeadersSecret}' does not exist in '${plan.target.namespace}'.`);
+    const otlpKeys = await command("kubectl", ["get", "secret", config.observability.otlpHeadersSecret, "--namespace", plan.target.namespace, "--output", "go-template={{range $key, $_ := .data}}{{$key}}{{\"\\n\"}}{{end}}"], "Validate OTLP headers Secret key", { ...options, capture: true });
+    if (!new Set(otlpKeys.split(/\r?\n/).filter(Boolean)).has(config.observability.otlpHeadersKey)) throw new Error(`OTLP headers Secret '${config.observability.otlpHeadersSecret}' is missing configured key '${config.observability.otlpHeadersKey}'.`);
+  }
+  if (config.topology === "ha") {
+    const nodeDocument = await command("kubectl", ["get", "nodes", "--output", "json"], "Validate schedulable failure-domain capacity", { ...options, capture: true });
+    const nodes = JSON.parse(nodeDocument).items.filter(node => !node.spec?.unschedulable
+      && !node.spec?.taints?.some(taint => ["NoSchedule", "NoExecute"].includes(taint.effect))
+      && node.status?.conditions?.some(condition => condition.type === "Ready" && condition.status === "True"));
+    if (nodes.length < plan.topology.minimumFailureDomains) throw new Error(`HA requires at least ${plan.topology.minimumFailureDomains} ready schedulable nodes.`);
+    const zones = new Set(nodes.map(node => node.metadata?.labels?.["topology.kubernetes.io/zone"]).filter(Boolean));
+    if (zones.size < plan.topology.minimumFailureDomains) throw new Error(`HA requires ready nodes in at least ${plan.topology.minimumFailureDomains} labeled topology zones.`);
+  }
+  if (mutation) {
+    const allowed = await command("kubectl", ["auth", "can-i", "create", "deployments.apps", "--namespace", plan.target.namespace], "Validate mutation permission", { ...options, capture: true });
+    if (allowed !== "yes") throw new Error(`Missing deployment mutation permission in '${plan.target.namespace}'.`);
+  }
+  if (config.image.pullSecretName) {
+    const pullSecret = await command("kubectl", ["get", "secret", config.image.pullSecretName, "--namespace", plan.target.namespace, "--ignore-not-found", "-o", "name"], "Validate image pull Secret reference", { ...options, capture: true });
+    if (!pullSecret) throw new Error(`Image pull Secret '${config.image.pullSecretName}' does not exist in '${plan.target.namespace}'.`);
+  }
+  if (config.redis.mode === "managed") {
+    for (const secretName of config.redis.managedImagePullSecrets ?? []) {
+      const pullSecret = await command("kubectl", ["get", "secret", secretName, "--namespace", plan.target.namespace, "--ignore-not-found", "-o", "name"], "Validate managed Redis image pull Secret reference", { ...options, capture: true });
+      if (!pullSecret) throw new Error(`Managed Redis image pull Secret '${secretName}' does not exist in '${plan.target.namespace}'.`);
+    }
+  }
+  const secret = await command("kubectl", ["get", "secret", config.redis.credentialsSecret, "--namespace", plan.target.namespace, "--ignore-not-found", "-o", "name"], "Validate credential Secret reference", { ...options, capture: true });
+  if (!secret) throw new Error(`Credential Secret '${config.redis.credentialsSecret}' does not exist in '${plan.target.namespace}'.`);
+  const keyListing = await command("kubectl", ["get", "secret", config.redis.credentialsSecret, "--namespace", plan.target.namespace, "--output", "go-template={{range $key, $_ := .data}}{{$key}}{{\"\\n\"}}{{end}}"], "Validate credential Secret keys", { ...options, capture: true });
+  const configuredKeys = new Set(keyListing.split(/\r?\n/).filter(Boolean));
+  for (const key of config.redis.mode === "managed" ? [config.redis.credentialKey, config.redis.adminCredentialKey] : [config.redis.credentialKey]) {
+    if (!configuredKeys.has(key)) throw new Error(`Credential Secret '${config.redis.credentialsSecret}' is missing configured key '${key}'.`);
+  }
+}
+
+async function assertTeardownTarget(plan, options) {
+  const context = await currentContext(options);
+  if (context !== plan.target.context) throw new Error(`Target mismatch: expected Kubernetes context '${plan.target.context}', found '${context}'.`);
+  await command("kubectl", ["cluster-info", "--request-timeout=15s"], "Reach Kubernetes API", options);
+  const allowed = await command("kubectl", ["auth", "can-i", "delete", "deployments.apps", "--namespace", plan.target.namespace], "Validate teardown permission", { ...options, capture: true });
+  if (allowed !== "yes") throw new Error(`Missing deployment deletion permission in '${plan.target.namespace}'.`);
+  const releasesDocument = await command("helm", targetReleaseListArguments(plan.target), "Inventory teardown releases", { ...options, capture: true });
+  if (!Array.isArray(JSON.parse(releasesDocument))) throw new Error("Helm release inventory was not a JSON array.");
+}
+
+async function assertBackupTarget(plan, options) {
+  const context = await currentContext(options);
+  if (context !== plan.target.context) throw new Error(`Target mismatch: expected Kubernetes context '${plan.target.context}', found '${context}'.`);
+  await command("kubectl", ["cluster-info", "--request-timeout=15s"], "Reach Kubernetes API", options);
+  const releasesDocument = await command("helm", targetReleaseListArguments(plan.target), "Inventory backup releases", { ...options, capture: true });
+  if (!Array.isArray(JSON.parse(releasesDocument))) throw new Error("Helm release inventory was not a JSON array.");
+}
+
+async function saveState(plan, config, options) {
+  const stamp = new Date().toISOString().replaceAll(":", "-");
+  const directory = resolve(options.backupRoot, plan.target.release, stamp);
+  assertPathInside(options.backupRoot, directory, "backup");
+  await mkdir(directory, { recursive: true });
+  try {
+    const capturedPlan = structuredClone(plan);
+    const releasesDocument = await command("helm", targetReleaseListArguments(plan.target), "Inventory installed releases", { ...options, capture: true });
+    const releases = JSON.parse(releasesDocument);
+    if (!Array.isArray(releases)) throw new Error("Helm release inventory was not a JSON array.");
+    await atomicWrite(resolve(directory, "releases.json"), `${stableJson(releases)}`);
+    const installed = new Set(releases.map(release => release?.name).filter(Boolean));
+    for (const release of [plan.target.release, plan.target.redisRelease]) {
+      if (installed.has(release)) {
+        const valuesDocument = await command("helm", ["get", "values", release, "--namespace", plan.target.namespace, "--all", "--output", "json"], `Back up ${release} values`, { ...options, capture: true });
+        const values = JSON.parse(valuesDocument);
+        const secretPaths = inlineSecretPaths(values);
+        if (secretPaths.length > 0) throw new Error(`Refusing to persist inline credential values returned by Helm at: ${secretPaths.join(", ")}. Replace them with Secret references before retrying.`);
+        if (release === plan.target.redisRelease) {
+          const chartVersion = capturedRedisChartVersion(releases, release);
+          const chart = managedRedisChartForBackup(plan, config, release, values, chartVersion, options);
+          capturedPlan.managedRedis ??= {};
+          capturedPlan.managedRedis.chart = chart;
+          capturedPlan.managedRedis.chartVersion = chartVersion;
+          let capturedChart;
+          let cacheError;
+          for (const cacheDirectory of [
+            managedRedisChartOutput(options.generatedRoot, options.targetName, chart, chartVersion),
+            legacyManagedRedisChartOutput(options.generatedRoot, options.targetName, chartVersion),
+            managedRedisChartOutput(resolve(repositoryRoot, ".bootstrap/lifecycle"), options.targetName, chart, chartVersion),
+            legacyManagedRedisChartOutput(resolve(repositoryRoot, ".bootstrap/lifecycle"), options.targetName, chartVersion),
+          ]) {
+            try {
+              capturedChart = await copyCachedManagedRedisChart({ chart, version: chartVersion, cacheDirectory, outputDirectory: directory });
+              break;
+            } catch (error) { cacheError = error; }
+          }
+          if (!capturedChart) {
+            if (options.action === "rollback") {
+              emit("warn", options.action, "Current managed Redis chart is not cached; continuing the explicitly selected self-contained rollback without a restorable pre-change chart archive.", { reason: cacheError.message });
+            } else {
+              throw new Error(`Installed managed Redis chart provenance is unavailable: ${cacheError.message} Preserve the verified lifecycle chart cache or restore it from a trusted backup before capturing state.`);
+            }
+          }
+          if (capturedChart) {
+            capturedPlan.managedRedis.chartArchiveSha256 = capturedChart.archiveSha256;
+            capturedPlan.managedRedis.chartArchiveFile = basename(capturedChart.archivePath);
+          } else {
+            delete capturedPlan.managedRedis.chartArchiveSha256;
+            delete capturedPlan.managedRedis.chartArchiveFile;
+          }
+        }
+        await atomicWrite(resolve(directory, `${release}.values.json`), stableJson(values));
+      }
+    }
+    await atomicWrite(resolve(directory, "plan.json"), stableJson(capturedPlan));
+  } catch (error) {
+    await rm(directory, { recursive: true, force: true });
+    throw error;
+  }
+  emit("pass", options.action, "Pre-change state captured.", { backup: directory });
+  return directory;
+}
+
+function topologyFromValues(values, release) {
+  if (["ha", "non-ha"].includes(values.topology)) return values.topology;
+  if (Number.isInteger(values.replicaCount)) return values.replicaCount > 1 ? "ha" : "non-ha";
+  throw new Error(`Release '${release}' does not expose a supported topology value.`);
+}
+
+async function installedReleaseState(planTarget, options) {
+  const context = await currentContext(options);
+  if (context !== planTarget.context) throw new Error(`Target mismatch: expected Kubernetes context '${planTarget.context}', found '${context}'.`);
+  const releasesDocument = await command("helm", targetReleaseListArguments(planTarget), "Inspect installed releases for topology", { ...options, capture: true });
+  const releases = JSON.parse(releasesDocument);
+  if (!Array.isArray(releases)) throw new Error("Helm release inventory was not a JSON array.");
+  if (!releases.some(release => release?.name === planTarget.release)) {
+    if (!releases.some(release => release?.name === planTarget.redisRelease)) return undefined;
+    const redisValuesDocument = await command("helm", ["get", "values", planTarget.redisRelease, "--namespace", planTarget.namespace, "--all", "--output", "json"], "Read installed managed Redis topology", { ...options, capture: true });
+    const redisValues = JSON.parse(redisValuesDocument);
+    const topology = redisValues.architecture === "standalone" ? "non-ha" : redisValues.architecture === "replication" ? "ha" : undefined;
+    if (!topology) throw new Error(`Release '${planTarget.redisRelease}' does not expose a supported managed Redis architecture.`);
+    return { topology, redisMode: "managed" };
+  }
+  const valuesDocument = await command("helm", ["get", "values", planTarget.release, "--namespace", planTarget.namespace, "--all", "--output", "json"], "Read installed gateway topology", { ...options, capture: true });
+  const values = JSON.parse(valuesDocument);
+  return { topology: topologyFromValues(values, planTarget.release), redisMode: values.redis?.mode ?? (releases.some(release => release?.name === planTarget.redisRelease) ? "managed" : "external") };
+}
+
+async function readRollbackSnapshot(planTarget, options) {
+  const backup = options.backup ? resolve(options.backup) : undefined;
+  if (!backup) throw new Error("rollback requires --backup pointing to a captured backup directory.");
+  assertRollbackSource(planTarget, options, backup);
+  const savedPlan = await readJson(resolve(backup, "plan.json"));
+  if (savedPlan.target.context !== planTarget.context || savedPlan.target.namespace !== planTarget.namespace || savedPlan.target.release !== planTarget.release) throw new Error("Backup target does not match the requested context, namespace, and release.");
+  const releases = await readJson(resolve(backup, "releases.json"));
+  if (!Array.isArray(releases)) throw new Error("Backup release inventory is invalid.");
+  const installed = new Set(releases.map(release => release?.name).filter(Boolean));
+  if (!installed.has(planTarget.release)) return { gatewayPresent: false, releases };
+  const valuesPath = resolve(backup, `${planTarget.release}.values.json`);
+  if (!await fileExists(valuesPath)) throw new Error(`Backup inventory includes '${planTarget.release}' but its values snapshot is missing.`);
+  const values = await readJson(valuesPath);
+  const redisPresent = installed.has(planTarget.redisRelease);
+  const redisValuesPath = resolve(backup, `${planTarget.redisRelease}.values.json`);
+  if (redisPresent && !await fileExists(redisValuesPath)) throw new Error(`Backup inventory includes '${planTarget.redisRelease}' but its values snapshot is missing.`);
+  return {
+    gatewayPresent: true,
+    releases,
+    topology: topologyFromValues(values, planTarget.release),
+    redisMode: values.redis?.mode ?? (redisPresent ? "managed" : "external"),
+    gatewayValues: values,
+    managedRedisValues: redisPresent ? await readJson(redisValuesPath) : undefined,
+    managedRedisChart: redisPresent ? savedPlan.managedRedis?.chart : undefined,
+    managedRedisChartVersion: redisPresent ? capturedRedisChartVersion(releases, planTarget.redisRelease) : undefined,
+    managedRedisChartArchiveSha256: redisPresent ? savedPlan.managedRedis?.chartArchiveSha256 : undefined,
+  };
+}
+
+async function writeNamingManifest(config) {
+  const names = releaseNames(config);
+  const [containerRegistry, ...repositoryParts] = config.image.repository.split("/");
+  await atomicWrite(resolve(repositoryRoot, ".bootstrap", "naming.json"), stableJson({
+    brand: "RealtimeStack",
+    application: names.application,
+    serviceName: `realtimestack-${names.application}-gateway`,
+    containerRegistry,
+    containerRepository: repositoryParts.join("/"),
+    imageRepository: config.image.repository,
+    redisInstancePrefix: config.redis.instancePrefix,
+    kubernetesApplication: names.application,
+  }));
+}
+
+function gatewayUpgradeArguments(plan, options, action = "upgrade") {
+  return [action, "--install", plan.target.release, "helm/realtimestack-gateway", "--namespace", plan.target.namespace, "--create-namespace", "--values", options.valuesPath, "--history-max", "0", "--atomic", "--wait", `--timeout=${plan.safety.boundedTimeoutSeconds}s`];
+}
+
+async function apply(plan, config, options) {
+  if (config.redis.mode === "managed") {
+    const redisArgs = ["upgrade", "--install", plan.target.redisRelease, options.redisChartPath ?? plan.managedRedis.chart];
+    if (!options.redisChartPath) redisArgs.push("--version", plan.managedRedis.chartVersion);
+    redisArgs.push("--namespace", plan.target.namespace, "--create-namespace", "--values", plan.managedRedis.baseValuesPath, "--values", options.redisValuesPath, "--history-max", "0", "--atomic", "--wait", `--timeout=${options.timeoutSeconds}s`);
+    await command("helm", redisArgs, "Install or update managed Redis", options);
+    if (options.action === "recover") {
+      const statefulSetName = plan.managedRedis.values.architecture === "replication" ? `${plan.target.redisRelease}-node` : `${plan.target.redisRelease}-master`;
+      const statefulSet = `statefulset/${statefulSetName}`;
+      await command("kubectl", ["rollout", "restart", statefulSet, "--namespace", plan.target.namespace], "Restart managed Redis after referenced Secret rotation", options);
+      await command("kubectl", ["rollout", "status", statefulSet, "--namespace", plan.target.namespace, `--timeout=${options.timeoutSeconds}s`], "Verify managed Redis recovery rollout", options);
+    }
+  }
+  await command("helm", gatewayUpgradeArguments(plan, options), "Install or update realtimestack gateway", options);
+  if (["update", "recover"].includes(options.action)) await command("kubectl", ["rollout", "restart", `deployment/${plan.target.release}`, "--namespace", plan.target.namespace], "Restart gateway after referenced Secret rotation", options);
+  await command("kubectl", ["rollout", "status", `deployment/${plan.target.release}`, "--namespace", plan.target.namespace, `--timeout=${options.timeoutSeconds}s`], "Verify gateway rollout", options);
+}
+
+async function prepareRedisChart(managedRedis, options) {
+  const outputDirectory = managedRedisChartOutput(options.generatedRoot, options.targetName, managedRedis.chart, managedRedis.chartVersion);
+  let archivePath = managedRedis.chartArchivePath;
+  if (!archivePath) {
+    const legacyGeneratedRoot = resolve(repositoryRoot, ".bootstrap/lifecycle");
+    const legacyCacheDirectories = [
+      managedRedisChartOutput(legacyGeneratedRoot, options.targetName, managedRedis.chart, managedRedis.chartVersion),
+      legacyManagedRedisChartOutput(legacyGeneratedRoot, options.targetName, managedRedis.chartVersion),
+    ];
+    for (const cacheDirectory of legacyCacheDirectories) {
+      if (resolve(cacheDirectory) === resolve(outputDirectory)) continue;
+      try {
+        const copied = await copyCachedManagedRedisChart({
+          chart: managedRedis.chart,
+          version: managedRedis.chartVersion,
+          cacheDirectory,
+          outputDirectory,
+        });
+        archivePath = copied.archivePath;
+        emit("info", options.action, "Reusing verified legacy managed Redis chart cache.", { cacheDirectory });
+        break;
+      } catch {}
+    }
+  }
+  const prepared = await prepareManagedRedisChart({
+    chart: managedRedis.chart,
+    version: managedRedis.chartVersion,
+    archiveSha256: managedRedis.chartArchiveSha256,
+    archivePath,
+    outputDirectory,
+    timeoutSeconds: options.timeoutSeconds,
+  });
+  emit("pass", options.action, "Verified and patched managed Redis chart.", {
+    chart: managedRedis.chart,
+    chartVersion: managedRedis.chartVersion,
+    chartArchiveSha256: managedRedis.chartArchiveSha256,
+  });
+  return prepared.chartDirectory;
+}
+
+function processExists(pid) {
+  if (!Number.isInteger(pid) || pid < 1) return false;
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return error.code === "EPERM"; }
+}
+
+async function acquireLock(lockPath) {
+  const ownerPath = resolve(lockPath, "owner.json");
+  const owner = { createdAt: new Date().toISOString(), hostname: hostname(), pid: process.pid, token: randomUUID() };
+  try {
+    await mkdir(lockPath);
+    await atomicWrite(ownerPath, stableJson(owner));
+    return owner.token;
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+  }
+
+  let stale = false;
+  if (await fileExists(ownerPath)) {
+    try {
+      const existing = await readJson(ownerPath);
+      const age = Date.now() - Date.parse(existing.createdAt);
+      stale = existing.hostname === hostname() ? !processExists(existing.pid) : Number.isFinite(age) && age > 2 * 60 * 60 * 1000;
+    } catch { stale = Date.now() - (await stat(lockPath)).mtimeMs > 2 * 60 * 60 * 1000; }
+  } else {
+    stale = Date.now() - (await stat(lockPath)).mtimeMs > 2 * 60 * 60 * 1000;
+  }
+  if (!stale) throw new Error(`Another lifecycle operation holds the target lock '${lockPath}'.`);
+  const stalePath = `${lockPath}.stale-${owner.token}`;
+  try { await rename(lockPath, stalePath); }
+  catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  try {
+    await mkdir(lockPath);
+    await atomicWrite(ownerPath, stableJson(owner));
+  } catch (error) {
+    if (error.code === "EEXIST") throw new Error(`Another lifecycle operation holds the target lock '${lockPath}'.`);
+    throw error;
+  } finally {
+    await rm(stalePath, { recursive: true, force: true });
+  }
+  return owner.token;
+}
+
+async function releaseLock(lockPath, token) {
+  try {
+    const owner = await readJson(resolve(lockPath, "owner.json"));
+    if (owner.token === token) await rm(lockPath, { recursive: true, force: true });
+  } catch (error) {
+    if (!/Cannot read JSON/.test(error.message)) throw error;
+  }
+}
+
+function capturedRedisChartVersion(releaseInventory, release) {
+  const chart = releaseInventory.find(item => item?.name === release)?.chart;
+  const match = typeof chart === "string" ? /^redis-(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/.exec(chart) : undefined;
+  if (!match) throw new Error(`Backup inventory for '${release}' does not contain a supported Redis chart version.`);
+  return match[1];
+}
+
+function managedRedisChartForBackup(plan, config, release, values, installedVersion, options) {
+  const annotatedChart = values.commonAnnotations?.["realtimestack.example/managed-chart"];
+  if (typeof annotatedChart === "string" && annotatedChart.startsWith("oci://")) return annotatedChart;
+
+  const expectedRedis = plan.values?.redis;
+  const actualUser = values.auth?.acl?.users?.[0];
+  const expectedPrefix = expectedRedis?.instancePrefix;
+  const legacyMatches = installedVersion === config.redis.managedChartVersion
+    && values.fullnameOverride === release
+    && values.auth?.existingSecret === expectedRedis?.credentialsSecret?.name
+    && values.auth?.existingSecretPasswordKey === expectedRedis?.managedAdminPasswordKey
+    && values.auth?.acl?.userSecret === expectedRedis?.credentialsSecret?.name
+    && actualUser?.username === expectedRedis?.username
+    && actualUser?.keys === `~${expectedPrefix}:*`
+    && actualUser?.channels === `&${expectedPrefix}:*`;
+  if (!legacyMatches || typeof config.redis.legacyManagedChart !== "string" || !config.redis.legacyManagedChart.startsWith("oci://")) {
+    throw new Error(`Installed managed Redis release '${release}' does not record its chart repository and does not match the verified legacy deployment contract.`);
+  }
+  emit("info", options.action, "Adopting verified legacy managed Redis release metadata.", { release, chart: config.redis.legacyManagedChart });
+  return config.redis.legacyManagedChart;
+}
+
+function capturedReleaseRevision(releaseInventory, release) {
+  const revision = Number(releaseInventory.find(item => item?.name === release)?.revision);
+  if (!Number.isInteger(revision) || revision < 1) throw new Error(`Backup inventory for '${release}' does not contain a valid Helm revision.`);
+  return revision;
+}
+
+async function rollback(plan, options) {
+  const backup = options.backup ? resolve(options.backup) : undefined;
+  if (!backup) throw new Error("rollback requires --backup pointing to a captured backup directory.");
+  assertRollbackSource(plan.target, options, backup);
+  const savedPlan = await readJson(resolve(backup, "plan.json"));
+  if (savedPlan.target.context !== plan.target.context || savedPlan.target.namespace !== plan.target.namespace || savedPlan.target.release !== plan.target.release) throw new Error("Backup target does not match the requested context, namespace, and release.");
+  const releaseInventory = await readJson(resolve(backup, "releases.json"));
+  if (!Array.isArray(releaseInventory)) throw new Error("Backup release inventory is invalid.");
+  const installedAtBackup = new Set(releaseInventory.map(release => release?.name).filter(Boolean));
+  for (const release of [plan.target.redisRelease, plan.target.release]) {
+    const valuesPath = resolve(backup, `${release}.values.json`);
+    if (!installedAtBackup.has(release)) {
+      await command("helm", ["uninstall", release, "--namespace", plan.target.namespace, "--ignore-not-found", "--keep-history", "--wait", `--timeout=${options.timeoutSeconds}s`], `Remove ${release} absent from backup`, options);
+    } else if (await fileExists(valuesPath)) {
+      if (release === plan.target.release) {
+        await command("helm", ["rollback", release, String(capturedReleaseRevision(releaseInventory, release)), "--namespace", plan.target.namespace, "--wait", `--timeout=${options.timeoutSeconds}s`], `Restore ${release} revision`, options);
+        continue;
+      }
+      const chart = savedPlan.managedRedis?.chart;
+      if (typeof chart !== "string" || !chart) throw new Error("Backup plan does not contain the managed Redis chart repository.");
+      const chartVersion = capturedRedisChartVersion(releaseInventory, release);
+      const chartArchiveSha256 = savedPlan.managedRedis?.chartArchiveSha256 ?? plan.managedRedis?.chartArchiveSha256;
+      if (typeof chartArchiveSha256 !== "string" || !chartArchiveSha256) throw new Error("Backup plan does not contain the managed Redis chart archive checksum. A legacy backup can only be restored when its exact chart pin matches the current trusted configuration.");
+      const chartArchiveFile = savedPlan.managedRedis?.chartArchiveFile;
+      let chartArchivePath;
+      if (chartArchiveFile !== undefined) {
+        if (typeof chartArchiveFile !== "string" || basename(chartArchiveFile) !== chartArchiveFile) throw new Error("Backup plan contains an invalid managed Redis chart archive path.");
+        chartArchivePath = resolve(backup, chartArchiveFile);
+        assertPathInside(backup, chartArchivePath, "rollback chart archive");
+        if (!await fileExists(chartArchivePath)) throw new Error("Backup managed Redis chart archive is missing.");
+      }
+      const restoredChart = await prepareRedisChart({ chart, chartVersion, chartArchiveSha256, chartArchivePath }, options);
+      const arguments_ = ["upgrade", "--install", release, restoredChart];
+      arguments_.push("--namespace", plan.target.namespace, "--values", valuesPath, "--atomic", "--wait", `--timeout=${options.timeoutSeconds}s`);
+      await command("helm", arguments_, `Restore ${release}`, options);
+    } else throw new Error(`Backup inventory includes '${release}' but its values snapshot is missing.`);
+  }
+}
+
+function configurationForPlan(config, plan) {
+  const captured = structuredClone(config);
+  const values = plan.values;
+  captured.image.pullSecretName = values.image?.pullSecretName ?? "";
+  captured.redis.mode = values.redis?.mode ?? captured.redis.mode;
+  captured.redis.tls = values.redis?.tls ?? captured.redis.tls;
+  captured.redis.credentialsSecret = values.redis?.credentialsSecret?.name ?? captured.redis.credentialsSecret;
+  captured.redis.credentialKey = values.redis?.credentialsSecret?.passwordKey ?? captured.redis.credentialKey;
+  captured.redis.adminCredentialKey = values.redis?.managedAdminPasswordKey ?? captured.redis.adminCredentialKey;
+  captured.redis.managedImagePullSecrets = plan.managedRedis?.values?.global?.imagePullSecrets ?? captured.redis.managedImagePullSecrets ?? [];
+  captured.ingress.enabled = values.ingressRoute?.enabled ?? captured.ingress.enabled;
+  captured.ingress.tlsSecretName = values.ingressRoute?.tlsSecretName ?? captured.ingress.tlsSecretName;
+  captured.observability.serviceMonitor = values.observability?.serviceMonitor?.enabled ?? captured.observability.serviceMonitor;
+  captured.observability.otlpEndpoint = values.observability?.otlp?.endpoint ?? captured.observability.otlpEndpoint;
+  captured.observability.otlpHeadersSecret = values.observability?.otlp?.headersSecret?.name ?? captured.observability.otlpHeadersSecret;
+  captured.observability.otlpHeadersKey = values.observability?.otlp?.headersSecret?.key ?? captured.observability.otlpHeadersKey;
+  captured.networking.traefikNamespace = values.networkPolicy?.ingressNamespaceSelector?.matchLabels?.["kubernetes.io/metadata.name"] ?? captured.networking.traefikNamespace;
+  captured.networking.metalLbNamespace = values.observability?.platformMetrics?.metalLbNamespace ?? captured.networking.metalLbNamespace;
+  if (plan.managedRedis?.values?.global?.storageClass) captured.kubernetes.storageClass = plan.managedRedis.values.global.storageClass;
+  return captured;
+}
+
+async function main() {
+  const options = parse(process.argv.slice(2));
+  options.action = options.action;
+  if (options.dryRun && ["organize", "restore-layout"].includes(options.action)) logPersistenceEnabled = false;
+  if (options.action === "help") {
+    process.stdout.write(usage);
+    return;
+  }
+  if (Number(process.versions.node.split(".")[0]) < 22) throw new Error(`Configuration is invalid: Node.js 22 or later is required; detected ${process.version}.`);
+  if (options.action === "organize") {
+    const result = await organizeBootstrapEnvironment({ repositoryRoot, dryRun: options.dryRun });
+    emit("pass", options.action, options.dryRun ? "Bootstrap environment organization preview completed." : "Bootstrap environment organization completed.", {
+      manifest: result.manifestPath,
+      moves: result.manifest.moves,
+      retained: result.manifest.retained,
+      collisions: result.manifest.collisions,
+      summary: { moved: options.dryRun ? 0 : result.manifest.moves.length, planned: result.manifest.moves.length, retained: result.manifest.retained.length, collisions: result.manifest.collisions.length },
+    });
+    await flushLog();
+    return;
+  }
+  if (options.action === "restore-layout") {
+    if (!options.manifest) {
+      const error = new Error("restore-layout requires --manifest FILE.");
+      error.exitCode = 2;
+      throw error;
+    }
+    const result = await restoreBootstrapEnvironment({ repositoryRoot, manifestPath: options.manifest, dryRun: options.dryRun });
+    emit("pass", options.action, options.dryRun ? "Bootstrap environment restoration preview completed." : "Bootstrap environment organization was restored.", {
+      manifest: result.manifestPath,
+      summary: { restored: result.restored, planned: result.planned },
+    });
+    await flushLog();
+    return;
+  }
+  let { config, profile } = await loadContract(repositoryRoot, options.config, options.profile);
+  options.kubeContext = config.kubernetes.context;
+  if (options.nameSuffix !== undefined) {
+    config = structuredClone(config);
+    config.naming.suffix = options.nameSuffix;
+  }
+  if (config.naming.suffix) {
+    config = structuredClone(config);
+    config.redis.instancePrefix = `${config.redis.instancePrefix}:${config.naming.suffix}`;
+  }
+  const environmentDirectoryConfigured = config.paths.environmentDirectory !== undefined;
+  config = structuredClone(config);
+  config.paths.environmentDirectory = expandEnvironmentPath(config.paths.environmentDirectory ?? ".bootstrap/env/{environment}", config.environment.name);
+  config.paths.generatedDirectory = expandEnvironmentPath(config.paths.generatedDirectory, config.environment.name);
+  config.paths.backupDirectory = expandEnvironmentPath(config.paths.backupDirectory, config.environment.name);
+  config.paths.logDirectory = expandEnvironmentPath(config.paths.logDirectory, config.environment.name);
+  const environmentRoot = resolve(repositoryRoot, config.paths.environmentDirectory);
+  options.generatedRoot = resolve(repositoryRoot, config.paths.generatedDirectory);
+  options.backupRoot = resolve(repositoryRoot, config.paths.backupDirectory);
+  const logRoot = resolve(repositoryRoot, config.paths.logDirectory);
+  assertPathInside(repositoryRoot, environmentRoot, "environment output");
+  assertPathInside(repositoryRoot, options.generatedRoot, "generated output");
+  assertPathInside(repositoryRoot, options.backupRoot, "backup output");
+  assertPathInside(repositoryRoot, logRoot, "log output");
+  if (environmentDirectoryConfigured) {
+    assertPathInside(environmentRoot, options.generatedRoot, "environment generated output");
+    assertPathInside(environmentRoot, logRoot, "environment log output");
+  }
+  activeLogPath = resolve(logRoot, `RealtimeStack-Bootstrap-${new Date().toISOString().replaceAll(":", "-")}.jsonl`);
+  const names = config.naming.suffix ? `realtimestack-${config.naming.suffix}` : "realtimestack";
+  const targetRoot = resolve(options.generatedRoot, `${config.environment.name}-${names}`);
+  options.targetName = `${config.environment.name}-${names}`;
+  assertPathInside(options.generatedRoot, targetRoot, "generated output");
+  await mkdir(targetRoot, { recursive: true });
+  const mutation = ["install", "update", "rollback", "recover", "teardown"].includes(options.action);
+  const locksRoot = resolve(repositoryRoot, ".bootstrap", "locks");
+  const namingLockPath = resolve(locksRoot, "naming-manifest");
+  const lockPath = resolve(locksRoot, `${config.environment.name}-${names}`);
+  assertPathInside(locksRoot, lockPath, "target lock");
+  await mkdir(locksRoot, { recursive: true });
+  const namingLockToken = await acquireLock(namingLockPath);
+  let lockToken;
+  try {
+    await archiveOldLogs(logRoot);
+    lockToken = await acquireLock(lockPath);
+    await writeNamingManifest(config);
+  } catch (error) {
+    await releaseLock(namingLockPath, namingLockToken);
+    throw error;
+  }
+  try {
+    const statePath = resolve(targetRoot, "state.json");
+    const legacyStatePath = resolve(repositoryRoot, ".bootstrap/lifecycle", options.targetName, "state.json");
+    const priorStatePath = await fileExists(statePath) ? statePath : await fileExists(legacyStatePath) ? legacyStatePath : undefined;
+    const priorState = priorStatePath ? await readJson(priorStatePath) : undefined;
+    const provisionalPlan = buildPlan(options.action, config, profile, { dryRun: options.dryRun, timeoutSeconds: options.timeoutSeconds, previousTopology: priorState?.topology });
+    const rollbackSnapshot = options.action === "rollback" ? await readRollbackSnapshot(provisionalPlan.target, options) : undefined;
+    if (rollbackSnapshot?.gatewayPresent) {
+      config = structuredClone(config);
+      config.topology = rollbackSnapshot.topology;
+      config.redis.mode = rollbackSnapshot.redisMode;
+      profile = await readJson(resolve(repositoryRoot, "bootstrap", "profiles", `${config.topology}.json`));
+      if (config.topology === "ha" && config.kubernetes.failureDomains < profile.minimumFailureDomains) throw new Error(`Configuration is invalid: rollback to HA requires at least ${profile.minimumFailureDomains} configured failure domains.`);
+    }
+    const clusterAware = ["install", "update", "rollback", "recover", "teardown"].includes(options.action);
+    const installedState = clusterAware ? await installedReleaseState(provisionalPlan.target, options) : undefined;
+    if (["install", "update", "recover"].includes(options.action) && installedState?.redisMode && installedState.redisMode !== config.redis.mode) throw new Error(`Redis mode conversion from '${installedState.redisMode}' to '${config.redis.mode}' requires an explicit migration outside this bootstrap action.`);
+    if (options.action === "rollback" && rollbackSnapshot?.gatewayPresent && installedState?.redisMode && installedState.redisMode !== rollbackSnapshot.redisMode) throw new Error(`Redis mode rollback conversion from '${installedState.redisMode}' to '${rollbackSnapshot.redisMode}' requires an explicit migration outside this bootstrap action.`);
+    const previousTopology = installedState?.topology ?? (clusterAware ? undefined : priorState?.topology);
+    let plan = buildPlan(options.action, config, profile, { dryRun: options.dryRun, timeoutSeconds: options.timeoutSeconds, previousTopology });
+    if (options.action === "rollback" && rollbackSnapshot?.gatewayPresent) {
+      const legacyTrustedChecksum = rollbackSnapshot.managedRedisChart === plan.managedRedis?.chart
+        && rollbackSnapshot.managedRedisChartVersion === plan.managedRedis?.chartVersion
+        ? plan.managedRedis.chartArchiveSha256
+        : undefined;
+      plan = useCapturedDeploymentValues(plan, rollbackSnapshot.gatewayValues, rollbackSnapshot.managedRedisValues, rollbackSnapshot.managedRedisChart, rollbackSnapshot.managedRedisChartVersion, rollbackSnapshot.managedRedisChartArchiveSha256 ?? legacyTrustedChecksum);
+    }
+    options.valuesPath = resolve(targetRoot, "values.json");
+    await atomicWrite(resolve(targetRoot, "plan.json"), stableJson(plan));
+    await atomicWrite(options.valuesPath, stableJson(plan.values));
+    if (plan.managedRedis) {
+      options.redisValuesPath = resolve(targetRoot, "redis-values.json");
+      await atomicWrite(options.redisValuesPath, stableJson(plan.managedRedis.values));
+    }
+    emit("info", "plan", "Normalized execution plan.", plan);
+    if (plan.topology.conversion && !options.confirmTopologyChange && !options.dryRun) throw new Error("Topology conversion requires --confirm-topology-change after reviewing the plan and impact warning.");
+    if (options.action === "teardown" && !options.force && !options.dryRun) throw new Error("teardown requires --force after reviewing the target and data-loss warning.");
+    if (options.action === "teardown" && config.environment.class === "production") throw new Error("Automated teardown is forbidden for production configurations.");
+    if (options.action === "plan" || options.dryRun) {
+      emit("pass", options.action, options.dryRun ? "Dry run completed without external operations." : "Plan completed without mutation.", { summary: { executed: 0, skipped: 1 } });
+      await flushLog();
+      return;
+    }
+
+    if (plan.managedRedis && options.action === "validate") {
+      options.redisChartPath = await prepareRedisChart(plan.managedRedis, options);
+    }
+
+    if (options.action === "prerequisites") {
+      await command("node", ["--version"], "Validate Node.js", options);
+      await command("git", ["--version"], "Validate Git", options);
+      const dotnetVersion = await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["--version"], "Validate .NET SDK", { ...options, capture: true });
+      if (!/^10\./.test(dotnetVersion)) throw new Error(`.NET SDK 10.x is required; detected '${dotnetVersion}'.`);
+      const helmVersion = await command("helm", ["version", "--short"], "Validate Helm", { ...options, capture: true });
+      const helmMatch = /^v(\d+)\.(\d+)\./.exec(helmVersion);
+      const helmSupported = helmMatch && (Number(helmMatch[1]) >= 4 || (Number(helmMatch[1]) === 3 && Number(helmMatch[2]) >= 21));
+      if (!helmSupported) throw new Error(`Helm 3.21 or later is required; detected '${helmVersion}'.`);
+      await command("kubectl", ["version", "--client"], "Validate kubectl", options);
+      await command("tar", ["--version"], "Validate chart extraction tool", options);
+      emit("pass", options.action, "Prerequisite validation completed.", { summary: { executed: 6, skipped: 0 } });
+      await flushLog();
+      return;
+    }
+    if (options.action === "bootstrap") {
+      await command("git", ["--version"], "Validate Git", options);
+      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["restore", "RealtimeStack.sln", "--locked-mode"], "Restore locked .NET dependencies", options);
+      await command(process.platform === "win32" ? "dotnet.exe" : "dotnet", ["build", "RealtimeStack.sln", "--configuration", "Release", "--no-restore"], "Build the Release solution", options);
+      emit("pass", options.action, "Workspace bootstrap completed.", { summary: { executed: 3, skipped: 0 } });
+      await flushLog();
+      return;
+    }
+    let backup;
+    if (options.action === "teardown") await assertTeardownTarget(plan, options);
+    else if (options.action === "backup") await assertBackupTarget(plan, options);
+    else await assertTarget(plan, options.action === "rollback" ? configurationForPlan(config, plan) : config, options, mutation);
+    if (plan.safety.requiresBackup || options.action === "backup") backup = await saveState(plan, config, options);
+    if (plan.managedRedis && ["install", "update", "recover"].includes(options.action)) {
+      options.redisChartPath = await prepareRedisChart(plan.managedRedis, options);
+    }
+    if (["install", "update", "recover"].includes(options.action)) await apply(plan, config, options);
+    else if (options.action === "validate") {
+      await command("helm", ["template", plan.target.release, "helm/realtimestack-gateway", "--namespace", plan.target.namespace, "--values", options.valuesPath, "--api-versions", "monitoring.coreos.com/v1/ServiceMonitor", "--api-versions", "monitoring.coreos.com/v1/PrometheusRule", "--api-versions", "monitoring.coreos.com/v1alpha1/AlertmanagerConfig"], "Render gateway manifests", options);
+      if (plan.managedRedis) {
+        const redisTemplateArgs = ["template", plan.target.redisRelease, options.redisChartPath ?? plan.managedRedis.chart];
+        if (!options.redisChartPath) redisTemplateArgs.push("--version", plan.managedRedis.chartVersion);
+        redisTemplateArgs.push("--namespace", plan.target.namespace, "--values", plan.managedRedis.baseValuesPath, "--values", options.redisValuesPath);
+        await command("helm", redisTemplateArgs, "Render verified managed Redis manifests", options);
+      }
+    }
+    else if (options.action === "rollback") await rollback(plan, options);
+    else if (options.action === "teardown") {
+      await command("helm", ["uninstall", plan.target.release, "--namespace", plan.target.namespace, "--ignore-not-found", "--keep-history", "--wait", `--timeout=${options.timeoutSeconds}s`], "Remove realtimestack gateway", options);
+      if (config.redis.mode === "managed" || installedState?.redisMode === "managed") await command("helm", ["uninstall", plan.target.redisRelease, "--namespace", plan.target.namespace, "--ignore-not-found", "--keep-history", "--wait", `--timeout=${options.timeoutSeconds}s`], "Remove managed Redis", options);
+    }
+    if (options.action === "teardown" || (options.action === "rollback" && rollbackSnapshot?.gatewayPresent === false)) {
+      await rm(statePath, { force: true });
+      if (legacyStatePath !== statePath) await rm(legacyStatePath, { force: true });
+    } else if (["install", "update", "recover", "rollback"].includes(options.action)) {
+      await atomicWrite(statePath, stableJson({ contractVersion: 2, topology: config.topology, valuesSha256: plan.valuesSha256, backup: backup ?? options.backup ?? null }));
+      if (legacyStatePath !== statePath) await rm(legacyStatePath, { force: true });
+    }
+    emit("pass", options.action, "Lifecycle action completed.", {
+      backup: backup ?? null,
+      profile: config.topology,
+      summary: { backups: backup ? 1 : 0, executed: 1, skipped: 0 },
+    });
+    await flushLog();
+  } finally {
+    try { await releaseLock(lockPath, lockToken); }
+    finally { await releaseLock(namingLockPath, namingLockToken); }
+  }
+}
+
+main().catch(async error => {
+  emit("error", "failure", error.message);
+  try { await flushLog(); } catch (logError) { process.stderr.write(`Unable to write lifecycle log: ${logError.message}\n`); }
+  if ([1, 2, 3].includes(error.exitCode)) process.exitCode = error.exitCode;
+  else if (/^(?:Action must|Unknown argument|--.+ (?:requires|must)|--timeout-seconds)|Configuration is invalid|Requested profile|Cannot read JSON|Derived Helm release/.test(error.message)) process.exitCode = 2;
+  else if (/requires --|requires an explicit migration|forbidden for production|Target mismatch|Backup target does not match|target lock|organization lock|already been restored/.test(error.message)) process.exitCode = 3;
+  else process.exitCode = 1;
+});

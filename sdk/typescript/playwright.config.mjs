@@ -1,9 +1,9 @@
 import { defineConfig } from "@playwright/test";
 
-const gatewayPort = Number.parseInt(process.env.REALTIME_BROWSER_GATEWAY_PORT ?? "18081", 10);
-const secondGatewayPort = Number.parseInt(process.env.REALTIME_BROWSER_SECOND_GATEWAY_PORT ?? "18082", 10);
-const proxyPort = Number.parseInt(process.env.REALTIME_BROWSER_PROXY_PORT ?? "18083", 10);
-const staticPort = Number.parseInt(process.env.REALTIME_BROWSER_STATIC_PORT ?? "14173", 10);
+const gatewayPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_GATEWAY_PORT ?? "18081", 10);
+const secondGatewayPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_SECOND_GATEWAY_PORT ?? "18082", 10);
+const proxyPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_PROXY_PORT ?? "18083", 10);
+const staticPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_STATIC_PORT ?? "14173", 10);
 const redisEndpoint = process.env.REDIS_TEST_ENDPOINT ?? "127.0.0.1:6379";
 
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "dotnet run --project ../../src/Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
+      command: "dotnet run --project ../../src/RealtimeStack.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
       url: `http://127.0.0.1:${gatewayPort}/health/live`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
@@ -27,30 +27,30 @@ export default defineConfig({
         ASPNETCORE_URLS: `http://127.0.0.1:${gatewayPort}`,
         Gateway__ShutdownDrainSeconds: "1",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "realtime:browser-tests",
+        Redis__InstancePrefix: "realtimestack:browser-tests",
         Redis__RequiredForReadiness: "true",
-        Realtime__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
-        Realtime__AllowedOrigins__1: `http://127.0.0.1:${gatewayPort}`,
-        Realtime__HeartbeatSeconds: "5",
-        Realtime__IdleTimeoutSeconds: "15",
+        RealtimeStack__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
+        RealtimeStack__AllowedOrigins__1: `http://127.0.0.1:${gatewayPort}`,
+        RealtimeStack__HeartbeatSeconds: "5",
+        RealtimeStack__IdleTimeoutSeconds: "15",
       },
     },
     {
-      command: "dotnet run --project ../../src/Realtime.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
+      command: "dotnet run --project ../../src/RealtimeStack.Gateway --configuration Release --no-launch-profile --no-build --no-restore",
       url: `http://127.0.0.1:${secondGatewayPort}/health/live`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
       env: {
         ASPNETCORE_URLS: `http://127.0.0.1:${secondGatewayPort}`,
-        Gateway__ServiceName: "realtime-browser-b",
+        Gateway__ServiceName: "realtimestack-browser-b",
         Gateway__ShutdownDrainSeconds: "1",
         Redis__Endpoint: redisEndpoint,
-        Redis__InstancePrefix: "realtime:browser-tests",
+        Redis__InstancePrefix: "realtimestack:browser-tests",
         Redis__RequiredForReadiness: "true",
-        Realtime__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
-        Realtime__AllowedOrigins__1: `http://127.0.0.1:${secondGatewayPort}`,
-        Realtime__HeartbeatSeconds: "5",
-        Realtime__IdleTimeoutSeconds: "15",
+        RealtimeStack__AllowedOrigins__0: `http://127.0.0.1:${proxyPort}`,
+        RealtimeStack__AllowedOrigins__1: `http://127.0.0.1:${secondGatewayPort}`,
+        RealtimeStack__HeartbeatSeconds: "5",
+        RealtimeStack__IdleTimeoutSeconds: "15",
       },
     },
     {
@@ -59,8 +59,8 @@ export default defineConfig({
       timeout: 30_000,
       reuseExistingServer: !process.env.CI,
       env: {
-        REALTIME_BROWSER_PROXY_PORT: String(proxyPort),
-        REALTIME_BROWSER_BACKENDS: `http://127.0.0.1:${gatewayPort},http://127.0.0.1:${secondGatewayPort}`,
+        REALTIMESTACK_BROWSER_PROXY_PORT: String(proxyPort),
+        REALTIMESTACK_BROWSER_BACKENDS: `http://127.0.0.1:${gatewayPort},http://127.0.0.1:${secondGatewayPort}`,
       },
     },
     {
@@ -68,7 +68,7 @@ export default defineConfig({
       url: `http://127.0.0.1:${staticPort}/health`,
       timeout: 30_000,
       reuseExistingServer: !process.env.CI,
-      env: { REALTIME_BROWSER_STATIC_PORT: String(staticPort) },
+      env: { REALTIMESTACK_BROWSER_STATIC_PORT: String(staticPort) },
     },
   ],
   globalSetup: "./test/browser/global-setup.mjs",

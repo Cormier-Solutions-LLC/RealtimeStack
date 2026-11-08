@@ -6,12 +6,12 @@
   },
   "profiles": {
     "readable": {
-      "bytes": 17924,
-      "gzipBytes": 6764
+      "bytes": 18074,
+      "gzipBytes": 6782
     },
     "optimized": {
-      "bytes": 14565,
-      "gzipBytes": 6240
+      "bytes": 14715,
+      "gzipBytes": 6291
     }
   }
 }

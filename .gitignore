@@ -39,7 +39,7 @@ node_modules/
 playwright-report/
 test-results/
 .browser-cache/
-/src/Realtime.Browser/wwwroot/
+/src/RealtimeStack.Browser/wwwroot/
 
 # Java build outputs
 target/

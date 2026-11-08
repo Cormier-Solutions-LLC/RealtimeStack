@@ -27,10 +27,10 @@
     }
   };
   document.querySelector("#snapshot").onclick = () => invoke(async () => {
-    const client = new Realtime.DiagnosticsClient(settings()); write("snapshot", await client.snapshot());
+    const client = new RealtimeStack.DiagnosticsClient(settings()); write("snapshot", await client.snapshot());
   });
   document.querySelector("#apply").onclick = () => invoke(async () => {
-    const client = new Realtime.DiagnosticsClient(settings());
+    const client = new RealtimeStack.DiagnosticsClient(settings());
     activeOverride = await client.applyLogLevel({
       category: document.querySelector("#category").value,
       level: document.querySelector("#level").value,
@@ -43,12 +43,12 @@
   });
   document.querySelector("#revert").onclick = () => invoke(async () => {
     if (!activeOverride) return;
-    const client = new Realtime.DiagnosticsClient(settings());
+    const client = new RealtimeStack.DiagnosticsClient(settings());
     await client.revertLogLevel(activeOverride.id); write("override", { id: activeOverride.id, state: "reverted" });
     activeOverride = undefined; document.querySelector("#revert").disabled = true;
   });
   document.querySelector("#audit").onclick = () => invoke(async () => {
-    const client = new Realtime.DiagnosticsClient(settings()); write("audit", await client.audit());
+    const client = new RealtimeStack.DiagnosticsClient(settings()); write("audit", await client.audit());
   });
   document.querySelector("#events").onclick = () => invoke(() => stream("/events", "event"));
   document.querySelector("#logs").onclick = () => invoke(() => stream("/logs/tail?level=Information", "log"));

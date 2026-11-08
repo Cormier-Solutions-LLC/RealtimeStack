@@ -13,12 +13,12 @@ export interface DurableTaskStatus {
     error: string | null;
     finishedAt: string | null;
 }
-export declare class RealtimePersistenceError extends Error {
+export declare class RealtimeStackPersistenceError extends Error {
     readonly status: number;
     constructor(status: number);
 }
 /** Session-scoped durable reads. Never accepts tenant IDs, owner IDs, or worker credentials. */
-export declare class RealtimePersistenceClient {
+export declare class RealtimeStackPersistenceClient {
     private readonly basePath;
     private readonly request;
     constructor(basePath?: string, request?: typeof fetch);

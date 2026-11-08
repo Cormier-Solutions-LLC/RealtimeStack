@@ -13,18 +13,18 @@ image:
 auth:
   enabled: true
   sentinel: true
-  existingSecret: realtime-redis-auth
+  existingSecret: realtimestack-redis-auth
   existingSecretPasswordKey: redis-password
   acl:
     enabled: true
     sentinel: false
-    userSecret: realtime-redis-auth
+    userSecret: realtimestack-redis-auth
     users:
-      - username: realtime
+      - username: realtimestack
         enabled: "on"
         commands: "+@read +@write +@connection +@pubsub +@scripting +@stream"
-        keys: "~realtime:*"
-        channels: "&realtime:*"
+        keys: "~realtimestack:*"
+        channels: "&realtimestack:*"
 tls: { enabled: false }
 master:
   persistence: { enabled: true, size: 8Gi }

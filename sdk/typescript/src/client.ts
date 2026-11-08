@@ -10,15 +10,15 @@ import {
   validateServerEnvelope,
   WEBSOCKET_SUBPROTOCOL,
 } from "./protocol.js";
-import { RealtimeConnectionError, RealtimeError, RealtimeQueueError } from "./errors.js";
+import { RealtimeStackConnectionError, RealtimeStackError, RealtimeStackQueueError } from "./errors.js";
 import {
   createTransportSocket,
   type HttpStreamingOptions,
-  type RealtimeTransport,
+  type RealtimeStackTransport,
   type WebSocketLike,
 } from "./transport.js";
 
-export type RealtimeClientState = "idle" | "connecting" | "open" | "reconnecting" | "closing" | "closed";
+export type RealtimeStackClientState = "idle" | "connecting" | "open" | "reconnecting" | "closing" | "closed";
 
 export interface SessionAuthentication {
   readonly kind: "session";
@@ -30,7 +30,7 @@ export interface TicketAuthentication {
   readonly fetch?: typeof globalThis.fetch;
 }
 
-export type RealtimeAuthentication = SessionAuthentication | TicketAuthentication;
+export type RealtimeStackAuthentication = SessionAuthentication | TicketAuthentication;
 
 export interface ReconnectOptions {
   readonly enabled?: boolean;
@@ -40,35 +40,35 @@ export interface ReconnectOptions {
   readonly maximumAttempts?: number;
 }
 
-export interface RealtimeClientOptions {
+export interface RealtimeStackClientOptions {
   readonly url: string | URL;
-  readonly authentication?: RealtimeAuthentication;
+  readonly authentication?: RealtimeStackAuthentication;
   readonly maximumQueuedCommands?: number;
   readonly maximumPendingCommands?: number;
   readonly commandTimeoutMilliseconds?: number;
   readonly maximumMessageBytes?: number;
   readonly heartbeatIntervalMilliseconds?: number;
   readonly reconnect?: ReconnectOptions;
-  readonly transports?: readonly RealtimeTransport[];
+  readonly transports?: readonly RealtimeStackTransport[];
   readonly httpStreaming?: HttpStreamingOptions;
   readonly webSocketFactory?: (url: string, protocol: string) => WebSocketLike;
   readonly random?: () => number;
 }
 
-export interface RealtimeCloseDetails {
+export interface RealtimeStackCloseDetails {
   readonly code: number;
   readonly reason: string;
   readonly expected: boolean;
 }
 
-export interface RealtimeClientEvents {
-  readonly state: RealtimeClientState;
-  readonly close: RealtimeCloseDetails;
+export interface RealtimeStackClientEvents {
+  readonly state: RealtimeStackClientState;
+  readonly close: RealtimeStackCloseDetails;
   readonly event: ServerMessageEnvelope;
-  readonly error: RealtimeError;
+  readonly error: RealtimeStackError;
 }
 
-type Listener<TKey extends keyof RealtimeClientEvents> = (event: RealtimeClientEvents[TKey]) => void;
+type Listener<TKey extends keyof RealtimeStackClientEvents> = (event: RealtimeStackClientEvents[TKey]) => void;
 
 interface PendingCommand {
   readonly resolve: (envelope: ServerMessageEnvelope) => void;
@@ -99,18 +99,18 @@ const defaultReconnect: Required<ReconnectOptions> = {
   maximumAttempts: 12,
 };
 
-export class RealtimeClient {
-  private readonly options: Required<Pick<RealtimeClientOptions,
+export class RealtimeStackClient {
+  private readonly options: Required<Pick<RealtimeStackClientOptions,
     "maximumQueuedCommands" | "maximumPendingCommands" | "commandTimeoutMilliseconds" | "heartbeatIntervalMilliseconds" | "maximumMessageBytes">>
-    & RealtimeClientOptions;
+    & RealtimeStackClientOptions;
   private readonly reconnectOptions: Required<ReconnectOptions>;
-  private readonly listeners = new Map<keyof RealtimeClientEvents, Set<(event: never) => void>>();
+  private readonly listeners = new Map<keyof RealtimeStackClientEvents, Set<(event: never) => void>>();
   private readonly pending = new Map<string, PendingCommand>();
   private readonly queued: QueuedCommand[] = [];
   private readonly subscriptions = new Map<string, Set<SubscriptionRegistration>>();
   private readonly subscriptionCommands = new Map<string, Promise<void>>();
   private socket: WebSocketLike | undefined;
-  private stateValue: RealtimeClientState = "idle";
+  private stateValue: RealtimeStackClientState = "idle";
   private connectPromise: Promise<void> | undefined;
   private connectAbortController: AbortController | undefined;
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -120,13 +120,13 @@ export class RealtimeClient {
   private intentionalClose = false;
   private serverReconnectAdvice: ReconnectAdvice | undefined;
 
-  public constructor(options: RealtimeClientOptions) {
+  public constructor(options: RealtimeStackClientOptions) {
     if (options.url.toString().trim().length === 0) {
       throw new TypeError("A WebSocket URL is required.");
     }
     const configuredUrl = new URL(options.url.toString(), "http://localhost");
     if ([...configuredUrl.searchParams.keys()].some((key) => key.toLowerCase() === "reconnect")) {
-      throw new TypeError("The realtime URL must not contain the reserved reconnect query parameter.");
+      throw new TypeError("The realtimestack URL must not contain the reserved reconnect query parameter.");
     }
     this.options = {
       maximumQueuedCommands: 128,
@@ -165,7 +165,7 @@ export class RealtimeClient {
     }
   }
 
-  public get state(): RealtimeClientState {
+  public get state(): RealtimeStackClientState {
     return this.stateValue;
   }
 
@@ -173,11 +173,11 @@ export class RealtimeClient {
     return [...this.subscriptions.keys()];
   }
 
-  public get activeTransport(): RealtimeTransport | undefined {
+  public get activeTransport(): RealtimeStackTransport | undefined {
     return this.stateValue === "open" ? this.socket?.transport ?? "websocket" : undefined;
   }
 
-  public on<TKey extends keyof RealtimeClientEvents>(type: TKey, listener: Listener<TKey>): () => void {
+  public on<TKey extends keyof RealtimeStackClientEvents>(type: TKey, listener: Listener<TKey>): () => void {
     let listeners = this.listeners.get(type);
     if (listeners === undefined) {
       listeners = new Set();
@@ -196,7 +196,7 @@ export class RealtimeClient {
     }
     this.intentionalClose = false;
     this.clearReconnectTimer();
-    this.connectAbortController?.abort(new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded"));
+    this.connectAbortController?.abort(new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded"));
     const controller = new AbortController();
     this.connectAbortController = controller;
     const connectionSignal = signal === undefined
@@ -232,14 +232,14 @@ export class RealtimeClient {
     }
     this.intentionalClose = true;
     this.generation += 1;
-    this.connectAbortController?.abort(new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded"));
+    this.connectAbortController?.abort(new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded"));
     this.connectAbortController = undefined;
     this.connectPromise = undefined;
     this.clearReconnectTimer();
     this.stopHeartbeat();
     this.setState("closing");
-    this.rejectPending(new RealtimeConnectionError("The client disconnected.", "client_disconnect"));
-    this.rejectQueued(new RealtimeConnectionError("The client disconnected.", "client_disconnect"));
+    this.rejectPending(new RealtimeStackConnectionError("The client disconnected.", "client_disconnect"));
+    this.rejectQueued(new RealtimeStackConnectionError("The client disconnected.", "client_disconnect"));
     const socket = this.socket;
     this.socket = undefined;
     if (socket !== undefined && (socket.readyState === OPEN || socket.readyState === CONNECTING)) {
@@ -321,7 +321,7 @@ export class RealtimeClient {
     const connectionUrl = await this.createConnectionUrl(reconnecting, signal);
     signal?.throwIfAborted();
     if (generation !== this.generation || this.intentionalClose) {
-      throw new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded");
+      throw new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded");
     }
     const authentication = this.options.authentication ?? { kind: "session" };
     const socket = createTransportSocket(
@@ -354,14 +354,14 @@ export class RealtimeClient {
         signal?.removeEventListener("abort", abort);
         void this.restoreSubscriptionsAndFlush(generation).then(() => {
           if (generation !== this.generation || this.intentionalClose) {
-            throw new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded");
+            throw new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded");
           }
           this.reconnectAttempt = 0;
           this.serverReconnectAdvice = undefined;
           connectionEstablished = true;
           this.setState("open");
           if (generation !== this.generation || this.intentionalClose || socket.readyState !== OPEN) {
-            throw new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded");
+            throw new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded");
           }
           this.startHeartbeat();
           settled = true;
@@ -383,14 +383,14 @@ export class RealtimeClient {
         if (!settled) {
           settled = true;
           signal?.removeEventListener("abort", abort);
-          reject(new RealtimeConnectionError("The WebSocket connection failed."));
+          reject(new RealtimeStackConnectionError("The WebSocket connection failed."));
         }
       };
       socket.onclose = (event) => {
         signal?.removeEventListener("abort", abort);
         if (!settled) {
           settled = true;
-          reject(new RealtimeConnectionError(`The WebSocket closed during connection (${event.code}).`));
+          reject(new RealtimeStackConnectionError(`The WebSocket closed during connection (${event.code}).`));
         }
         this.handleClose(event, generation, connectionEstablished || reconnecting);
       };
@@ -407,13 +407,13 @@ export class RealtimeClient {
       } else if (ticketBaseUrl.protocol === "wss:") {
         ticketBaseUrl.protocol = "https:";
       }
-      const endpoint = new URL(authentication.endpoint?.toString() ?? "/realtime/tickets", ticketBaseUrl);
+      const endpoint = new URL(authentication.endpoint?.toString() ?? "/realtimestack/tickets", ticketBaseUrl);
       if (endpoint.protocol !== "http:" && endpoint.protocol !== "https:") {
         throw new TypeError("The ticket endpoint must use http or https.");
       }
       const fetcher = authentication.fetch ?? globalThis.fetch;
       if (fetcher === undefined) {
-        throw new RealtimeConnectionError("Ticket authentication requires the Fetch API.", "ticket_unavailable");
+        throw new RealtimeStackConnectionError("Ticket authentication requires the Fetch API.", "ticket_unavailable");
       }
       const response = await this.waitForAbort(fetcher(endpoint, {
         method: "POST",
@@ -422,11 +422,11 @@ export class RealtimeClient {
         ...(signal === undefined ? {} : { signal }),
       }), signal);
       if (!response.ok) {
-        throw new RealtimeConnectionError(`Connection ticket request failed (${response.status}).`, "ticket_rejected");
+        throw new RealtimeStackConnectionError(`Connection ticket request failed (${response.status}).`, "ticket_rejected");
       }
       const value: unknown = await this.waitForAbort(response.json(), signal);
       if (!this.isTicketResponse(value)) {
-        throw new RealtimeConnectionError("Connection ticket response was invalid.", "ticket_invalid");
+        throw new RealtimeStackConnectionError("Connection ticket response was invalid.", "ticket_invalid");
       }
       url.searchParams.set("ticket", value.ticket);
     }
@@ -436,7 +436,7 @@ export class RealtimeClient {
       url.protocol = "wss:";
     }
     if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-      throw new TypeError("The realtime URL must use ws, wss, http, or https.");
+      throw new TypeError("The realtimestack URL must use ws, wss, http, or https.");
     }
     if (reconnecting) {
       url.searchParams.set("reconnect", "true");
@@ -456,7 +456,7 @@ export class RealtimeClient {
         return;
       }
       if (this.queued.length >= this.options.maximumQueuedCommands) {
-        reject(new RealtimeQueueError());
+        reject(new RealtimeStackQueueError());
         return;
       }
       const command: QueuedCommand = { envelope, resolve, reject, ...(signal === undefined ? {} : { signal }) };
@@ -483,15 +483,15 @@ export class RealtimeClient {
       return;
     }
     if (this.pending.size >= this.options.maximumPendingCommands) {
-      command.reject(new RealtimeQueueError());
+      command.reject(new RealtimeStackQueueError());
       return;
     }
     const socket = this.socket;
     if (socket?.readyState !== OPEN) {
       if (!queueWhenUnavailable) {
-        command.reject(new RealtimeConnectionError("The connection closed before the command could be sent.", "connection_closed"));
+        command.reject(new RealtimeStackConnectionError("The connection closed before the command could be sent.", "connection_closed"));
       } else if (this.queued.length >= this.options.maximumQueuedCommands) {
-        command.reject(new RealtimeQueueError());
+        command.reject(new RealtimeStackQueueError());
       } else {
         this.queued.push(command);
       }
@@ -499,7 +499,7 @@ export class RealtimeClient {
     }
     const serialized = JSON.stringify(command.envelope);
     if (new TextEncoder().encode(serialized).byteLength > this.options.maximumMessageBytes) {
-      command.reject(new RealtimeError("The command exceeds the configured message-size limit.", "message_too_large", command.envelope.correlationId));
+      command.reject(new RealtimeStackError("The command exceeds the configured message-size limit.", "message_too_large", command.envelope.correlationId));
       return;
     }
     const correlationId = command.envelope.correlationId;
@@ -507,7 +507,7 @@ export class RealtimeClient {
     const timer = setTimeout(() => {
       if (this.pending.delete(correlationId)) {
         removeAbortListener();
-        command.reject(new RealtimeConnectionError("The command acknowledgement timed out.", "command_timeout"));
+        command.reject(new RealtimeStackConnectionError("The command acknowledgement timed out.", "command_timeout"));
       }
     }, this.options.commandTimeoutMilliseconds);
     this.pending.set(correlationId, { resolve: command.resolve, reject: command.reject, timer, removeAbortListener });
@@ -526,19 +526,19 @@ export class RealtimeClient {
 
   private handleMessage(event: MessageEvent): void {
     if (typeof event.data !== "string") {
-      this.emit("error", new RealtimeError("The server sent a non-text message.", "invalid_message_type"));
+      this.emit("error", new RealtimeStackError("The server sent a non-text message.", "invalid_message_type"));
       return;
     }
     let parsed: unknown;
     try {
       parsed = JSON.parse(event.data) as unknown;
     } catch {
-      this.emit("error", new RealtimeError("The server sent malformed JSON.", "invalid_envelope"));
+      this.emit("error", new RealtimeStackError("The server sent malformed JSON.", "invalid_envelope"));
       return;
     }
     const validation = validateServerEnvelope(parsed);
     if (!validation.valid || validation.value === undefined) {
-      this.emit("error", new RealtimeError(validation.message ?? "The server envelope was invalid.", validation.errorCode ?? "invalid_envelope"));
+      this.emit("error", new RealtimeStackError(validation.message ?? "The server envelope was invalid.", validation.errorCode ?? "invalid_envelope"));
       return;
     }
     const envelope = validation.value;
@@ -563,7 +563,7 @@ export class RealtimeClient {
     pending.removeAbortListener();
     this.pending.delete(envelope.correlationId);
     if (envelope.type === messageTypes.error) {
-      const error = RealtimeError.fromEnvelope(envelope);
+      const error = RealtimeStackError.fromEnvelope(envelope);
       pending.reject(error);
       this.emit("error", error);
     } else {
@@ -578,7 +578,7 @@ export class RealtimeClient {
     this.stopHeartbeat();
     this.socket = undefined;
     const expected = this.intentionalClose || event.code === closeCodes.normal;
-    this.rejectPending(new RealtimeConnectionError(`The WebSocket closed (${event.code}).`, "connection_closed"));
+    this.rejectPending(new RealtimeStackConnectionError(`The WebSocket closed (${event.code}).`, "connection_closed"));
     this.setState("closed");
     this.emit("close", { code: event.code, reason: event.reason, expected });
     if (expected || !allowReconnect || !this.reconnectOptions.enabled || generation !== this.generation) {
@@ -593,7 +593,7 @@ export class RealtimeClient {
     }
     if (this.reconnectAttempt >= this.reconnectOptions.maximumAttempts) {
       this.setState("closed");
-      const error = new RealtimeConnectionError("The reconnect attempt limit was reached.", "reconnect_exhausted");
+      const error = new RealtimeStackConnectionError("The reconnect attempt limit was reached.", "reconnect_exhausted");
       this.rejectQueued(error);
       this.emit("error", error);
       return;
@@ -614,7 +614,7 @@ export class RealtimeClient {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       const controller = new AbortController();
-      this.connectAbortController?.abort(new RealtimeConnectionError("The connection attempt was superseded.", "connection_superseded"));
+      this.connectAbortController?.abort(new RealtimeStackConnectionError("The connection attempt was superseded.", "connection_superseded"));
       this.connectAbortController = controller;
       void this.openSocket(controller.signal, true).catch((error: unknown) => {
         const normalized = this.normalizeError(error);
@@ -641,7 +641,7 @@ export class RealtimeClient {
     }
 
     const routes = new Set([...this.subscriptions.keys(), ...queuedSubscriptions.keys()]);
-    const failures: RealtimeError[] = [];
+    const failures: RealtimeStackError[] = [];
     for (const route of routes) {
       try {
         this.assertOpenGeneration(generation);
@@ -662,7 +662,7 @@ export class RealtimeClient {
       }
     }
     if (failures.length > 0) {
-      throw new RealtimeConnectionError("One or more subscriptions could not be restored.", "subscription_restore_failed");
+      throw new RealtimeStackConnectionError("One or more subscriptions could not be restored.", "subscription_restore_failed");
     }
 
     this.assertOpenGeneration(generation);
@@ -717,7 +717,7 @@ export class RealtimeClient {
 
   private assertOpenGeneration(generation: number): void {
     if (generation !== this.generation || this.socket?.readyState !== OPEN) {
-      throw new RealtimeConnectionError("The connection closed during subscription restoration.", "connection_closed");
+      throw new RealtimeStackConnectionError("The connection closed during subscription restoration.", "connection_closed");
     }
   }
 
@@ -820,7 +820,7 @@ export class RealtimeClient {
       : new DOMException("The command was cancelled.", "AbortError");
   }
 
-  private emit<TKey extends keyof RealtimeClientEvents>(type: TKey, event: RealtimeClientEvents[TKey]): void {
+  private emit<TKey extends keyof RealtimeStackClientEvents>(type: TKey, event: RealtimeStackClientEvents[TKey]): void {
     for (const listener of this.listeners.get(type) ?? []) {
       this.invokeListener(listener, event as never);
     }
@@ -834,17 +834,17 @@ export class RealtimeClient {
     }
   }
 
-  private setState(state: RealtimeClientState): void {
+  private setState(state: RealtimeStackClientState): void {
     if (this.stateValue !== state) {
       this.stateValue = state;
       this.emit("state", state);
     }
   }
 
-  private normalizeError(error: unknown): RealtimeError {
-    return error instanceof RealtimeError
+  private normalizeError(error: unknown): RealtimeStackError {
+    return error instanceof RealtimeStackError
       ? error
-      : new RealtimeConnectionError(error instanceof Error ? error.message : "The realtime operation failed.");
+      : new RealtimeStackConnectionError(error instanceof Error ? error.message : "The realtimestack operation failed.");
   }
 
   private isTicketResponse(value: unknown): value is ConnectionTicketResponse {

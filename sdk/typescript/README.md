@@ -1,12 +1,12 @@
-# Realtime TypeScript and browser SDK
+# RealtimeStack TypeScript and browser SDK
 
-`@realtime/client` is the typed browser client for wire protocol `1.0`. It supports same-origin HttpOnly session cookies and short-lived, single-use connection tickets without exposing authentication material through callbacks, errors, or library logging.
+`@realtimestack/client` is the typed browser client for wire protocol `1.0`. It supports same-origin HttpOnly session cookies and short-lived, single-use connection tickets without exposing authentication material through callbacks, errors, or library logging.
 
-For an npm consumer, install `@realtime/client` from your configured approved registry and import `{ RealtimeClient }` from `@realtime/client`. The package is ESM (`type: module`), with declarations at `dist/types/index.d.ts`; it does not provide a CommonJS build. The `@realtime/client/browser` export selects the readable IIFE. Direct browser examples below assume the chosen generated file is served at the shown relative URL. An authenticated application session and a compatible gateway must already exist; the SDK does not log users in.
+For an npm consumer, install `@realtimestack/client` from your configured approved registry and import `{ RealtimeStackClient }` from `@realtimestack/client`. The package is ESM (`type: module`), with declarations at `dist/types/index.d.ts`; it does not provide a CommonJS build. The `@realtimestack/client/browser` export selects the readable IIFE. Direct browser examples below assume the chosen generated file is served at the shown relative URL. An authenticated application session and a compatible gateway must already exist; the SDK does not log users in.
 
 ## Operator diagnostics client
 
-`DiagnosticsClient` is an explicit administrative client for the versioned diagnostics API. It is separate from `RealtimeClient`, so ordinary application roles do not invoke operator controls accidentally. Configure an operator-protected base URL and authentication headers, then call `snapshot()`, `activeLogLevels()`, `applyLogLevel()`, or `revertLogLevel()`. `streamEvents()` and `tailLogs()` use a credentialed streaming `fetch`, carry the configured headers, retry ordinary interruptions, and stop when the server sends its bounded `disconnect` event; call the returned function to disconnect manually.
+`DiagnosticsClient` is an explicit administrative client for the versioned diagnostics API. It is separate from `RealtimeStackClient`, so ordinary application roles do not invoke operator controls accidentally. Configure an operator-protected base URL and authentication headers, then call `snapshot()`, `activeLogLevels()`, `applyLogLevel()`, or `revertLogLevel()`. `streamEvents()` and `tailLogs()` use a credentialed streaming `fetch`, carry the configured headers, retry ordinary interruptions, and stop when the server sends its bounded `disconnect` event; call the returned function to disconnect manually.
 
 `audit(offset, limit)` reads the paginated logging audit. The default diagnostics base path is `/diagnostics/v1`; requests use `credentials: "same-origin"`. Stream retries use a configurable delay (default one second), stop on permanent HTTP errors or a server `disconnect` event, and support explicit cancellation. Never persist an operator token in browser storage. Server authorization, Origin/network policy, redaction, duration, buffer, and rate limits remain authoritative.
 
@@ -14,10 +14,10 @@ For an npm consumer, install `@realtime/client` from your configured approved re
 
 ```html
 <script type="module">
-  import { RealtimeClient } from "./realtime.min.js";
+  import { RealtimeStackClient } from "./realtimestack.min.js";
 
-  const client = new RealtimeClient({
-    url: "/realtime/ws",
+  const client = new RealtimeStackClient({
+    url: "/realtimestack/ws",
     authentication: { kind: "session" },
   });
   await client.connect();
@@ -30,37 +30,37 @@ For an npm consumer, install `@realtime/client` from your configured approved re
 ## Direct browser script
 
 ```html
-<script src="./realtime.iife.min.js"></script>
+<script src="./realtimestack.iife.min.js"></script>
 <script>
-  const client = new Realtime.RealtimeClient({
-    url: "/realtime/ws",
+  const client = new RealtimeStack.RealtimeStackClient({
+    url: "/realtimestack/ws",
     authentication: { kind: "ticket" },
   });
   client.connect();
 </script>
 ```
 
-Ticket mode POSTs to `/realtime/tickets` resolved against the WebSocket origin before every connection attempt, using Fetch `credentials: "include"`. Override `authentication.endpoint` or inject `authentication.fetch` when needed. Prefer same-origin hosting; any cross-origin deployment must deliberately configure browser cookie/CORS and gateway Origin policy. The ticket is placed in the WebSocket handshake URL and is not returned as a ticket field in library event/error callbacks. Do not log WebSocket URLs at the edge or in a custom transport because ticket query parameters are credential material. Do not supply the reserved `reconnect` query parameter yourself.
+Ticket mode POSTs to `/realtimestack/tickets` resolved against the WebSocket origin before every connection attempt, using Fetch `credentials: "include"`. Override `authentication.endpoint` or inject `authentication.fetch` when needed. Prefer same-origin hosting; any cross-origin deployment must deliberately configure browser cookie/CORS and gateway Origin policy. The ticket is placed in the WebSocket handshake URL and is not returned as a ticket field in library event/error callbacks. Do not log WebSocket URLs at the edge or in a custom transport because ticket query parameters are credential material. Do not supply the reserved `reconnect` query parameter yourself.
 
 ## Optional HTTP fallback
 
 Install and map `RealtimeStack.HttpFallback` on the gateway, then choose an ordered transport list. HTTP can be primary:
 
 ```js
-new RealtimeClient({
-  url: "/realtime/ws",
+new RealtimeStackClient({
+  url: "/realtimestack/ws",
   transports: ["http-streaming"],
-  httpStreaming: { url: "/realtime/http" },
+  httpStreaming: { url: "/realtimestack/http" },
 });
 ```
 
 Or it can take over only when WebSocket initialization fails:
 
 ```js
-new RealtimeClient({
-  url: "/realtime/ws",
+new RealtimeStackClient({
+  url: "/realtimestack/ws",
   transports: ["websocket", "http-streaming"],
-  httpStreaming: { url: "/realtime/http" },
+  httpStreaming: { url: "/realtimestack/http" },
 });
 ```
 
@@ -68,13 +68,13 @@ The switch occurs only before a transport opens. An established transport that l
 
 ## Behavior
 
-- `connect`, `publish`, `subscribe`, `unsubscribe`, `ping`, and `disconnect` use the `realtime.v1` subprotocol.
-- Command and pending-acknowledgement collections are bounded. Saturation rejects new work with `RealtimeQueueError` rather than growing memory without limit.
+- `connect`, `publish`, `subscribe`, `unsubscribe`, `ping`, and `disconnect` use the `realtimestack.v1` subprotocol.
+- Command and pending-acknowledgement collections are bounded. Saturation rejects new work with `RealtimeStackQueueError` rather than growing memory without limit.
 - A browser heartbeat prevents the gateway's idle timeout from treating a healthy connection as stale.
 - Unexpected disconnects use bounded exponential backoff with jitter and a maximum attempt count. A reconnect obtains a fresh ticket when ticket mode is selected.
 - Desired subscriptions are restored once on a new connection. Multiple local listeners for one route share one server subscription.
 - `subscribe` resolves to an async disposer for that local listener. Use `on("state", ...)`, `on("close", ...)`, `on("event", ...)`, and `on("error", ...)` for lifecycle reporting; `on` returns a listener-removal function. Catch the initial `connect()` rejection explicitly; an initial failed connection is not automatically retried like an established connection that drops.
-- Server errors become `RealtimeError` instances with stable codes. Unknown optional server fields are ignored.
+- Server errors become `RealtimeStackError` instances with stable codes. Unknown optional server fields are ignored.
 - Pub/Sub events are ephemeral. A reconnect cannot replay messages missed while disconnected. Durable delivery is a separately approved Redis Streams behavior and is not implied by this client.
 
 Load balancers and WAFs need only ordinary WebSocket upgrade forwarding, an idle timeout longer than the configured heartbeat interval, and query-string redaction. Sticky sessions and application-specific edge integration are not required: sessions and tickets are revalidated through Redis on every new gateway connection.
@@ -87,7 +87,7 @@ The generated files contain no inline code generation, `eval`, environment addre
 
 Validators currently require the exact envelope version `1.0`; additive optional fields are accepted, but arbitrary `1.x` version strings are not. Required envelope changes, removals, or semantic changes require the documented protocol migration. See the [protocol contract](../../docs/protocol.md); rolling upgrades must retain the prior protocol until all consumers move.
 
-Default client limits are 128 queued commands, 128 pending acknowledgements, a ten-second command timeout and a 16 KiB serialized outgoing envelope. Heartbeats run every 15 seconds. Reconnect defaults are 500 ms initial delay, 30 seconds maximum delay, 20% jitter and 12 attempts; server restart advice can override delay/jitter. Configure these in `RealtimeClientOptions` to match gateway limits. Heartbeats cannot guarantee timely execution in suspended/background browser tabs. The client does not turn an acknowledgement into durable delivery evidence.
+Default client limits are 128 queued commands, 128 pending acknowledgements, a ten-second command timeout and a 16 KiB serialized outgoing envelope. Heartbeats run every 15 seconds. Reconnect defaults are 500 ms initial delay, 30 seconds maximum delay, 20% jitter and 12 attempts; server restart advice can override delay/jitter. Configure these in `RealtimeStackClientOptions` to match gateway limits. Heartbeats cannot guarantee timely execution in suspended/background browser tabs. The client does not turn an acknowledgement into durable delivery evidence.
 
 ## Build and verification
 
@@ -105,3 +105,7 @@ npm run test:browser
 The generated reference manifest records hashes, SRI, profile defaults, source-map policy, selector mappings, tool versions, and sizes. Production examples select optimized assets; development and support select readable assets. See [Optimized reference assets](../../docs/optimized-assets.md) for deployment, CSP, accessibility, update, debugging, and rollback guidance.
 
 The size budget is 32 KiB per minified JavaScript artifact before compression and 12 KiB with gzip. CI rejects larger output. Troubleshooting should begin with the state, close, and structured error callbacks; these intentionally omit cookie and ticket material.
+
+## Upgrade to RealtimeStack 2
+
+Replace the earlier `@realtime/client` package with `@realtimestack/client` at `2.0.0-beta`, update ESM imports to the `RealtimeStackClient` export, and change direct-script calls to `RealtimeStack.RealtimeStackClient`. Load the matching `realtimestack*.js` files; ASP.NET Core static assets now live under `/_content/RealtimeStack.Browser/`. Update gateways and clients together for the `realtimestack.v1` default subprotocol and `/realtimestack/` routes. Refresh declarations, source maps, SRI/CSP entries, and cached HTML as one asset set. Package installation does not rewrite application source or URLs. Follow the [complete upgrade guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/upgrading-to-realtimestack-2.md) for configuration and deployment migration. Previously published package bytes remain immutable.

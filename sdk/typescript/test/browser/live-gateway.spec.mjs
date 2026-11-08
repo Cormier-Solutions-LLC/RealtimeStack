@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
-const gatewayPort = Number.parseInt(process.env.REALTIME_BROWSER_GATEWAY_PORT ?? "18081", 10);
-const proxyPort = Number.parseInt(process.env.REALTIME_BROWSER_PROXY_PORT ?? "18083", 10);
-const staticPort = Number.parseInt(process.env.REALTIME_BROWSER_STATIC_PORT ?? "14173", 10);
+const gatewayPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_GATEWAY_PORT ?? "18081", 10);
+const proxyPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_PROXY_PORT ?? "18083", 10);
+const staticPort = Number.parseInt(process.env.REALTIMESTACK_BROWSER_STATIC_PORT ?? "14173", 10);
 const sessionCookie = {
-  name: "realtime_session",
+  name: "realtimestack_session",
   value: "browser-session-123456",
   url: `http://127.0.0.1:${proxyPort}`,
   httpOnly: true,
@@ -23,10 +23,10 @@ async function exposeArtifact(page, name) {
 }
 
 for (const artifact of [
-  { format: "esm", name: "realtime.js" },
-  { format: "esm", name: "realtime.min.js" },
-  { format: "iife", name: "realtime.iife.js" },
-  { format: "iife", name: "realtime.iife.min.js" },
+  { format: "esm", name: "realtimestack.js" },
+  { format: "esm", name: "realtimestack.min.js" },
+  { format: "iife", name: "realtimestack.iife.js" },
+  { format: "iife", name: "realtimestack.iife.min.js" },
 ]) {
   test(`${artifact.name} establishes an authorized connection and exchanges an event`, async ({ page, context }) => {
     await context.addCookies([sessionCookie]);
@@ -35,18 +35,18 @@ for (const artifact of [
       await exposeArtifact(page, artifact.name);
       await page.addScriptTag({
         type: "module",
-        content: `import * as sdk from '/sdk/${artifact.name}'; window.realtimeSdk = sdk;`,
+        content: `import * as sdk from '/sdk/${artifact.name}'; window.realtimestackSdk = sdk;`,
       });
-      await expect.poll(() => page.evaluate(() => typeof window.realtimeSdk?.RealtimeClient)).toBe("function");
+      await expect.poll(() => page.evaluate(() => typeof window.realtimestackSdk?.RealtimeStackClient)).toBe("function");
     } else {
       await exposeArtifact(page, artifact.name);
       await page.addScriptTag({ url: `/sdk/${artifact.name}` });
-      await page.evaluate(() => { window.realtimeSdk = window.Realtime; });
+      await page.evaluate(() => { window.realtimestackSdk = window.RealtimeStack; });
     }
 
     const result = await page.evaluate(async () => {
-      const client = new window.realtimeSdk.RealtimeClient({
-        url: "/realtime/ws",
+      const client = new window.realtimestackSdk.RealtimeStackClient({
+        url: "/realtimestack/ws",
         authentication: { kind: "ticket" },
         heartbeatIntervalMilliseconds: 5_000,
       });
@@ -83,10 +83,10 @@ test("single-use and expired tickets are rejected without credential disclosure"
   await context.addCookies([sessionCookie]);
   await page.goto("/health/live");
   const result = await page.evaluate(async () => {
-    const response = await fetch("/realtime/tickets", { method: "POST", credentials: "include" });
+    const response = await fetch("/realtimestack/tickets", { method: "POST", credentials: "include" });
     const { ticket } = await response.json();
     const connect = (candidate) => new Promise((resolve) => {
-      const socket = new WebSocket(`/realtime/ws?ticket=${encodeURIComponent(candidate)}`, "realtime.v1");
+      const socket = new WebSocket(`/realtimestack/ws?ticket=${encodeURIComponent(candidate)}`, "realtimestack.v1");
       socket.onopen = () => {
         socket.close(1000, "test_complete");
         resolve("open");
@@ -106,7 +106,7 @@ test("session authentication rejects a different browser Origin", async ({ page,
   await context.addCookies([sessionCookie]);
   await page.goto(`http://127.0.0.1:${staticPort}/health`);
   const result = await page.evaluate((port) => new Promise((resolve) => {
-    const socket = new WebSocket(`ws://127.0.0.1:${port}/realtime/ws`, "realtime.v1");
+    const socket = new WebSocket(`ws://127.0.0.1:${port}/realtimestack/ws`, "realtimestack.v1");
     socket.onopen = () => resolve("open");
     socket.onerror = () => resolve("rejected");
   }), proxyPort);
@@ -117,12 +117,12 @@ test("network failure reconnects through a different gateway with a fresh ticket
   test.skip(browserName !== "chromium", "Cross-replica behavior is transport-independent and runs once.");
   await context.addCookies([sessionCookie]);
   await page.goto("/health/live");
-  await exposeArtifact(page, "realtime.js");
-  await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtime.js'; window.realtimeSdk = sdk;" });
-  await expect.poll(() => page.evaluate(() => typeof window.realtimeSdk?.RealtimeClient)).toBe("function");
+  await exposeArtifact(page, "realtimestack.js");
+  await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtimestack.js'; window.realtimestackSdk = sdk;" });
+  await expect.poll(() => page.evaluate(() => typeof window.realtimestackSdk?.RealtimeStackClient)).toBe("function");
   await page.evaluate(async () => {
-    const client = new window.realtimeSdk.RealtimeClient({
-      url: "/realtime/ws",
+    const client = new window.realtimestackSdk.RealtimeStackClient({
+      url: "/realtimestack/ws",
       authentication: { kind: "ticket" },
       reconnect: { initialDelayMilliseconds: 10, maximumDelayMilliseconds: 50, jitterRatio: 0, maximumAttempts: 10 },
       heartbeatIntervalMilliseconds: 2_000,
@@ -159,14 +159,14 @@ test("Redis fan-out preserves tenant isolation across gateway replicas", async (
     const first = await firstContext.newPage();
     const second = await secondContext.newPage();
     for (const page of [first, second]) {
-      await exposeArtifact(page, "realtime.js");
+      await exposeArtifact(page, "realtimestack.js");
       await page.goto(`http://127.0.0.1:${proxyPort}/health/live`);
-      await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtime.js'; window.realtimeSdk = sdk;" });
-      await expect.poll(() => page.evaluate(() => typeof window.realtimeSdk?.RealtimeClient)).toBe("function");
+      await page.addScriptTag({ type: "module", content: "import * as sdk from '/sdk/realtimestack.js'; window.realtimestackSdk = sdk;" });
+      await expect.poll(() => page.evaluate(() => typeof window.realtimestackSdk?.RealtimeStackClient)).toBe("function");
       await page.evaluate(async () => {
         window.isolationEvents = [];
-        window.isolationClient = new window.realtimeSdk.RealtimeClient({
-          url: "/realtime/ws",
+        window.isolationClient = new window.realtimestackSdk.RealtimeStackClient({
+          url: "/realtimestack/ws",
           authentication: { kind: "ticket" },
           heartbeatIntervalMilliseconds: 2_000,
         });

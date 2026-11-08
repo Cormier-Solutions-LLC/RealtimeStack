@@ -1,7 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
-  "name": "realtime/example-laravel",
-  "description": "Minimal Laravel reference adapter for Realtime",
+  "name": "realtimestack/example-laravel",
+  "description": "Minimal Laravel reference adapter for RealtimeStack",
   "type": "project",
   "license": "MIT",
   "require": {

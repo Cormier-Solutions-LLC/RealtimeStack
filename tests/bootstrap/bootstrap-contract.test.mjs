@@ -8,11 +8,11 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import test from "node:test";
 import {
-  buildPlan, fileExists, inlineSecretPaths, loadContract, renderValues, stableJson, useCapturedDeploymentValues, validateConfiguration,
+  buildPlan, fileExists, inlineSecretPaths, loadContract, releaseNames, renderValues, stableJson, useCapturedDeploymentValues, validateConfiguration,
 } from "../../scripts/lib/bootstrap-contract.mjs";
 import { managedRedisChartOutput, patchSentinelService, prepareManagedRedisChart } from "../../scripts/lib/managed-redis-chart.mjs";
-import { buildCertificateManifest, parseCertificateArguments } from "../../scripts/realtime-certificate.mjs";
-import { normalizePasswordBytes, resolveRedisSecretOptions } from "../../scripts/realtime-redis-secret.mjs";
+import { buildCertificateManifest, parseCertificateArguments } from "../../scripts/realtimestack-certificate.mjs";
+import { normalizePasswordBytes, resolveRedisSecretOptions } from "../../scripts/realtimestack-redis-secret.mjs";
 import {
   classifyLegacyBootstrapArtifact, expandEnvironmentPath, organizeBootstrapEnvironment, restoreBootstrapEnvironment,
 } from "../../scripts/lib/bootstrap-environment.mjs";
@@ -22,7 +22,7 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const example = JSON.parse(await readFile(resolve(repositoryRoot, "bootstrap/config.example.json"), "utf8"));
 const haExample = JSON.parse(await readFile(resolve(repositoryRoot, "bootstrap/config.ha.example.json"), "utf8"));
 const bootstrapSchema = JSON.parse(await readFile(resolve(repositoryRoot, "bootstrap/config.schema.json"), "utf8"));
-const helmSchema = JSON.parse(await readFile(resolve(repositoryRoot, "helm/realtime-gateway/values.schema.json"), "utf8"));
+const helmSchema = JSON.parse(await readFile(resolve(repositoryRoot, "helm/realtimestack-gateway/values.schema.json"), "utf8"));
 const profiles = {
   "non-ha": JSON.parse(await readFile(resolve(repositoryRoot, "bootstrap/profiles/non-ha.json"), "utf8")),
   ha: JSON.parse(await readFile(resolve(repositoryRoot, "bootstrap/profiles/ha.json"), "utf8")),
@@ -71,7 +71,7 @@ test("environment path templates expand only the validated environment token", (
 });
 
 test("environment workspace relationship failures use the invalid-input exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-paths-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-paths-"));
   const config = configuration();
   config.paths.generatedDirectory = ".bootstrap/lifecycle";
   config.paths.logDirectory = ".logs";
@@ -79,7 +79,7 @@ test("environment workspace relationship failures use the invalid-input exit cod
   await writeFile(configPath, stableJson(config));
   try {
     await assert.rejects(
-      execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", configPath], { cwd: repositoryRoot }),
+      execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--config", configPath], { cwd: repositoryRoot }),
       error => error.code === 2 && /Configuration is invalid/.test(error.stdout) && /paths\.generatedDirectory/.test(error.stdout),
     );
   } finally {
@@ -90,17 +90,17 @@ test("environment workspace relationship failures use the invalid-input exit cod
 test("environment organization dry runs do not persist lifecycle logs", async () => {
   const logRoot = resolve(repositoryRoot, ".logs");
   const before = await fileExists(logRoot) ? (await readdir(logRoot)).sort() : [];
-  await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "organize", "--dry-run"], { cwd: repositoryRoot });
+  await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "organize", "--dry-run"], { cwd: repositoryRoot });
   const after = await fileExists(logRoot) ? (await readdir(logRoot)).sort() : [];
   assert.deepEqual(after, before);
 });
 
 test("layout actions expose invalid-input and safety-stop exit classifications", async () => {
   await assert.rejects(
-    execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "restore-layout"], { cwd: repositoryRoot }),
+    execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "restore-layout"], { cwd: repositoryRoot }),
     error => error.code === 2 && /requires --manifest/.test(error.stdout),
   );
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-invalid-manifest-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-invalid-manifest-"));
   const manifestPath = resolve(directory, ".bootstrap/organization/invalid.json");
   await mkdir(dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, "{}\n");
@@ -130,7 +130,7 @@ test("legacy bootstrap artifacts are classified by their target slot rather than
 });
 
 test("environment organization previews, applies, remains idempotent, and restores from its manifest", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environments-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environments-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   await mkdir(resolve(bootstrapRoot, "lifecycle"), { recursive: true });
   const files = [
@@ -197,7 +197,7 @@ test("environment organization previews, applies, remains idempotent, and restor
 });
 
 test("environment organization fails safely while another organizer holds the workspace lock", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-lock-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-lock-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const lockPath = resolve(bootstrapRoot, "locks/environment-organization");
   await mkdir(lockPath, { recursive: true });
@@ -218,7 +218,7 @@ test("environment organization fails safely while another organizer holds the wo
 });
 
 test("environment organization rejects symlinked destination directories", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(resolve(bootstrapRoot, "env"), { recursive: true });
@@ -235,7 +235,7 @@ test("environment organization rejects symlinked destination directories", async
 });
 
 test("environment organization rejects a symlinked environment root without movable files", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-root-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-root-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(bootstrapRoot, { recursive: true });
@@ -252,7 +252,7 @@ test("environment organization rejects a symlinked environment root without mova
 });
 
 test("environment organization rejects a symlinked manifest directory before moving files", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-organization-symlink-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-organization-symlink-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const outside = resolve(directory, "outside");
   await mkdir(bootstrapRoot, { recursive: true });
@@ -269,7 +269,7 @@ test("environment organization rejects a symlinked manifest directory before mov
 });
 
 test("environment restoration reconciles a journaled move interrupted after rename", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-journal-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-journal-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   const manifestPath = resolve(bootstrapRoot, "organization/interrupted.json");
   const move = { environment: "qa", source: "config.qa.json", destination: "env/qa/config.qa.json" };
@@ -298,7 +298,7 @@ test("environment restoration reconciles a journaled move interrupted after rena
 });
 
 test("environment organization fails closed before moving files when a destination collides", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-environment-collision-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-environment-collision-"));
   const bootstrapRoot = resolve(directory, ".bootstrap");
   await mkdir(resolve(bootstrapRoot, "env/test"), { recursive: true });
   await writeFile(resolve(bootstrapRoot, "plan.test.log"), "legacy\n");
@@ -454,8 +454,8 @@ test("managed Redis chart patch publishes not-ready Sentinel service endpoints i
   assert.equal(patchSentinelService(patched), patched);
   assert.throws(() => patchSentinelService("kind: Service\n"), /does not match the reviewed patch contract/);
   assert.notEqual(
-    managedRedisChartOutput(".bootstrap/lifecycle", "prod-realtime", "oci://registry.example.test/a/redis", "23.1.1"),
-    managedRedisChartOutput(".bootstrap/lifecycle", "prod-realtime", "oci://registry.example.test/b/redis", "23.1.1"),
+    managedRedisChartOutput(".bootstrap/lifecycle", "prod-realtimestack", "oci://registry.example.test/a/redis", "23.1.1"),
+    managedRedisChartOutput(".bootstrap/lifecycle", "prod-realtimestack", "oci://registry.example.test/b/redis", "23.1.1"),
   );
 });
 
@@ -473,7 +473,7 @@ test("managed Redis accepts top-level repositories and renders existing pull Sec
 
 test("managed Redis chart preparation terminates a command that exceeds its lifecycle deadline", { timeout: 10_000 }, async t => {
   if (process.platform === "win32") return t.skip("POSIX process termination is exercised on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-chart-timeout-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-chart-timeout-"));
   const helm = resolve(directory, "helm");
   await writeFile(helm, "#!/usr/bin/env bash\ntrap 'exit 143' TERM\nsleep 30\n", { mode: 0o755 });
   const started = Date.now();
@@ -504,14 +504,14 @@ test("managed Redis rejects duplicate administrator and ACL Secret keys", () => 
 });
 
 test("WebSocket routing rejects case-insensitive collisions with fallback and fixed endpoints", () => {
-  for (const path of ["/realtime/tickets", "/REALTIME/TICKETS", "/health/startup", "/health/live", "/health/ready", "/metrics"]) {
+  for (const path of ["/realtimestack/tickets", "/REALTIMESTACK/TICKETS", "/health/startup", "/health/live", "/health/ready", "/metrics"]) {
     const config = configuration();
     config.ingress.webSocketPath = path;
     assert(validateConfiguration(config).some(item => item.path === "$.ingress.webSocketPath"), path);
   }
   const collision = configuration();
-  collision.ingress.webSocketPath = "/Realtime/Ws";
-  collision.ingress.httpFallbackPath = "/realtime/ws";
+  collision.ingress.webSocketPath = "/RealtimeStack/Ws";
+  collision.ingress.httpFallbackPath = "/realtimestack/ws";
   assert(validateConfiguration(collision).some(item => item.path === "$.ingress.httpFallbackPath"));
   const custom = configuration();
   custom.ingress.webSocketPath = "/health/custom";
@@ -519,22 +519,22 @@ test("WebSocket routing rejects case-insensitive collisions with fallback and fi
 });
 
 test("credential and Certificate helpers derive target identities from configuration", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-helper-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-helper-config-"));
   const config = structuredClone(haExample);
   config.kubernetes.context = "prod-context";
   const configPath = resolve(directory, "config.json");
   const adminPasswordPath = resolve(directory, "admin.txt");
-  const realtimePasswordPath = resolve(directory, "realtime.txt");
+  const realtimestackPasswordPath = resolve(directory, "realtimestack.txt");
   await writeFile(configPath, stableJson(config));
   await writeFile(adminPasswordPath, "0123456789abcdef0123456789abcdef");
-  await writeFile(realtimePasswordPath, "fedcba9876543210fedcba9876543210");
+  await writeFile(realtimestackPasswordPath, "fedcba9876543210fedcba9876543210");
   try {
-    const secret = await resolveRedisSecretOptions({ config: configPath, adminPasswordFile: "admin", realtimePasswordFile: "realtime", kubectl: "kubectl" });
+    const secret = await resolveRedisSecretOptions({ config: configPath, adminPasswordFile: "admin", realtimestackPasswordFile: "realtimestack", kubectl: "kubectl" });
     assert.equal(secret.context, config.kubernetes.context);
     assert.equal(secret.namespace, config.kubernetes.namespace);
     assert.equal(secret.secretName, config.redis.credentialsSecret);
     assert.equal(secret.adminKey, config.redis.adminCredentialKey);
-    assert.equal(secret.realtimeKey, config.redis.credentialKey);
+    assert.equal(secret.realtimestackKey, config.redis.credentialKey);
     const certificateOptions = parseCertificateArguments(["--config", configPath, "--issuer-name", "letsencrypt-prod", "--dry-run"]);
     const certificate = buildCertificateManifest(config, certificateOptions);
     assert.equal(certificate.metadata.name, config.ingress.certificateName);
@@ -542,9 +542,9 @@ test("credential and Certificate helpers derive target identities from configura
     assert.equal(certificate.spec.secretName, config.ingress.tlsSecretName);
     assert.deepEqual(certificate.spec.dnsNames, [config.ingress.host]);
     assert.equal(certificate.spec.issuerRef.name, "letsencrypt-prod");
-    const secretDryRun = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-redis-secret.mjs"), "--config", configPath, "--admin-password-file", adminPasswordPath, "--realtime-password-file", realtimePasswordPath, "--dry-run"], { cwd: repositoryRoot });
+    const secretDryRun = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-redis-secret.mjs"), "--config", configPath, "--admin-password-file", adminPasswordPath, "--realtimestack-password-file", realtimestackPasswordPath, "--dry-run"], { cwd: repositoryRoot });
     assert.deepEqual(JSON.parse(secretDryRun.stdout), { changed: false, dryRun: true, namespace: config.kubernetes.namespace, secretName: config.redis.credentialsSecret });
-    const certificateDryRun = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-certificate.mjs"), "--config", configPath, "--issuer-name", "letsencrypt-prod", "--dry-run"], { cwd: repositoryRoot });
+    const certificateDryRun = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-certificate.mjs"), "--config", configPath, "--issuer-name", "letsencrypt-prod", "--dry-run"], { cwd: repositoryRoot });
     assert.equal(JSON.parse(certificateDryRun.stdout).tlsSecret, config.ingress.tlsSecretName);
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -561,10 +561,10 @@ test("topology changes are classified and require backup and confirmation", () =
 });
 
 test("offline plans preserve topology state from the legacy lifecycle root", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-state-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-legacy-state-"));
   const config = configuration("ha");
   config.naming.suffix = "legacy-state";
-  const release = "dev-realtime-legacy-state";
+  const release = "dev-realtimestack-legacy-state";
   const configPath = resolve(directory, "config.json");
   const targetRoot = generatedTarget(config, release);
   const legacyTargetRoot = resolve(repositoryRoot, ".bootstrap/lifecycle", release);
@@ -572,7 +572,7 @@ test("offline plans preserve topology state from the legacy lifecycle root", asy
   await mkdir(legacyTargetRoot, { recursive: true });
   await writeFile(resolve(legacyTargetRoot, "state.json"), stableJson({ contractVersion: 1, topology: "non-ha" }));
   try {
-    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", configPath, "--dry-run"], { cwd: repositoryRoot });
+    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--config", configPath, "--dry-run"], { cwd: repositoryRoot });
     const plan = normalizedPlan(result.stdout);
     assert.equal(plan.topology.previous, "non-ha");
     assert.equal(plan.topology.conversion, true);
@@ -619,7 +619,7 @@ test("OTLP URL credentials and path traversal segments fail closed", () => {
   config.observability.otlpEndpoint = "https://user:token@collector.example.test";
   config.observability.otlpEgressCidrs = ["192.0.2.50/32"];
   config.paths.backupDirectory = ".backups/../scripts";
-  config.ingress.allowedOrigins = ["https://user:token@realtime.example.test"];
+  config.ingress.allowedOrigins = ["https://user:token@realtimestack.example.test"];
   const errors = validateConfiguration(config);
   assert(errors.some(item => item.path === "$.observability.otlpEndpoint" && item.message.includes("userinfo")));
   assert(errors.some(item => item.path === "$.paths.backupDirectory"));
@@ -653,7 +653,7 @@ test("MetalLB monitoring accepts IPv4 and IPv6 addresses and rejects malformed v
 
 test("rollback plans use the exact captured gateway and managed Redis values", () => {
   const desired = buildPlan("rollback", configuration(), profiles["non-ha"]);
-  const gateway = { image: { repository: "registry.example.test/realtime", tag: "captured" }, topology: "non-ha" };
+  const gateway = { image: { repository: "registry.example.test/realtimestack", tag: "captured" }, topology: "non-ha" };
   const redis = { architecture: "standalone", master: { persistence: { size: "32Gi" } } };
   const captured = useCapturedDeploymentValues(desired, gateway, redis, "oci://registry.example.test/charts/redis", "22.3.4");
   assert.deepEqual(captured.values, gateway);
@@ -688,12 +688,12 @@ test("ingress mode selects explicit traffic sources and optional certificate mon
   config.networking.directIngressNamespaceLabels = {};
   assert(validateConfiguration(config).some(item => item.path === "$.networking.directIngressNamespaceLabels"));
   config.ingress.enabled = true;
-  config.ingress.certificateName = "realtime-certificate";
+  config.ingress.certificateName = "realtimestack-certificate";
   assert.deepEqual(validateConfiguration(config), []);
   const ingress = renderValues(config, profiles["non-ha"]);
   assert.deepEqual(ingress.networkPolicy.ingressNamespaceSelector.matchLabels, { "kubernetes.io/metadata.name": config.networking.traefikNamespace });
   assert.deepEqual(ingress.networkPolicy.ingressPodSelector.matchLabels, config.networking.traefikPodLabels);
-  assert.equal(ingress.observability.platformMetrics.certificateName, "realtime-certificate");
+  assert.equal(ingress.observability.platformMetrics.certificateName, "realtimestack-certificate");
   assert(bootstrapSchema.allOf.some(rule => rule.if?.properties?.ingress?.properties?.enabled?.const === true
     && rule.then?.properties?.ingress?.properties?.host?.minLength === 1
     && rule.then?.properties?.ingress?.properties?.tlsSecretName?.minLength === 1));
@@ -701,8 +701,8 @@ test("ingress mode selects explicit traffic sources and optional certificate mon
 
 test("Secret references accept Kubernetes DNS subdomain names", () => {
   const config = configuration();
-  config.redis.credentialsSecret = "realtime.redis-auth";
-  config.ingress.tlsSecretName = "realtime.gateway-tls";
+  config.redis.credentialsSecret = "realtimestack.redis-auth";
+  config.ingress.tlsSecretName = "realtimestack.gateway-tls";
   config.observability.otlpHeadersSecret = "telemetry.headers";
   config.observability.otlpEndpoint = "https://collector.example.test";
   config.observability.otlpEgressCidrs = ["192.0.2.50/32"];
@@ -711,7 +711,7 @@ test("Secret references accept Kubernetes DNS subdomain names", () => {
 
 test("Certificate and storage-class references accept DNS subdomains and reject path syntax", () => {
   const config = configuration();
-  config.ingress.certificateName = "realtime.gateway-cert";
+  config.ingress.certificateName = "realtimestack.gateway-cert";
   config.kubernetes.storageClass = "storage.fast";
   assert.deepEqual(validateConfiguration(config), []);
   config.kubernetes.storageClass = "fast/storage";
@@ -739,7 +739,7 @@ test("proxy trust, observability labels, and resource units fail closed", () => 
 });
 
 test("requested shell profile must match the versioned configuration", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-test-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-test-"));
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(configuration()));
   await assert.rejects(loadContract(repositoryRoot, path, "ha"), /does not match configuration topology/);
@@ -753,18 +753,18 @@ test("unsafe configured output paths are rejected before any mutation", () => {
 
 test("installed Helm topology remains authoritative when local state is absent", async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-conversion-"));
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-conversion-tools-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-conversion-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-conversion-tools-"));
   await fakeClusterTools(fakeBin);
   const config = configuration("ha");
   config.naming.suffix = "contract-test";
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(config));
-  const targetRoot = generatedTarget(config, "dev-realtime-contract-test");
+  const targetRoot = generatedTarget(config, "dev-realtimestack-contract-test");
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", path], {
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", path], {
       cwd: repositoryRoot,
-      env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: "dev-realtime-contract-test", BOOTSTRAP_FAKE_REDIS_RELEASE: "dev-realtime-contract-test-redis", BOOTSTRAP_FAKE_TOPOLOGY: "non-ha" },
+      env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: "dev-realtimestack-contract-test", BOOTSTRAP_FAKE_REDIS_RELEASE: "dev-realtimestack-contract-test-redis", BOOTSTRAP_FAKE_TOPOLOGY: "non-ha" },
     }), error => error.code === 3 && /confirm-topology-change/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
@@ -773,17 +773,17 @@ test("installed Helm topology remains authoritative when local state is absent",
 
 test("an orphaned managed Redis release still requires topology-conversion confirmation", async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-orphan-redis-"));
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-orphan-redis-tools-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-orphan-redis-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-orphan-redis-tools-"));
   await fakeClusterTools(fakeBin);
   const config = configuration("ha");
   config.naming.suffix = "orphan-redis";
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-orphan-redis";
+  const release = "dev-realtimestack-orphan-redis";
   const targetRoot = generatedTarget(config, release);
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_ORPHAN_REDIS: "1", BOOTSTRAP_FAKE_REDIS_ARCHITECTURE: "standalone" } }), error => error.code === 3 && /confirm-topology-change/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_ORPHAN_REDIS: "1", BOOTSTRAP_FAKE_REDIS_ARCHITECTURE: "standalone" } }), error => error.code === 3 && /confirm-topology-change/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(directory, { recursive: true, force: true });
@@ -791,7 +791,7 @@ test("an orphaned managed Redis release still requires topology-conversion confi
 });
 
 test("an existing target lock produces the safety-stop exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-lock-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-lock-"));
   const config = configuration();
   config.naming.suffix = "lock-test";
   config.paths.environmentDirectory = ".bootstrap/alternate-lock-output";
@@ -799,12 +799,12 @@ test("an existing target lock produces the safety-stop exit code", async () => {
   config.paths.logDirectory = ".bootstrap/alternate-lock-output/logs";
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(config));
-  const targetRoot = resolve(repositoryRoot, ".bootstrap/alternate-lock-output/lifecycle/dev-realtime-lock-test");
-  const lockPath = resolve(repositoryRoot, ".bootstrap/locks/dev-realtime-lock-test");
+  const targetRoot = resolve(repositoryRoot, ".bootstrap/alternate-lock-output/lifecycle/dev-realtimestack-lock-test");
+  const lockPath = resolve(repositoryRoot, ".bootstrap/locks/dev-realtimestack-lock-test");
   await mkdir(lockPath, { recursive: true });
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "install", "--config", path], { cwd: repositoryRoot }), error => error.code === 3 && /target lock/.test(error.stdout));
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", path], { cwd: repositoryRoot }), error => error.code === 3 && /target lock/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "install", "--config", path], { cwd: repositoryRoot }), error => error.code === 3 && /target lock/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--config", path], { cwd: repositoryRoot }), error => error.code === 3 && /target lock/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(lockPath, { recursive: true, force: true });
@@ -835,8 +835,8 @@ if [[ -n "\${BOOTSTRAP_FAKE_DELAY:-}" ]]; then sleep "$BOOTSTRAP_FAKE_DELAY"; fi
 if [[ "\${BOOTSTRAP_FAKE_FAIL:-}" == 'redis' && "$*" == *"$BOOTSTRAP_FAKE_REDIS_RELEASE"* && "\${1:-}" == 'upgrade' ]]; then printf '%s\\n' 'injected Redis failure' >&2; exit 9; fi
 case "\${1:-}" in
   version) printf '%s\\n' 'v4.2.0+fake' ;;
-  list) if [[ "\${BOOTSTRAP_FAKE_EMPTY_RELEASES:-}" == '1' ]]; then printf '[]\\n'; elif [[ "\${BOOTSTRAP_FAKE_ORPHAN_REDIS:-}" == '1' ]]; then printf '[{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; else printf '[{"name":"%s","chart":"realtime-gateway-0.1.0","revision":"3"},{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_RELEASE" "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; fi ;;
-  get) if [[ "\${BOOTSTRAP_FAKE_INLINE_SECRET:-}" == '1' ]]; then printf '{"auth":{"password":"exposed"}}\\n'; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" && "\${BOOTSTRAP_FAKE_LEGACY_REDIS:-}" == '1' ]]; then printf '{"fullnameOverride":"%s","architecture":"%s","auth":{"existingSecret":"%s","existingSecretPasswordKey":"redis-password","acl":{"userSecret":"%s","users":[{"username":"realtime","keys":"~%s:*","channels":"&%s:*"}]}}}\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtime-redis}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtime:dev}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtime:dev}"; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" ]]; then printf '{"architecture":"%s","commonAnnotations":{"realtime.example/managed-chart":"%s"}}\\n' "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART:-oci://registry-1.docker.io/bitnamicharts/redis}"; else printf '{"topology":"%s","redis":{"mode":"%s"}}\\n' "\${BOOTSTRAP_FAKE_TOPOLOGY:-non-ha}" "\${BOOTSTRAP_FAKE_REDIS_MODE:-managed}"; fi ;;
+  list) if [[ "\${BOOTSTRAP_FAKE_EMPTY_RELEASES:-}" == '1' ]]; then printf '[]\\n'; elif [[ "\${BOOTSTRAP_FAKE_ORPHAN_REDIS:-}" == '1' ]]; then printf '[{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; else printf '[{"name":"%s","chart":"realtimestack-gateway-0.1.0","revision":"3"},{"name":"%s","chart":"redis-%s","revision":"4"}]\\n' "$BOOTSTRAP_FAKE_RELEASE" "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_CHART_VERSION:-23.1.1}"; fi ;;
+  get) if [[ "\${BOOTSTRAP_FAKE_INLINE_SECRET:-}" == '1' ]]; then printf '{"auth":{"password":"exposed"}}\\n'; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" && "\${BOOTSTRAP_FAKE_LEGACY_REDIS:-}" == '1' ]]; then printf '{"fullnameOverride":"%s","architecture":"%s","auth":{"existingSecret":"%s","existingSecretPasswordKey":"redis-password","acl":{"userSecret":"%s","users":[{"username":"realtimestack","keys":"~%s:*","channels":"&%s:*"}]}}}\\n' "$BOOTSTRAP_FAKE_REDIS_RELEASE" "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtimestack-redis}" "\${BOOTSTRAP_FAKE_REDIS_SECRET:-dev-realtimestack-redis}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtimestack:dev}" "\${BOOTSTRAP_FAKE_REDIS_PREFIX:-realtimestack:dev}"; elif [[ "\${3:-}" == "$BOOTSTRAP_FAKE_REDIS_RELEASE" ]]; then printf '{"architecture":"%s","commonAnnotations":{"realtimestack.example/managed-chart":"%s"}}\\n' "\${BOOTSTRAP_FAKE_REDIS_ARCHITECTURE:-standalone}" "\${BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART:-oci://registry-1.docker.io/bitnamicharts/redis}"; else printf '{"topology":"%s","redis":{"mode":"%s"}}\\n' "\${BOOTSTRAP_FAKE_TOPOLOGY:-non-ha}" "\${BOOTSTRAP_FAKE_REDIS_MODE:-managed}"; fi ;;
   pull) version=''; destination=''; shift; while (( $# )); do case "$1" in --version) version="$2"; shift 2;; --destination) destination="$2"; shift 2;; *) shift;; esac; done; cp '${shellChartFixture}' "$destination/redis-$version.tgz" ;;
   lint|template|upgrade|uninstall|rollback) printf '%s\\n' 'ok' ;;
   *) printf 'unsupported fake helm command: %s\\n' "\${1:-}" >&2; exit 64 ;;
@@ -856,7 +856,7 @@ elif [[ "$joined" == *'get nodes --output json'* ]]; then
     printf '%s\\n' '{"items":[{"metadata":{"labels":{"topology.kubernetes.io/zone":"zone-a"}},"spec":{},"status":{"conditions":[{"type":"Ready","status":"True"}]}},{"metadata":{"labels":{"topology.kubernetes.io/zone":"zone-b"}},"spec":{},"status":{"conditions":[{"type":"Ready","status":"True"}]}},{"metadata":{"labels":{"topology.kubernetes.io/zone":"zone-c"}},"spec":{},"status":{"conditions":[{"type":"Ready","status":"True"}]}}]}'
   fi
 elif [[ "$joined" == *'get secret'* && "\${BOOTSTRAP_FAKE_FAIL:-}" == 'credential' ]]; then exit 0
-elif [[ "$joined" == *'go-template='* ]]; then printf '%s\\n' 'realtime' 'redis-password'
+elif [[ "$joined" == *'go-template='* ]]; then printf '%s\\n' 'realtimestack' 'redis-password'
 elif [[ "$joined" == *'auth can-i'* && "\${BOOTSTRAP_FAKE_FAIL:-}" == 'permission' ]]; then printf '%s\\n' 'no'
 elif [[ "$joined" == *'auth can-i'* ]]; then printf '%s\\n' 'yes'
 elif [[ "$joined" == *'rollout status'* && "\${BOOTSTRAP_FAKE_FAIL:-}" == 'rollout' ]]; then printf '%s\\n' 'injected rollout failure' >&2; exit 9
@@ -883,33 +883,33 @@ async function seedManagedChartCache(fakeBin, release, chart = "oci://registry-1
 
 function shellInvocation(shell, action, configPath, extra = []) {
   return shell === "bash"
-    ? ["bash", [resolve(repositoryRoot, "scripts/realtime-bootstrap.sh"), action, "--config", configPath, ...extra]]
-    : ["pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/Realtime-Bootstrap.ps1"), "-Action", action, "-Config", configPath, ...extra.map(value => value === "--force" ? "-Force" : value === "--confirm-topology-change" ? "-ConfirmTopologyChange" : value)]];
+    ? ["bash", [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.sh"), action, "--config", configPath, ...extra]]
+    : ["pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/RealtimeStack-Bootstrap.ps1"), "-Action", action, "-Config", configPath, ...extra.map(value => value === "--force" ? "-Force" : value === "--confirm-topology-change" ? "-ConfirmTopologyChange" : value)]];
 }
 
 test("Bash and PowerShell wrappers emit the same normalized plan and exit semantics", async t => {
   if (process.platform === "win32") return t.skip("cross-shell parity runs on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-parity-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-parity-"));
   const path = resolve(directory, "config.json");
   await writeFile(path, stableJson(configuration("ha")));
-  const bash = await execute("bash", [resolve(repositoryRoot, "scripts/realtime-bootstrap.sh"), "plan", "--config", path, "--profile", "ha"], { cwd: repositoryRoot });
-  const powershell = await execute("pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/Realtime-Bootstrap.ps1"), "-Action", "plan", "-Config", path, "-Profile", "ha"], { cwd: repositoryRoot });
+  const bash = await execute("bash", [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.sh"), "plan", "--config", path, "--profile", "ha"], { cwd: repositoryRoot });
+  const powershell = await execute("pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/RealtimeStack-Bootstrap.ps1"), "-Action", "plan", "-Config", path, "-Profile", "ha"], { cwd: repositoryRoot });
   assert.deepEqual(normalizedPlan(bash.stdout), normalizedPlan(powershell.stdout));
 });
 
 test("both entry points reject an invalid topology with a non-zero exit", async t => {
   if (process.platform === "win32") return t.skip("cross-shell parity runs on the Ubuntu CI image");
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failure-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-failure-"));
   const path = resolve(directory, "config.json");
   const invalid = configuration("ha");
   invalid.kubernetes.failureDomains = 1;
   await writeFile(path, stableJson(invalid));
-  await assert.rejects(execute("bash", [resolve(repositoryRoot, "scripts/realtime-bootstrap.sh"), "plan", "--config", path], { cwd: repositoryRoot }));
-  await assert.rejects(execute("pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/Realtime-Bootstrap.ps1"), "-Action", "plan", "-Config", path], { cwd: repositoryRoot }));
+  await assert.rejects(execute("bash", [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.sh"), "plan", "--config", path], { cwd: repositoryRoot }));
+  await assert.rejects(execute("pwsh", ["-NoProfile", "-File", resolve(repositoryRoot, "scripts/RealtimeStack-Bootstrap.ps1"), "-Action", "plan", "-Config", path], { cwd: repositoryRoot }));
 });
 
 test("PowerShell delegates unsupported actions to the shared exit-code contract", async () => {
-  const script = resolve(repositoryRoot, "scripts/Realtime-Bootstrap.ps1");
+  const script = resolve(repositoryRoot, "scripts/RealtimeStack-Bootstrap.ps1");
   await assert.rejects(execute("pwsh", ["-NoProfile", "-File", script, "-Action", "unsupported-action"], { cwd: repositoryRoot }), error => error.code === 2 && /Action must be one of/.test(error.stdout));
   await assert.rejects(execute("pwsh", ["-NoProfile", "-File", script, "-Action", "plan", "-Topology", "invalid"], { cwd: repositoryRoot }), error => error.code === 2);
   await assert.rejects(execute("pwsh", ["-NoProfile", "-File", script, "-Action", "plan", "-NameSuffix", "INVALID"], { cwd: repositoryRoot }), error => error.code === 2);
@@ -919,7 +919,7 @@ test("PowerShell delegates unsupported actions to the shared exit-code contract"
 test("both shells execute the complete lifecycle for both profiles with identical safety semantics", { timeout: 60_000 }, async t => {
   if (process.platform === "win32") return t.skip("the hermetic Bash/PowerShell lifecycle matrix runs on Ubuntu CI");
   if (process.env.BOOTSTRAP_SKIP_LIFECYCLE === "1") return t.skip("the lifecycle runs in its dedicated CI matrix");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-tools-"));
   await fakeClusterTools(fakeBin);
   const shells = process.env.BOOTSTRAP_TEST_SHELLS?.split(",").filter(Boolean) ?? ["bash", "pwsh"];
   for (const shell of shells) {
@@ -928,11 +928,11 @@ test("both shells execute the complete lifecycle for both profiles with identica
       const suffix = `${shell}-${topology}`;
       const config = configuration(topology);
       config.naming.suffix = suffix;
-      const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-lifecycle-"));
+      const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-lifecycle-"));
       const configPath = resolve(directory, "config.json");
       const operationLog = resolve(directory, "operations.log");
       await writeFile(configPath, stableJson(config));
-      const release = `dev-realtime-${suffix}`;
+      const release = `dev-realtimestack-${suffix}`;
       const environment = {
         ...process.env,
         PATH: `${fakeBin}:${process.env.PATH}`,
@@ -979,39 +979,39 @@ test("both shells execute the complete lifecycle for both profiles with identica
 
 test("managed Redis uses the hardened ACL values and rollback removes releases absent from backup", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-fresh";
   const configPath = resolve(directory, "config.json");
   const operationLog = resolve(directory, "helm.log");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-rollback-fresh";
+  const release = "dev-realtimestack-rollback-fresh";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   const environment = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_TOPOLOGY: "non-ha", BOOTSTRAP_FAKE_LOG: operationLog };
   try {
-    const installed = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "install", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_EMPTY_RELEASES: "1" } });
+    const installed = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "install", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_EMPTY_RELEASES: "1" } });
     const backup = installed.stdout.trim().split(/\r?\n/).map(line => {
       try { return JSON.parse(line); } catch { return undefined; }
     }).find(event => event?.message === "Pre-change state captured.")?.backup;
     assert(backup);
     const redisValues = JSON.parse(await readFile(resolve(targetRoot, "redis-values.json"), "utf8"));
-    assert.equal(redisValues.auth.acl.userSecret, "dev-realtime-redis");
+    assert.equal(redisValues.auth.acl.userSecret, "dev-realtimestack-redis");
     assert.equal(redisValues.auth.existingSecretPasswordKey, "redis-password");
-    assert.equal(redisValues.auth.acl.users[0].username, "realtime");
+    assert.equal(redisValues.auth.acl.users[0].username, "realtimestack");
     assert.equal(redisValues.master.pdb.create, false);
     assert.equal(redisValues.replica.pdb.create, false);
     await seedManagedChartCache(fakeBin, release, "oci://mirror.example.test/charts/redis");
-    const updated = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART: "oci://mirror.example.test/charts/redis" } });
+    const updated = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_INSTALLED_REDIS_CHART: "oci://mirror.example.test/charts/redis" } });
     const updateBackup = updated.stdout.trim().split(/\r?\n/).map(line => { try { return JSON.parse(line); } catch { return undefined; } }).find(event => event?.message === "Pre-change state captured.")?.backup;
     const capturedPlan = JSON.parse(await readFile(resolve(updateBackup, "plan.json"), "utf8"));
     assert.equal(capturedPlan.managedRedis.chart, "oci://mirror.example.test/charts/redis");
     assert.match(capturedPlan.managedRedis.chartArchiveSha256, /^sha256:[a-f0-9]{64}$/);
     assert.equal(await fileExists(resolve(updateBackup, capturedPlan.managedRedis.chartArchiveFile)), true);
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "recover", "--config", configPath], { cwd: repositoryRoot, env: environment });
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "recover", "--config", configPath], { cwd: repositoryRoot, env: environment });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment });
     const log = await readFile(operationLog, "utf8");
     assert.match(log, /--values cluster\/redis\/managed-values.yaml/);
     assert.match(log, new RegExp(`--values .*${release}[/\\\\]redis-values\\.json`));
@@ -1023,7 +1023,7 @@ test("managed Redis uses the hardened ACL values and rollback removes releases a
     assert.match(log, new RegExp(`uninstall ${release}-redis .*--ignore-not-found`));
     assert.match(log, new RegExp(`uninstall ${release} .*--ignore-not-found`));
     assert.doesNotMatch(log, /get namespace metallb-system/);
-    assert.match(log, /list --namespace dev-realtime --filter .* --max 2 --output json/);
+    assert.match(log, /list --namespace dev-realtimestack --filter .* --max 2 --output json/);
     assert.match(log, /--history-max 0/);
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
@@ -1033,15 +1033,15 @@ test("managed Redis uses the hardened ACL values and rollback removes releases a
 
 test("update adopts only a verified legacy managed Redis release", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-redis-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-legacy-redis-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-legacy-redis-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-legacy-redis-config-"));
   const config = configuration();
   config.naming.suffix = "legacy-adopt";
   config.redis.managedChart = "oci://mirror.example.test/charts/redis";
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-legacy-adopt";
+  const release = "dev-realtimestack-legacy-adopt";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   const legacyGeneratedRoot = resolve(repositoryRoot, ".bootstrap/lifecycle");
@@ -1050,14 +1050,14 @@ test("update adopts only a verified legacy managed Redis release", { timeout: 30
   try {
     await seedManagedChartCache(fakeBin, release, config.redis.legacyManagedChart, "23.1.1", true, config, legacyGeneratedRoot);
     await seedManagedChartCache(fakeBin, release, config.redis.managedChart, "23.1.1", false, config, legacyGeneratedRoot);
-    const updated = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: environment });
+    const updated = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: environment });
     const backup = updated.stdout.trim().split(/\r?\n/).map(line => { try { return JSON.parse(line); } catch { return undefined; } }).find(event => event?.message === "Pre-change state captured.")?.backup;
     assert(backup);
     assert.equal(JSON.parse(await readFile(resolve(backup, "plan.json"), "utf8")).managedRedis.chart, config.redis.legacyManagedChart);
     assert.match(updated.stdout, /Adopting verified legacy managed Redis release metadata/);
     assert.match(updated.stdout, /Reusing verified legacy managed Redis chart cache/);
     assert.doesNotMatch(await readFile(operationLog, "utf8"), /^pull /m);
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_REDIS_PREFIX: "wrong:prefix" } }), error => error.code === 1 && /does not match the verified legacy deployment contract/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_REDIS_PREFIX: "wrong:prefix" } }), error => error.code === 1 && /does not match the verified legacy deployment contract/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(targetBackups, { recursive: true, force: true });
@@ -1068,9 +1068,9 @@ test("update adopts only a verified legacy managed Redis release", { timeout: 30
 
 test("standalone backup captures installed managed Redis while desired configuration is external", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-drift-backup-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-drift-backup-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-drift-backup-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-drift-backup-config-"));
   const config = configuration();
   config.naming.suffix = "drift-backup";
   config.redis.mode = "external";
@@ -1078,12 +1078,12 @@ test("standalone backup captures installed managed Redis while desired configura
   config.redis.externalEgressCidrs = ["192.0.2.50/32"];
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-drift-backup";
+  const release = "dev-realtimestack-drift-backup";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   try {
     await seedManagedChartCache(fakeBin, release);
-    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis` } });
+    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis` } });
     const backup = result.stdout.trim().split(/\r?\n/).map(line => { try { return JSON.parse(line); } catch { return undefined; } }).find(event => event?.message === "Pre-change state captured.")?.backup;
     const captured = JSON.parse(await readFile(resolve(backup, "plan.json"), "utf8"));
     assert.equal(captured.managedRedis.chart, "oci://registry-1.docker.io/bitnamicharts/redis");
@@ -1099,19 +1099,19 @@ test("standalone backup captures installed managed Redis while desired configura
 
 test("backup refuses to mint managed Redis chart provenance from a registry download", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-provenance-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-provenance-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-provenance-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-provenance-config-"));
   const config = configuration();
   config.naming.suffix = "missing-provenance";
   const configPath = resolve(directory, "config.json");
   const operationLog = resolve(directory, "operations.log");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-missing-provenance";
+  const release = "dev-realtimestack-missing-provenance";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], {
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], {
       cwd: repositoryRoot,
       env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_LOG: operationLog },
     }), error => error.code === 1 && /chart provenance is unavailable/.test(error.stdout));
@@ -1128,18 +1128,18 @@ test("backup refuses to mint managed Redis chart provenance from a registry down
 
 test("backup rejects and removes snapshots containing inline Helm credentials", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-secret-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-secret-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-secret-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-secret-config-"));
   const config = configuration();
   config.naming.suffix = "secret-backup";
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-secret-backup";
+  const release = "dev-realtimestack-secret-backup";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_INLINE_SECRET: "1" } }), error => error.code === 1 && /Refusing to persist inline credential values/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_INLINE_SECRET: "1" } }), error => error.code === 1 && /Refusing to persist inline credential values/.test(error.stdout));
     const entries = await fileExists(targetBackups) ? await (await import("node:fs/promises")).readdir(targetBackups) : [];
     assert.equal(entries.length, 0);
   } finally {
@@ -1150,9 +1150,9 @@ test("backup rejects and removes snapshots containing inline Helm credentials", 
 
 test("Redis mode changes require an explicit migration", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-mode-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-mode-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-mode-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-mode-config-"));
   const config = configuration();
   config.naming.suffix = "mode-change";
   config.redis.mode = "external";
@@ -1160,34 +1160,34 @@ test("Redis mode changes require an explicit migration", { timeout: 30_000 }, as
   config.redis.externalEgressCidrs = ["192.0.2.50/32"];
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-mode-change";
+  const release = "dev-realtimestack-mode-change";
   const targetRoot = generatedTarget(config, release);
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_REDIS_MODE: "managed" } }), error => error.code === 3 && /requires an explicit migration/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "update", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_REDIS_MODE: "managed" } }), error => error.code === 3 && /requires an explicit migration/.test(error.stdout));
   } finally { await rm(targetRoot, { recursive: true, force: true }); }
 });
 
 test("rollback classifies conversion from installed topology to backup topology", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-topology-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-topology-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-topology-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-topology-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-topology";
   config.kubernetes.failureDomains = 3;
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-rollback-topology";
+  const release = "dev-realtimestack-rollback-topology";
   const targetRoot = generatedTarget(config, release);
   const legacyBackupRoot = resolve(repositoryRoot, ".backups/bootstrap", release);
   const backup = resolve(legacyBackupRoot, "fixture");
   await mkdir(backup, { recursive: true });
-  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "kind-example", namespace: "dev-realtime", release }, managedRedis: { chart: config.redis.managedChart } }));
-  await writeFile(resolve(backup, "releases.json"), stableJson([{ name: release, chart: "realtime-gateway-0.1.0", revision: "3" }, { name: `${release}-redis`, chart: "redis-23.1.1", revision: "4" }]));
+  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "kind-example", namespace: "dev-realtimestack", release }, managedRedis: { chart: config.redis.managedChart } }));
+  await writeFile(resolve(backup, "releases.json"), stableJson([{ name: release, chart: "realtimestack-gateway-0.1.0", revision: "3" }, { name: `${release}-redis`, chart: "redis-23.1.1", revision: "4" }]));
   await writeFile(resolve(backup, `${release}.values.json`), stableJson({ topology: "ha", replicaCount: 3, redis: { mode: "managed" } }));
   await writeFile(resolve(backup, `${release}-redis.values.json`), stableJson({ architecture: "replication" }));
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_TOPOLOGY: "non-ha" } }), error => error.code === 3 && /confirm-topology-change/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_TOPOLOGY: "non-ha" } }), error => error.code === 3 && /confirm-topology-change/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(legacyBackupRoot, { recursive: true, force: true });
@@ -1195,18 +1195,18 @@ test("rollback classifies conversion from installed topology to backup topology"
 });
 
 test("rollback rejects a cross-target backup with the safety-stop exit code", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-cross-target-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-cross-target-config-"));
   const config = configuration();
   config.naming.suffix = "cross-target";
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-cross-target";
+  const release = "dev-realtimestack-cross-target";
   const targetRoot = generatedTarget(config, release);
   const backup = resolve(backupTarget(config, release), "mismatch");
   await mkdir(backup, { recursive: true });
-  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "another-context", namespace: "dev-realtime", release } }));
+  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "another-context", namespace: "dev-realtimestack", release } }));
   try {
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot }), error => error.code === 3 && /Backup target does not match/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot }), error => error.code === 3 && /Backup target does not match/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(backupTarget(config, release), { recursive: true, force: true });
@@ -1216,13 +1216,13 @@ test("rollback rejects a cross-target backup with the safety-stop exit code", as
 
 test("rollback rejects cross-mode restoration and restores the captured Redis chart version", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-version-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-version-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-rollback-version-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-rollback-version-config-"));
   const config = configuration();
   config.naming.suffix = "rollback-version";
   const configPath = resolve(directory, "config.json");
-  const release = "dev-realtime-rollback-version";
+  const release = "dev-realtimestack-rollback-version";
   const targetRoot = generatedTarget(config, release);
   const backup = resolve(backupTarget(config, release), "fixture");
   const operationLog = resolve(directory, "operations.log");
@@ -1230,14 +1230,14 @@ test("rollback rejects cross-mode restoration and restores the captured Redis ch
   await mkdir(backup, { recursive: true });
   const chartArchiveFile = "redis-22.3.4.tgz";
   await writeFile(resolve(backup, chartArchiveFile), await readFile(resolve(fakeBin, "redis-fixture.tgz")));
-  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "kind-example", namespace: "dev-realtime", release }, managedRedis: { chart: "oci://mirror.example.test/charts/redis", chartArchiveFile, chartArchiveSha256: managedChartFixtureSha256 } }));
-  await writeFile(resolve(backup, "releases.json"), stableJson([{ name: release, chart: "realtime-gateway-0.1.0", revision: "3" }, { name: `${release}-redis`, chart: "redis-22.3.4", revision: "4" }]));
-  const capturedGatewayValues = { replicaCount: 1, redis: { mode: "managed", credentialsSecret: { name: "captured.redis-auth", passwordKey: "realtime" }, managedAdminPasswordKey: "redis-password" } };
+  await writeFile(resolve(backup, "plan.json"), stableJson({ target: { context: "kind-example", namespace: "dev-realtimestack", release }, managedRedis: { chart: "oci://mirror.example.test/charts/redis", chartArchiveFile, chartArchiveSha256: managedChartFixtureSha256 } }));
+  await writeFile(resolve(backup, "releases.json"), stableJson([{ name: release, chart: "realtimestack-gateway-0.1.0", revision: "3" }, { name: `${release}-redis`, chart: "redis-22.3.4", revision: "4" }]));
+  const capturedGatewayValues = { replicaCount: 1, redis: { mode: "managed", credentialsSecret: { name: "captured.redis-auth", passwordKey: "realtimestack" }, managedAdminPasswordKey: "redis-password" } };
   await writeFile(resolve(backup, `${release}.values.json`), stableJson(capturedGatewayValues));
   await writeFile(resolve(backup, `${release}-redis.values.json`), stableJson({ architecture: "standalone" }));
   const environment = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_LOG: operationLog };
   try {
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment });
     const operations = await readFile(operationLog, "utf8");
     assert.match(operations, new RegExp(`upgrade --install ${release}-redis .*redis-22\\.3\\.4-[a-f0-9]{12}[/\\\\]redis`));
     assert.doesNotMatch(operations, new RegExp(`upgrade --install ${release}-redis .*--version`));
@@ -1253,7 +1253,7 @@ test("rollback rejects cross-mode restoration and restores the captured Redis ch
     assert.equal(rollbackPlan.managedRedis.chartVersion, "22.3.4");
     assert.equal(rollbackState.valuesSha256, rollbackPlan.valuesSha256);
     await writeFile(resolve(backup, `${release}.values.json`), stableJson({ topology: "non-ha", redis: { mode: "external" } }));
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment }), error => error.code === 3 && /Redis mode rollback conversion.*explicit migration/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "rollback", "--config", configPath, "--backup", backup], { cwd: repositoryRoot, env: environment }), error => error.code === 3 && /Redis mode rollback conversion.*explicit migration/.test(error.stdout));
   } finally {
     await rm(targetRoot, { recursive: true, force: true });
     await rm(backupTarget(config, release), { recursive: true, force: true });
@@ -1262,14 +1262,14 @@ test("rollback rejects cross-mode restoration and restores the captured Redis ch
 
 test("teardown skips desired-state prerequisites while retaining target and deletion checks", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-teardown-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-teardown-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-teardown-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-teardown-config-"));
   const config = configuration();
   config.naming.suffix = "teardown-preflight";
   const configPath = resolve(directory, "config.json");
   const operationLog = resolve(directory, "operations.log");
-  const release = "dev-realtime-teardown-preflight";
+  const release = "dev-realtimestack-teardown-preflight";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   await writeFile(configPath, stableJson(config));
@@ -1277,8 +1277,8 @@ test("teardown skips desired-state prerequisites while retaining target and dele
   await writeFile(resolve(targetRoot, "state.json"), stableJson({ contractVersion: 1, topology: "non-ha" }));
   await seedManagedChartCache(fakeBin, release);
   try {
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_FAIL: "credential", BOOTSTRAP_FAKE_LOG: operationLog } });
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "teardown", "--config", configPath, "--force"], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_FAIL: "credential", BOOTSTRAP_FAKE_LOG: operationLog } });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_FAIL: "credential", BOOTSTRAP_FAKE_LOG: operationLog } });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "teardown", "--config", configPath, "--force"], { cwd: repositoryRoot, env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis`, BOOTSTRAP_FAKE_FAIL: "credential", BOOTSTRAP_FAKE_LOG: operationLog } });
     const log = await readFile(operationLog, "utf8");
     assert.match(log, /kubectl auth can-i delete deployments\.apps/);
     assert.doesNotMatch(log, /kubectl get (?:secret|storageclass|nodes)/);
@@ -1292,9 +1292,9 @@ test("teardown skips desired-state prerequisites while retaining target and dele
 
 test("external Redis skips unused storage and HA excludes untolerated nodes", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-capacity-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-capacity-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-capacity-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-capacity-config-"));
   const operationLog = resolve(directory, "operations.log");
   const external = configuration();
   external.naming.suffix = "external-storage";
@@ -1303,9 +1303,9 @@ test("external Redis skips unused storage and HA excludes untolerated nodes", { 
   external.redis.externalEgressCidrs = ["192.0.2.50/32"];
   const externalPath = resolve(directory, "external.json");
   await writeFile(externalPath, stableJson(external));
-  const environment = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: "dev-realtime-external-storage", BOOTSTRAP_FAKE_REDIS_RELEASE: "dev-realtime-external-storage-redis", BOOTSTRAP_FAKE_LOG: operationLog, BOOTSTRAP_FAKE_WARN: "1" };
+  const environment = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: "dev-realtimestack-external-storage", BOOTSTRAP_FAKE_REDIS_RELEASE: "dev-realtimestack-external-storage-redis", BOOTSTRAP_FAKE_LOG: operationLog, BOOTSTRAP_FAKE_WARN: "1" };
   try {
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "validate", "--config", externalPath], { cwd: repositoryRoot, env: environment });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "validate", "--config", externalPath], { cwd: repositoryRoot, env: environment });
     const externalLog = await readFile(operationLog, "utf8");
     assert.doesNotMatch(externalLog, /kubectl get storageclass/);
     assert.doesNotMatch(externalLog, /kubectl get (?:namespace traefik|service traefik)/);
@@ -1314,24 +1314,24 @@ test("external Redis skips unused storage and HA excludes untolerated nodes", { 
     ha.naming.suffix = "tainted-capacity";
     const haPath = resolve(directory, "ha.json");
     await writeFile(haPath, stableJson(ha));
-    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "validate", "--config", haPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_TAINTED_NODES: "1" } }), error => error.code === 1 && /ready schedulable nodes/.test(error.stdout));
+    await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "validate", "--config", haPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_TAINTED_NODES: "1" } }), error => error.code === 1 && /ready schedulable nodes/.test(error.stdout));
   } finally {
-    await rm(generatedTarget(configuration("ha"), "dev-realtime-external-storage"), { recursive: true, force: true });
-    await rm(generatedTarget(configuration("ha"), "dev-realtime-tainted-capacity"), { recursive: true, force: true });
+    await rm(generatedTarget(configuration("ha"), "dev-realtimestack-external-storage"), { recursive: true, force: true });
+    await rm(generatedTarget(configuration("ha"), "dev-realtimestack-tainted-capacity"), { recursive: true, force: true });
     await rm(directory, { recursive: true, force: true });
   }
 });
 
 test("stale lifecycle locks are recovered with bounded owner metadata", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("hermetic cluster tools run on the Ubuntu CI image");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-stale-lock-tools-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-stale-lock-tools-"));
   await fakeClusterTools(fakeBin);
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-stale-lock-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-stale-lock-config-"));
   const config = configuration();
   config.naming.suffix = "stale-lock";
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(config));
-  const release = "dev-realtime-stale-lock";
+  const release = "dev-realtimestack-stale-lock";
   const targetRoot = generatedTarget(config, release);
   const targetBackups = backupTarget(config, release);
   const lockPath = resolve(repositoryRoot, `.bootstrap/locks/${release}`);
@@ -1340,11 +1340,11 @@ test("stale lifecycle locks are recovered with bounded owner metadata", { timeou
   await writeFile(resolve(lockPath, "owner.json"), stableJson({ createdAt: new Date().toISOString(), hostname: hostname(), pid: 999999 }));
   try {
     const environment = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BOOTSTRAP_FAKE_RELEASE: release, BOOTSTRAP_FAKE_REDIS_RELEASE: `${release}-redis` };
-    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: environment });
+    await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: environment });
     assert.equal(await fileExists(lockPath), false);
     await mkdir(lockPath, { recursive: true });
     await writeFile(resolve(lockPath, "owner.json"), stableJson({ createdAt: new Date().toISOString(), hostname: hostname(), pid: 999999 }));
-    const contenders = await Promise.allSettled(Array.from({ length: 6 }, () => execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_DELAY: "0.2" } })));
+    const contenders = await Promise.allSettled(Array.from({ length: 6 }, () => execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "backup", "--config", configPath], { cwd: repositoryRoot, env: { ...environment, BOOTSTRAP_FAKE_DELAY: "0.2" } })));
     assert.equal(contenders.filter(result => result.status === "fulfilled").length, 1);
     assert(contenders.filter(result => result.status === "rejected").every(result => result.reason.code === 3 && /target lock/.test(result.reason.stdout)));
     assert.equal(await fileExists(lockPath), false);
@@ -1356,22 +1356,22 @@ test("stale lifecycle locks are recovered with bounded owner metadata", { timeou
 });
 
 test("configured and overridden name suffixes isolate Redis and update the shared naming manifest", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-name-config-"));
+  const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-name-config-"));
   const configPath = resolve(directory, "config.json");
   await writeFile(configPath, stableJson(configuration()));
   const namingPath = resolve(repositoryRoot, ".bootstrap/naming.json");
   const priorNaming = await fileExists(namingPath) ? await readFile(namingPath, "utf8") : undefined;
   try {
-    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", configPath, "--name-suffix", "contract-name"], { cwd: repositoryRoot });
-    assert.equal(normalizedPlan(result.stdout).target.application, "realtime-contract-name");
+    const result = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--config", configPath, "--name-suffix", "contract-name"], { cwd: repositoryRoot });
+    assert.equal(normalizedPlan(result.stdout).target.application, "realtimestack-contract-name");
     const naming = JSON.parse(await readFile(namingPath, "utf8"));
-    assert.equal(naming.application, "realtime-contract-name");
-    assert.equal(naming.redisInstancePrefix, "realtime:dev:contract-name");
+    assert.equal(naming.application, "realtimestack-contract-name");
+    assert.equal(naming.redisInstancePrefix, "realtimestack:dev:contract-name");
     const configured = configuration();
     configured.naming.suffix = "configured-name";
     await writeFile(configPath, stableJson(configured));
-    const configuredResult = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--config", configPath], { cwd: repositoryRoot });
-    assert.equal(normalizedPlan(configuredResult.stdout).values.redis.instancePrefix, "realtime:dev:configured-name");
+    const configuredResult = await execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--config", configPath], { cwd: repositoryRoot });
+    assert.equal(normalizedPlan(configuredResult.stdout).values.redis.instancePrefix, "realtimestack:dev:configured-name");
     assert.equal(await fileExists(resolve(repositoryRoot, ".bootstrap/locks/naming-manifest")), false);
   } finally {
     if (priorNaming === undefined) await rm(namingPath, { force: true });
@@ -1381,19 +1381,19 @@ test("configured and overridden name suffixes isolate Redis and update the share
 
 test("cluster, permission, credential, Redis, and rollout failures stop safely and release the lock", { timeout: 30_000 }, async t => {
   if (process.platform === "win32") return t.skip("the hermetic failure matrix runs on Ubuntu CI");
-  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failures-"));
+  const fakeBin = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-failures-"));
   await fakeClusterTools(fakeBin);
   for (const failure of ["cluster", "permission", "credential", "redis", "rollout"]) {
     const config = configuration();
     config.naming.suffix = `failure-${failure}`;
-    const directory = await mkdtemp(resolve(tmpdir(), "realtime-bootstrap-failure-config-"));
+    const directory = await mkdtemp(resolve(tmpdir(), "realtimestack-bootstrap-failure-config-"));
     const configPath = resolve(directory, "config.json");
     await writeFile(configPath, stableJson(config));
-    const release = `dev-realtime-failure-${failure}`;
+    const release = `dev-realtimestack-failure-${failure}`;
     const targetRoot = generatedTarget(config, release);
     const targetBackups = backupTarget(config, release);
     try {
-      await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "install", "--config", configPath], {
+      await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "install", "--config", configPath], {
         cwd: repositoryRoot,
         env: {
           ...process.env,
@@ -1413,7 +1413,7 @@ test("cluster, permission, credential, Redis, and rollout failures stop safely a
 });
 
 test("timeouts are bounded by the versioned CLI contract", async () => {
-  await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtime-bootstrap.mjs"), "plan", "--timeout-seconds", "59"], { cwd: repositoryRoot }), error => error.code === 2 && /60 through 1800/.test(error.stdout));
+  await assert.rejects(execute(process.execPath, [resolve(repositoryRoot, "scripts/realtimestack-bootstrap.mjs"), "plan", "--timeout-seconds", "59"], { cwd: repositoryRoot }), error => error.code === 2 && /60 through 1800/.test(error.stdout));
 });
 
 
@@ -1458,4 +1458,17 @@ test("persistence rejects invalid provider, credentials, egress and SQLite HA be
   delete legacy.persistence;
   assert.deepEqual(validateConfiguration(legacy), []);
   assert.equal(renderValues(legacy, profiles["non-ha"]).persistence, undefined);
+});
+
+
+test("RealtimeStack suffix limits preserve the longest environment and managed Redis release", () => {
+  for (const topology of ["ha", "non-ha"]) {
+    const config = configuration(topology);
+    config.environment.name = "abcdefghij";
+    config.naming.suffix = "a".repeat(22);
+    assert.deepEqual(validateConfiguration(config), []);
+    assert.equal(releaseNames(config).redisRelease.length, 53);
+    config.naming.suffix += "a";
+    assert.ok(validateConfiguration(config).some(error => error.path === "$.naming.suffix"));
+  }
 });

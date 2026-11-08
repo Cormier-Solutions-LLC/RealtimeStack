@@ -14,7 +14,7 @@ use Throwable;
 
 final class ReferenceController
 {
-    private const string COOKIE = 'realtime_session';
+    private const string COOKIE = 'realtimestack_session';
 
     private const int MAXIMUM_BODY_BYTES = 65536;
 
@@ -143,7 +143,7 @@ final class ReferenceController
                     'X-Forwarded-Proto' => $this->config->publicScheme(),
                 ]))
                 ->withBody($request->getContent(), $request->header('Content-Type', 'application/json'))
-                ->post($this->config->gatewayUrl.(in_array('/'.$request->path(), ['/realtime/persistence/records/read', '/realtime/persistence/records/ack', '/realtime/persistence/tasks/read'], true) ? '/'.$request->path() : '/realtime/tickets'));
+                ->post($this->config->gatewayUrl.(in_array('/'.$request->path(), ['/realtimestack/persistence/records/read', '/realtimestack/persistence/records/ack', '/realtimestack/persistence/tasks/read'], true) ? '/'.$request->path() : '/realtimestack/tickets'));
             $stream = $upstream->toPsrResponse()->getBody();
             $body = '';
             while (! $stream->eof()) {

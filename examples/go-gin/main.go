@@ -28,8 +28,8 @@ import (
 	redislogging "github.com/redis/go-redis/v9/logging"
 )
 
-const sessionCookie = "realtime_session"
-const realtimeProtocol = "realtime.v1"
+const sessionCookie = "realtimestack_session"
+const realtimestackProtocol = "realtimestack.v1"
 const maximumBodyBytes = 64 << 10
 
 var sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{16,256}$`)
@@ -183,7 +183,7 @@ func (a *App) router() http.Handler {
 	router.GET("/failover.html", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "failover.html")) })
 	router.GET("/app.css", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "app.css")) })
 	router.GET("/app.js", func(c *gin.Context) { c.File(filepath.Join(a.config.SharedAssetRoot, "app.js")) })
-	router.GET("/_content/Realtime.Browser/:asset", func(c *gin.Context) {
+	router.GET("/_content/RealtimeStack.Browser/:asset", func(c *gin.Context) {
 		asset := c.Param("asset")
 		if !sdkAssetPattern.MatchString(asset) {
 			c.AbortWithStatus(http.StatusNotFound)
@@ -196,12 +196,12 @@ func (a *App) router() http.Handler {
 	router.POST("/api/login", a.login)
 	router.GET("/api/session", a.session)
 	router.POST("/api/logout", a.logout)
-	router.POST("/realtime/tickets", a.ticket)
-	router.Any("/realtime/http/*path", a.httpFallback)
-	router.POST("/realtime/persistence/records/read", a.httpFallback)
-	router.POST("/realtime/persistence/records/ack", a.httpFallback)
-	router.POST("/realtime/persistence/tasks/read", a.httpFallback)
-	router.GET("/realtime/ws", a.websocket)
+	router.POST("/realtimestack/tickets", a.ticket)
+	router.Any("/realtimestack/http/*path", a.httpFallback)
+	router.POST("/realtimestack/persistence/records/read", a.httpFallback)
+	router.POST("/realtimestack/persistence/records/ack", a.httpFallback)
+	router.POST("/realtimestack/persistence/tasks/read", a.httpFallback)
+	router.GET("/realtimestack/ws", a.websocket)
 	return router
 }
 
@@ -395,7 +395,7 @@ func (a *App) ticket(c *gin.Context) {
 		return
 	}
 	limitBody(c)
-	target := a.config.GatewayURL.ResolveReference(&url.URL{Path: "/realtime/tickets"})
+	target := a.config.GatewayURL.ResolveReference(&url.URL{Path: "/realtimestack/tickets"})
 	request, err := http.NewRequestWithContext(c.Request.Context(), http.MethodPost, target.String(), c.Request.Body)
 	if err != nil {
 		unavailable(c)
@@ -448,11 +448,11 @@ func (a *App) websocket(c *gin.Context) {
 	if !a.requireOrigin(c) {
 		return
 	}
-	browser, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{Subprotocols: []string{realtimeProtocol}, InsecureSkipVerify: true})
+	browser, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{Subprotocols: []string{realtimestackProtocol}, InsecureSkipVerify: true})
 	if err != nil {
 		return
 	}
-	if browser.Subprotocol() != realtimeProtocol {
+	if browser.Subprotocol() != realtimestackProtocol {
 		_ = browser.Close(websocket.StatusPolicyViolation, "required subprotocol")
 		return
 	}
@@ -469,7 +469,7 @@ func (a *App) websocket(c *gin.Context) {
 	} else {
 		target.Scheme = "ws"
 	}
-	target.Path = "/realtime/ws"
+	target.Path = "/realtimestack/ws"
 	target.RawQuery = c.Request.URL.RawQuery
 	headers := http.Header{
 		"Origin":            []string{a.config.PublicOrigin},
@@ -482,7 +482,7 @@ func (a *App) websocket(c *gin.Context) {
 	outbound.Timeout = 0
 	outbound.Transport = hostTransport{a.client.Transport, c.Request.Host}
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
-	gateway, _, err := websocket.Dial(ctx, target.String(), &websocket.DialOptions{Subprotocols: []string{realtimeProtocol}, HTTPHeader: headers, HTTPClient: &outbound})
+	gateway, _, err := websocket.Dial(ctx, target.String(), &websocket.DialOptions{Subprotocols: []string{realtimestackProtocol}, HTTPHeader: headers, HTTPClient: &outbound})
 	cancel()
 	if err != nil {
 		_ = browser.Close(websocket.StatusTryAgainLater, "dependency unavailable")

@@ -1,4 +1,4 @@
-name: realtime-full-circle
+name: realtimestack-full-circle
 
 services:
   redis:
