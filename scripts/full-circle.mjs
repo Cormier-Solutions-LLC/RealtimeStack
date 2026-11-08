@@ -238,9 +238,11 @@ try {
     await command(executable("npm"), ["run", "build", "--silent"], { cwd: resolve(repositoryRoot, "sdk/typescript") });
     const projectConfig = await writeProjectReferenceConfig();
     await command("dotnet", ["restore", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--locked-mode", "--configfile", projectConfig], { env: upstreamPackageEnvironment });
-    // The application selects net10.0 from the multi-targeted contracts project. Build that package
-    // explicitly so its netstandard2.0 asset also exists before the clean local-feed pack.
-    await command("dotnet", ["build", "src/RealtimeStack.Contracts/RealtimeStack.Contracts.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    // Build every framework of the multi-targeted dependencies before packing with --no-build.
+    // Building the application alone selects only their net10.0 assets.
+    for (const project of ["RealtimeStack.Contracts", "RealtimeStack.Plugins.Logging"]) {
+      await command("dotnet", ["build", `src/${project}/${project}.csproj`, "--configuration", "Release", "--no-restore", "--no-incremental"]);
+    }
     await command("dotnet", ["build", "examples/full-circle/RealtimeStack.Example.FullCircle.csproj", "--configuration", "Release", "--no-restore", "--no-incremental"]);
     await buildPackageConsumer();
   } else if (action === "validate") {
