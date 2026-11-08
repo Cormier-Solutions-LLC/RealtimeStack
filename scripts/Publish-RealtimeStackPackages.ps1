@@ -5,7 +5,7 @@
     Never rebuilds package bytes. NuGet is the default promotion surface; npm publication is opt-in and requires
     explicit registry approval. WhatIf validates and prints the promotion plan without requiring credentials.
 .NOTES
-    Version: 2.0.2-beta
+    Version: 2.0.3-beta
     Project: RealtimeStack
     Requires: PowerShell 7, .NET SDK 10, Node.js/npm only when PublishNpm is selected.
     Inputs: CandidatePath, configured registry endpoints, and credential-bearing environment variables. CI supplies
@@ -206,10 +206,6 @@ try {
         'RealtimeStack.Plugins.Bugsnag'
         'RealtimeStack.Plugins.Serilog'
         'RealtimeStack.Plugins.Log4net'
-        'RealtimeStack.Plugins.Logging'
-        'RealtimeStack.Plugins.Bugsnag'
-        'RealtimeStack.Plugins.Serilog'
-        'RealtimeStack.Plugins.Log4net'
         'RealtimeStack.AspNetCore'
         'RealtimeStack.HttpFallback'
         'RealtimeStack.Browser'
@@ -226,6 +222,9 @@ try {
         'RealtimeStack.Plugins.Snowflake'
         'RealtimeStack.Config'
     )
+    if (@($nugetPackageIdsInDependencyOrder | Sort-Object -Unique).Count -ne $nugetPackageIdsInDependencyOrder.Count) {
+        throw 'INVALID release plan: each NuGet package ID must occur exactly once.'
+    }
     $nugetPackages = @(
         foreach ($packageId in $nugetPackageIdsInDependencyOrder) {
             $matches = @($discoveredNuGetPackages | Where-Object {

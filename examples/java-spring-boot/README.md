@@ -66,7 +66,7 @@ This is a teaching adapter, not a production identity system or general-purpose 
 | Maven wrapper | 3.9.12 | Pinned build tool with distribution checksum |
 | Spring Boot | 4.1.1 | Supported example framework |
 | Spring Cloud / Gateway | BOM 2025.1.3 / BOM-managed Gateway | Resolve the effective dependency tree for the exact Gateway version |
-| RealtimeStack browser SDK | 2.0.2-beta | Canonical generated shared JavaScript |
+| RealtimeStack browser SDK | 2.0.3-beta | Canonical generated shared JavaScript |
 | RealtimeStack protocol | 1.0 | Supported wire protocol |
 | RealtimeStack gateway | 0.1.x repository build | Required external dependency |
 | Redis | 7.4 | Tested session service |

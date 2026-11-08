@@ -10,7 +10,7 @@
   },
   "image": {
     "repository": "registry.example.com/realtimestack/realtimestack-gateway",
-    "tag": "2.0.2-beta",
+    "tag": "2.0.3-beta",
     "digest": "",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""

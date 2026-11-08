@@ -202,7 +202,20 @@ jobs:
           PACKAGE_REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
           PACKAGE_PROJECT_URL: ${{ github.server_url }}/${{ github.repository }}
           PACKAGE_RELEASE_NOTES_URL: ${{ github.server_url }}/${{ github.repository }}/releases
-        run: ./scripts/Build-RealtimeStackPackages.ps1
+        run: |
+          ./scripts/Build-RealtimeStackPackages.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $candidate = Get-ChildItem artifacts/packages -Directory | Select-Object -First 1
+          if ($null -eq $candidate) { throw 'Built package candidate was not found.' }
+          $plan = & ./scripts/Publish-RealtimeStackPackages.ps1 -CandidatePath $candidate.FullName -NuGetSource $env:NUGET_UPSTREAM_SOURCE -WhatIf
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $plan | Write-Output
+          $uploads = @($plan | ForEach-Object {
+            if ($_ -match 'WHATIF: would publish (\S+\.s?nupkg) to') { $Matches[1] }
+          })
+          if ($uploads.Count -ne 44 -or @($uploads | Sort-Object -Unique).Count -ne 44) {
+            throw 'Promotion rehearsal must plan exactly 22 unique NuGet packages and 22 symbol uploads.'
+          }
       - name: Upload package build diagnostics
         if: always()
         uses: actions/upload-artifact@v7

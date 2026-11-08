@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.3-beta - 2026-11-07
+
+- See the coordinated release notes in `docs/release-notes/2.0.3-beta.md`.
+
 ## 2.0.2-beta - 2026-11-07
 
 - See the coordinated release notes in `docs/release-notes/2.0.2-beta.md`.

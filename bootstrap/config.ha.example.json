@@ -10,7 +10,7 @@
   },
   "image": {
     "repository": "ghcr.io/example-org/realtimestack-gateway",
-    "tag": "2.0.2-beta",
+    "tag": "2.0.3-beta",
     "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "pullPolicy": "IfNotPresent",
     "pullSecretName": ""
