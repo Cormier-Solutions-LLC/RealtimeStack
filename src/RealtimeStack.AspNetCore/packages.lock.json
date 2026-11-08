@@ -93,7 +93,7 @@
       "realtimestack.redis": {
         "type": "Project",
         "dependencies": {
-          "RealtimeStack.Contracts": "[2.0.0-beta, )",
+          "RealtimeStack.Contracts": "[2.0.1-beta, )",
           "StackExchange.Redis": "[3.1.31, )"
         }
       }

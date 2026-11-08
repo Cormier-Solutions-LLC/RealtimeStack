@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$DotNetClientVersion = '2.0.0-beta',
+    [string]$DotNetClientVersion = '2.0.1-beta',
     [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
-    [string]$ContractsVersion = '2.0.0-beta',
+    [string]$ContractsVersion = '2.0.1-beta',
     [string]$PackageSource,
     [string]$UpstreamPackageSource = $env:NUGET_UPSTREAM_SOURCE
 )

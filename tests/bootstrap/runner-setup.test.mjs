@@ -40,10 +40,14 @@ test('optional CI registry logins use configured credentials', () => {
   assert.ok(logins.length > 0);
   assert.equal(logins.length, [...workflow.matchAll(/if: vars\.CI_IMAGE_REGISTRY != ''/g)].length);
   for (const [, inputs] of logins) {
-    assert.match(inputs, /username: \$\{\{ secrets\.HARBOR_USERNAME \}\}/);
-    assert.match(inputs, /password: \$\{\{ secrets\.HARBOR_PASSWORD \}\}/);
+    assert.match(inputs, /username: \$\{\{ vars\.CI_IMAGE_REGISTRY == 'docker\.io' && secrets\.DOCKERHUB_USERNAME \|\| secrets\.HARBOR_USERNAME \}\}/);
+    assert.match(inputs, /password: \$\{\{ vars\.CI_IMAGE_REGISTRY == 'docker\.io' && secrets\.DOCKERHUB_TOKEN \|\| secrets\.HARBOR_PASSWORD \}\}/);
   }
   assert.doesNotMatch(workflow, /secrets\.HARBOR_TOKEN/);
+  assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
+  const packages = readFileSync(new URL('.github/workflows/packages.yml', root), 'utf8');
+  assert.match(packages, /image: \$\{\{ vars\.CI_REDIS_IMAGE \}\}/);
+  assert.match(packages, /credentials:[\s\S]*startsWith\(vars\.CI_REDIS_IMAGE, 'docker\.io\/'\) && secrets\.DOCKERHUB_USERNAME[\s\S]*startsWith\(vars\.CI_REDIS_IMAGE, 'docker\.io\/'\) && secrets\.DOCKERHUB_TOKEN/);
 });
 
 test('all Linux jobs use shared setup after checkout and before dependent steps', () => {

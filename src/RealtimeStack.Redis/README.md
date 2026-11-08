@@ -6,7 +6,7 @@ Install this package directly only when composing the lower-level Redis services
 
 Redis endpoints, credentials, key prefixes, and deployment identities are configuration and are never embedded in this package.
 
-The package targets `net10.0`, depends on StackExchange.Redis `3.1.31`, and carries a compatible Contracts dependency (default range `[2.0.0-beta,2.1.0)`). Install from your configured NuGet source with `dotnet add package RealtimeStack.Redis --version 2.0.0-beta`. It does not provision Redis, configure ACLs, register gateway endpoints or supply a login flow.
+The package targets `net10.0`, depends on StackExchange.Redis `3.1.31`, and carries a compatible Contracts dependency (default range `[2.0.1-beta,2.1.0)`). Install from your configured NuGet source with `dotnet add package RealtimeStack.Redis --version 2.0.1-beta`. It does not provision Redis, configure ACLs, register gateway endpoints or supply a login flow.
 
 ## Composition and configuration
 
@@ -48,6 +48,6 @@ Repository coverage is in `tests/RealtimeStack.IntegrationTests/RedisMessagingTe
 
 ## Upgrade to RealtimeStack 2
 
-Update `RealtimeStack.Redis` to `2.0.0-beta` together with the other RealtimeStack packages. NuGet restores the matching transitive dependencies automatically; it does not rewrite application code or configuration. Replace `Realtime.Redis` (or its older `Cormier.`-prefixed equivalent) namespace/assembly references with `RealtimeStack.Redis`. Rename product-prefixed types and registration calls from `Realtime...` to `RealtimeStack...`, then rebuild.
+Update `RealtimeStack.Redis` to `2.0.1-beta` together with the other RealtimeStack packages. NuGet restores the matching transitive dependencies automatically; it does not rewrite application code or configuration. Replace `Realtime.Redis` (or its older `Cormier.`-prefixed equivalent) namespace/assembly references with `RealtimeStack.Redis`. Rename product-prefixed types and registration calls from `Realtime...` to `RealtimeStack...`, then rebuild.
 
 Browser consumers must use `@realtimestack/client`, `RealtimeStack.RealtimeStackClient`, and `/_content/RealtimeStack.Browser/realtimestack*.js`. Update configuration sections, routes, cookie options, metrics, scripts, and deployment selectors as described in the [complete upgrade guide](https://github.com/Cormier-Solutions-LLC/RealtimeStack/blob/main/docs/upgrading-to-realtimestack-2.md). Preserve configured Redis prefixes when existing state must remain reachable. Previously published package files are immutable; upgrading installs the new revision.
