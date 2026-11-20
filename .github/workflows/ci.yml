@@ -1303,7 +1303,6 @@ jobs:
           provenance: false
           sbom: false
           cache-from: type=gha,scope=swift-vapor,timeout=2m
-          cache-to: type=gha,scope=swift-vapor,mode=max,timeout=5m,ignore-error=true
       - name: Scan the Vapor reference container
         if: matrix.part == 'container'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
@@ -1322,6 +1321,24 @@ jobs:
         env:
           SWIFT_VAPOR_IMAGE: realtimestack-swift-vapor:${{ github.sha }}
         run: npx playwright test --config playwright.swift-vapor.config.mjs
+      - name: Export optional Vapor build cache after validation
+        if: matrix.part == 'container'
+        timeout-minutes: 6
+        continue-on-error: true
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          DOCKER_BUILD_SUMMARY: 'false'
+          DOCKER_BUILD_RECORD_UPLOAD: 'false'
+        with:
+          context: .
+          file: examples/swift-vapor/Dockerfile
+          build-args: |
+            SWIFT_BUILD_IMAGE=${{ env.CI_SWIFT_IMAGE }}
+            GO_IMAGE=${{ env.CI_GO_CADDY_IMAGE }}
+            SWIFT_RUNTIME_IMAGE=${{ env.CI_SWIFT_RUNTIME_IMAGE }}
+          provenance: false
+          sbom: false
+          cache-to: type=gha,scope=swift-vapor,mode=max,timeout=5m,ignore-error=true
       - name: Upload Vapor failure evidence
         if: failure()
         uses: actions/upload-artifact@v7
