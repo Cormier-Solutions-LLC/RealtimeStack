@@ -17,15 +17,29 @@ public sealed class RedisTicketStore : ITicketStore, IDisposable
     public bool IsConnected => connection.IsConnected;
     public RedisTicketStore(IConfiguration configuration, IDataProtectionProvider protection)
     {
-        var file = configuration["Sso:RedisConnectionFile"];
-        var redis = !string.IsNullOrWhiteSpace(file) ? File.ReadAllText(file).Trim() : configuration["Sso:RedisConnection"];
         prefix = configuration["Sso:RedisPrefix"] ?? "";
-        if (string.IsNullOrWhiteSpace(redis) || prefix.Length is < 8 or > 100 || !prefix.EndsWith(':') || prefix.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is ':' or '-' or '_')))
+        if (prefix.Length is < 8 or > 100 || !prefix.EndsWith(':') || prefix.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is ':' or '-' or '_')))
             throw new InvalidOperationException("SSO requires a Secret-backed Redis connection and an isolated Sso:RedisPrefix ending in a colon.");
-        var options = ConfigurationOptions.Parse(redis); options.AbortOnConnectFail = false; options.ConnectTimeout = 5000; options.AsyncTimeout = 5000;
-        connection = ConnectionMultiplexer.Connect(options);
+        connection = ConnectionMultiplexer.Connect(ReadRedisOptions(configuration));
         protector = protection.CreateProtector("RealtimeStack.Accounts.Tickets.v1");
         registrationProtector = protection.CreateProtector("RealtimeStack.Accounts.Registration.v1");
+    }
+    public static ConfigurationOptions ReadRedisOptions(IConfiguration configuration)
+    {
+        var connection = ReadSecret(configuration, "Sso:RedisConnection") ?? configuration["Sso:RedisEndpoint"];
+        if (string.IsNullOrWhiteSpace(connection)) throw new InvalidOperationException("SSO requires a configured Redis endpoint or Secret-backed connection.");
+        var options = ConfigurationOptions.Parse(connection);
+        if (configuration["Sso:RedisUser"] is { } user) options.User = user;
+        if (ReadSecret(configuration, "Sso:RedisPassword") is { } password) options.Password = password;
+        if (configuration["Sso:RedisSentinelServiceName"] is { } service) options.ServiceName = service;
+        if (ReadSecret(configuration, "Sso:RedisSentinelPassword") is { } sentinelPassword) options.SentinelPassword = sentinelPassword;
+        options.AbortOnConnectFail = false; options.ConnectTimeout = 5000; options.AsyncTimeout = 5000;
+        return options;
+    }
+    private static string? ReadSecret(IConfiguration configuration, string key)
+    {
+        var file = configuration[key + "File"];
+        return !string.IsNullOrWhiteSpace(file) ? File.ReadAllText(file).Trim() : configuration[key];
     }
     private string Key(string value) => prefix + "ticket:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     public async Task<string> StoreAsync(AuthenticationTicket ticket)

@@ -11,6 +11,12 @@ namespace RealtimeStack.Accounts.Tests;
 
 public class AccountsTests
 {
+    [Fact] public void RedisCredentialsRemainSeparateFromEndpointAndSupportSentinel()
+    {
+        var values = new Dictionary<string, string?> { ["Sso:RedisEndpoint"] = "redis.example.org:26379,sentinelUser=default", ["Sso:RedisUser"] = "accounts", ["Sso:RedisPassword"] = "fixture,with;separators", ["Sso:RedisSentinelPassword"] = "sentinel-fixture", ["Sso:RedisSentinelServiceName"] = "test-master" };
+        var options = RedisTicketStore.ReadRedisOptions(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+        Assert.Equal("accounts", options.User); Assert.Equal("fixture,with;separators", options.Password); Assert.Equal("sentinel-fixture", options.SentinelPassword); Assert.Equal("test-master", options.ServiceName); Assert.Equal("default", options.SentinelUser);
+    }
     private const string Issuer = "https://access.example.org";
     [Fact] public void IdentityRejectsEmailOnlyBindingAndUnsignedOwnerTypes()
     {

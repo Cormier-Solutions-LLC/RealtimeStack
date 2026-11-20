@@ -19,6 +19,11 @@ namespace or client secret is compiled into the service.
 | `Sso__ClientSecretFile` | Mounted Secret file, at least 32 characters |
 | `Sso__PublicUrl` | Exact public HTTPS RealtimeStack origin |
 | `Sso__RedisConnectionFile` | Mounted Redis connection Secret file |
+| `Sso__RedisEndpoint` | Alternative endpoint(s), with credentials supplied separately |
+| `Sso__RedisUser` | Existing scoped Redis ACL user |
+| `Sso__RedisPasswordFile` | Mounted existing Redis password Secret key |
+| `Sso__RedisSentinelServiceName` | Optional existing Sentinel service name |
+| `Sso__RedisSentinelPasswordFile` | Mounted existing Sentinel password Secret key |
 | `Sso__RedisPrefix` | Dedicated prefix ending in `:`, for example `realtime-accounts:production:` |
 | `Sso__DataProtectionPath` | Persistent, shared key directory writable by UID 1654 |
 | `Sso__ApplicationName` | Stable shared key discriminator; defaults to `RealtimeStack.Accounts` |
