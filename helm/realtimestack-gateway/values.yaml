@@ -9,6 +9,9 @@ licensing:
     name: ""
     key: license-key
   egressCidrs: []
+  egressNamespaceSelector: {}
+  egressPodSelector: {}
+  egressTargetPorts: [443]
 
 # Availability is an explicit deployment choice; it is never inferred from replica count.
 topology: ha

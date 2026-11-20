@@ -34,6 +34,17 @@ spec:
         - { protocol: TCP, port: {{ .Values.service.targetPort }} }
     {{- end }}
   egress:
+    {{- if and .Values.licensing.serverUrl (not (empty .Values.licensing.egressNamespaceSelector)) }}
+    - to:
+        - namespaceSelector: {{ toYaml .Values.licensing.egressNamespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.licensing.egressPodSelector) }}
+          podSelector: {{ toYaml .Values.licensing.egressPodSelector | nindent 12 }}
+          {{- end }}
+      ports:
+        {{- range .Values.licensing.egressTargetPorts }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- end }}
     {{- if and .Values.licensing.serverUrl (not (empty .Values.licensing.egressCidrs)) }}
     - to:
         {{- range .Values.licensing.egressCidrs }}

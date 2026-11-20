@@ -31,3 +31,8 @@ transition rather than requiring every connected client to upgrade at once.
 Set `licensing.egressCidrs` to the configured licensing endpoint addresses when
 using the chart's NetworkPolicy. No production network identity is baked into
 the shared application code or chart defaults.
+
+When HTTPS ingress is translated to an ingress-controller pod port, configure
+`licensing.egressNamespaceSelector`, `licensing.egressPodSelector` and
+`licensing.egressTargetPorts` for that controller. Keep this exception scoped to
+the licensing ingress instead of allowing unrestricted private-network egress.
