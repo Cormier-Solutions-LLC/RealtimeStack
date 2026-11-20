@@ -94,6 +94,39 @@ Bearer service token and exposes only installation registration and zero cost.
 Restrict it to namespace-local network access; do not publish it through ingress.
 Registration status does not change gateway resource or connection limits.
 
+## Require registration for a managed installation
+
+The gateway defaults to `Registration__Required=false`. After the operator has
+signed in and registered the installation on `/account`, an explicit cutover can
+enable these gateway settings:
+
+| Environment variable | Value |
+| --- | --- |
+| `Registration__Required` | `true` only for installations requiring registration |
+| `Registration__StatusUrl` | Exact internal accounts `/internal/product/registration` endpoint |
+| `Registration__InstallationId` | Same stable installation ID as the accounts service |
+| `Registration__ServiceTokenFile` | Mounted dedicated internal status token, also configured on accounts |
+| `Registration__CacheFile` | Absolute path on persistent storage, writable by gateway UID 1654 |
+| `Registration__PollSeconds` | 30–600; default 60 |
+| `Registration__AllowInsecureHttp` | Explicit `true` only for a namespace-isolated HTTP service; HTTPS is the default |
+
+Before its first verified free receipt, an explicitly required installation
+returns readiness 503 with `setup-required`. A confirmed zero-cost registration
+makes that readiness check pass. The gateway authenticates the permanent receipt
+cache with HMAC using the dedicated service token, bound to endpoint and
+installation ID, and writes it atomically with private file permissions.
+The last confirmed permanent free registration remains valid during sidecar or
+central outages, including gateway replacement when the cache volume is retained.
+Missing, invalid, paid or unregistered responses cannot create a registration.
+They do not erase an already verified permanent registration. Changing the
+service token, endpoint or installation ID requires a fresh verified receipt.
+
+This opt-in check changes installation readiness only; it adds no charge,
+connection/resource cap or changes to wire/application authorization. Keep the
+existing Kubernetes initialization key, application credentials and ticket gates.
+Do not enable it on a serving installation before owner registration and cache
+storage are ready. Shared libraries and default standalone gateway use stay free.
+
 ## Validation
 
 The test project covers identity binding, signed claim types, code/PKCE settings,

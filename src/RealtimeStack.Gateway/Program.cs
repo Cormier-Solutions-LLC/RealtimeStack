@@ -26,6 +26,11 @@ builder.Logging.AddJsonConsole(options =>
 
 builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddCommandLine(hostArgs);
+builder.Services.AddSingleton(GatewayRegistrationOptions.Read(builder.Configuration));
+builder.Services.AddHttpClient("registration-state", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 32 * 1024; })
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+builder.Services.AddSingleton<GatewayRegistrationMonitor>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<GatewayRegistrationMonitor>());
 // Preserve standalone gateway defaults when a host replaces the shipped settings file.
 builder.Configuration["RealtimeStackSetup:GatewayEnabled"] ??= "true";
 builder.Configuration["RealtimeStackSetup:HttpFallbackEnabled"] ??= builder.Configuration["RealtimeStackSetup:GatewayEnabled"];
@@ -79,6 +84,7 @@ if (setupOnly)
     return;
 }
 var state = app.Services.GetRequiredService<GatewayState>();
+var registration = app.Services.GetRequiredService<GatewayRegistrationMonitor>();
 var metrics = app.Services.GetRequiredService<GatewayMetrics>();
 var gatewayOptions = app.Services.GetRequiredService<IOptions<GatewayOptions>>().Value;
 var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("GatewayLifecycle");
@@ -141,7 +147,8 @@ app.MapGet("/health/ready", async Task<Results<Ok<HealthStatusResponse>, JsonHtt
         var checks = await app.Services.GetRequiredService<RealtimeStackSetupManager>().InspectAsync(cancellationToken);
         ready = checks.All(check => check.State != RealtimeStackSetupState.Unavailable);
     }
-    var response = CreateHealthResponse(ready ? "healthy" : "unavailable");
+    ready = ready && registration.Ready;
+    var response = CreateHealthResponse(!registration.Ready ? "setup-required" : ready ? "healthy" : "unavailable");
     return ready
         ? TypedResults.Ok(response)
         : TypedResults.Json(
@@ -161,6 +168,7 @@ HealthStatusResponse CreateHealthResponse(string status)
         {
             ["started"] = state.IsStarted ? "healthy" : "starting",
             ["draining"] = state.IsDraining ? "draining" : "accepting-traffic",
+            ["registration"] = registration.HealthStatus,
         };
     }
 
