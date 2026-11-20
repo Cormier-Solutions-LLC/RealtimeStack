@@ -1,0 +1,105 @@
+# Central accounts and free registration
+
+RealtimeStack remains free and open source with registration. Its gateway keeps
+its Native AOT build, existing application authentication and wire protocols.
+`RealtimeStack.Accounts` is a separate managed ASP.NET Core service for interactive
+account login and free installation registration. It creates no paid tier or
+connection/resource limits. It does not replace application ticket authentication.
+
+## Configure
+
+All values below are deployment inputs. No production host, Redis credential,
+namespace or client secret is compiled into the service.
+
+| Environment variable | Value |
+| --- | --- |
+| `Sso__Enabled` | `true` to enable central accounts |
+| `Sso__Authority` | Exact HTTPS Access issuer origin |
+| `Sso__ClientId` | `realtime`, matching the central confidential client |
+| `Sso__ClientSecretFile` | Mounted Secret file, at least 32 characters |
+| `Sso__PublicUrl` | Exact public HTTPS RealtimeStack origin |
+| `Sso__RedisConnectionFile` | Mounted Redis connection Secret file |
+| `Sso__RedisPrefix` | Dedicated prefix ending in `:`, for example `realtime-accounts:production:` |
+| `Sso__DataProtectionPath` | Persistent, shared key directory writable by UID 1654 |
+| `Sso__ApplicationName` | Stable shared key discriminator; defaults to `RealtimeStack.Accounts` |
+| `Sso__KnownProxyNetworks__0` | Actual trusted ingress source CIDR; add numbered entries as needed |
+| `Sso__KnownProxies__0` | Alternatively, the exact trusted ingress proxy IP |
+| `Licensing__Origin` | Exact HTTPS LicensingServer origin |
+| `ProductConfiguration__Url` | HTTPS `/v1/products/realtime/config` endpoint |
+| `ProductConfiguration__PollSeconds` | 30–600; default 60 |
+| `Registration__InstallationId` | Stable installation ID, 8–128 characters; retain across upgrades |
+| `Registration__DeploymentType` | `kubernetes`, `docker`, `linux` or `windows` |
+| `Registration__ApplicationVersion` | Deployed gateway version |
+| `Registration__ServiceTokenFile` | Optional separate mounted token for internal status polling |
+
+Direct secret-valued configuration alternatives (`Sso__ClientSecret`,
+`Sso__RedisConnection`, `Registration__ServiceToken`) are supported for secret
+injection. Never put those values in a ConfigMap, command line or image. Reuse the
+existing Redis connection Secret through a mounted file, with a dedicated prefix;
+prefer a restricted Redis ACL when available. Do not copy credentials to source.
+
+Persist Data Protection keys on a dedicated volume shared by account replicas.
+An externally provisioned keyring may be mounted read-only when its rotation and
+key lifetime are managed externally. A new empty read-only directory cannot work.
+The same application discriminator/keyring must survive pod replacement so both
+opaque session cookies and encrypted registration receipts remain readable.
+
+Register the exact callback `${Sso__PublicUrl}/api/auth/sso/callback` in Access.
+This uses authorization code + S256 PKCE and `client_secret_post`. Access must
+include `iss`, immutable `sub`, Boolean `email_verified` and optional Boolean
+`god` in the signed ID token. The service requests `openid profile email licensing`
+and the LicensingServer resource at authorization and token exchange. Its JWT
+access token is retained encrypted in Redis, never returned to the browser.
+Account identity is issuer plus subject; email does not link or promote accounts.
+
+## Build and route
+
+```powershell
+dotnet test tests/RealtimeStack.Accounts.Tests -c Release
+docker build -f deploy/accounts.Dockerfile -t YOUR_REGISTRY/realtime-accounts:SOURCE_COMMIT .
+docker push YOUR_REGISTRY/realtime-accounts:SOURCE_COMMIT
+```
+
+Deploy the resolved immutable digest separately from the AOT gateway. Use a
+readiness-gated rolling update with zero unavailable replicas; retain the existing
+gateway deployment, Redis and first-initialization Kubernetes code gates.
+Route these exact paths under the gateway's public HTTPS origin to the accounts
+service on port 8080:
+
+- `/account`
+- `/api/auth/sso/` and all its children
+- `/api/product/` and all its children
+
+Keep gateway/WebSocket/application protocol routes on the gateway. Forward HTTPS
+scheme only from explicitly configured trusted ingress networks/proxies. Apply
+Traefik/cert-manager HTTPS as for other applications. Never log callback query
+strings or Authorization headers. Probe `/health/live` and `/health/ready` on the
+accounts service directly; readiness requires Redis connectivity when enabled.
+
+The page `/account` signs in, shows installation registration and explicitly
+registers through `POST /api/product/registration`, protected by account cookies
+and antiforgery tokens. Account logout ends the local account session. This is
+not global SSO logout. Central registration is idempotent for product, subject and
+installation ID and remains free forever with no expiration. A receipt is checked
+for matching subject/installation, zero USD price and no expiration before storage.
+
+`GET /api/product/config` returns the last validated central catalog envelope;
+an initial configured-but-unavailable catalog returns 503. Refresh failure keeps
+the last valid snapshot. Versions cannot move backward and a revision cannot be
+reused for different content. A same-version new revision is supported for live
+pricing updates. RealtimeStack rejects any nonzero or non-USD registration price.
+
+Optional `GET /internal/product/registration` requires the separately configured
+Bearer service token and exposes only installation registration and zero cost.
+Restrict it to namespace-local network access; do not publish it through ingress.
+Registration status does not change gateway resource or connection limits.
+
+## Validation
+
+The test project covers identity binding, signed claim types, code/PKCE settings,
+free-only catalog/receipt validation and account/installation swaps. To run the
+real Redis persistence/encryption test, set `REDIS_TEST_ENDPOINT` to an isolated
+Redis endpoint before `dotnet test`; CI already supplies its Redis service.
+The test creates and deletes only its own random key prefix. Verify full
+browser sign-in, registration, restart persistence and HTTPS ingress against the
+central issuer before reporting a live integration as complete.
