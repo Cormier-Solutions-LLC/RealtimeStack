@@ -27,6 +27,19 @@ can stall TLS. `CI_ACCOUNTS_BUILD_NETWORK` overrides this CI setting. Standalone
 `ACCOUNTS_BUILD_NETWORK` is supplied. Locked restore and certificate verification
 remain enabled; no global Docker, DNS or production network setting is changed.
 
+Accounts uses the same mandatory `HIGH,CRITICAL` vulnerability policy as Gateway.
+The full report at `artifacts/trivy-accounts.full.sarif` retains every severity;
+the separate gate report limits SARIF to the configured threshold and exits
+nonzero for those findings. No finding is ignored or relabeled. The November 20
+qualification found six MEDIUM GNU libc findings in the official Noble chiseled
+runtime (`libc6` 2.39-0ubuntu8.9), with no HIGH/CRITICAL or NuGet findings. Ubuntu's
+[security notice](https://ubuntu.com/security/notices/USN-9065-1) provides 8.12,
+but the freshly inspected same-flavor Microsoft image still contained 8.9.
+Retain that exposure report until the official image is refreshed; a passing
+HIGH/CRITICAL gate does not mean the image has no vulnerabilities. Keep the
+chiseled distribution and supported framework; do not copy custom libc files or
+silently change runtime distributions to clear a report.
+
 Publication does not deploy. The existing manual `promote.yml` dispatch, protected
 GitHub environment and `KUBERNETES_DEPLOY_ENABLED` gate remain. Promotion validates
 the successful main CI/publish provenance and resolves both manifests. It overrides
