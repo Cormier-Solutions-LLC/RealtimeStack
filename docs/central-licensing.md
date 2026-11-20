@@ -36,3 +36,12 @@ When HTTPS ingress is translated to an ingress-controller pod port, configure
 `licensing.egressNamespaceSelector`, `licensing.egressPodSelector` and
 `licensing.egressTargetPorts` for that controller. Keep this exception scoped to
 the licensing ingress instead of allowing unrestricted private-network egress.
+
+For installations managed outside this chart, fill in the deployment and ingress
+selectors in [the additive HTTPS policy example](../deploy/central-https-egress.example.yaml).
+Use the ingress pod's observed target port after Service translation. The example
+uses port `8443`; replace it when the controller uses a different port. Keep the
+existing ingress, Redis and DNS policy in place. Check both Access discovery and
+Licensing readiness over verified HTTPS under the workload's actual policy.
+Any temporary probe with the gateway's labels must remain unready so the serving
+Service cannot route client traffic to it.
