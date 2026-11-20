@@ -1,6 +1,15 @@
 nameOverride: ""
 fullnameOverride: ""
 
+licensing:
+  serverUrl: ""
+  publicKeys: ""
+  deploymentType: kubernetes
+  keySecret:
+    name: ""
+    key: license-key
+  egressCidrs: []
+
 # Availability is an explicit deployment choice; it is never inferred from replica count.
 topology: ha
 

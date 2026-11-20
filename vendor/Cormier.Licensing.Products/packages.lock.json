@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "BouncyCastle.Cryptography": {
+        "type": "Direct",
+        "requested": "[2.7.0, )",
+        "resolved": "2.7.0",
+        "contentHash": "U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw=="
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[8.0.30, )",
+        "resolved": "8.0.30",
+        "contentHash": "SfmwuZjUPBTEoBMAsXZ/hWkaEK9oL+Y/UtAx7N6RyWHfcMt9J0ExrNPuOgTyPbCXIyiTBFsxFNrPLEZNPmJcvA=="
+      },
+      "Microsoft.SourceLink.GitHub": {
+        "type": "Direct",
+        "requested": "[10.0.303, )",
+        "resolved": "10.0.303",
+        "contentHash": "fxqLxLWx4yBAabjJgSIehVITPysG30YwAMWI6LkWyrgxDlnzFKITVj9SpBAGDeFlM2QR91T4X7Z3MFkzb4kzEw==",
+        "dependencies": {
+          "Microsoft.Build.Tasks.Git": "10.0.303",
+          "Microsoft.SourceLink.Common": "10.0.303",
+          "System.IO.Hashing": "10.0.11"
+        }
+      },
+      "Microsoft.Build.Tasks.Git": {
+        "type": "Transitive",
+        "resolved": "10.0.303",
+        "contentHash": "tUblJMHhGAg4WKq3fzfJqXpV8o01WmQnWvgopNBnbhVQB6qwW2c8guCTCFMILD9Dekhe8MROBJ4lEk8AtXKisQ==",
+        "dependencies": {
+          "System.IO.Hashing": "10.0.11"
+        }
+      },
+      "Microsoft.SourceLink.Common": {
+        "type": "Transitive",
+        "resolved": "10.0.303",
+        "contentHash": "rEJw+kxSZHFRnSR5rIT2I4qYDnEhoOOl0SGS7wCeYXG88u008LwIb0oEZtj/auGvaQBMvy7jvPu6VFli8zUAZg=="
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "10.0.11",
+        "contentHash": "OzKDcIRkeNJeC8qAsbn8yJXnfTLP1dtkWILe+T56Gf/z+IkAASi7sMqLqJQat08j5z/mRN5xVtoAwbkMNMoBUQ=="
+      }
+    },
+    "net8.0/linux-x64": {}
+  }
+}

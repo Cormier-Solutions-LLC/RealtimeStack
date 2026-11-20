@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RealtimeStack.AspNetCore\RealtimeStack.AspNetCore.csproj" />
+    <ProjectReference Include="../../vendor/Cormier.Licensing.Products/Cormier.Licensing.Products.csproj" />
     <ProjectReference Include="..\RealtimeStack.HttpFallback\RealtimeStack.HttpFallback.csproj" />
   </ItemGroup>
   

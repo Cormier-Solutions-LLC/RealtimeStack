@@ -11,3 +11,8 @@
 **/target
 **/test-results
 **/vendor
+!vendor/
+!vendor/Cormier.Licensing.Products/
+!vendor/Cormier.Licensing.Products/**
+**/bin
+**/obj

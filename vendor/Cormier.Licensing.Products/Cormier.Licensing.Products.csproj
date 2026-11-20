@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion><TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsAotCompatible>true</IsAotCompatible><EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <PackageId>Cormier.Licensing.Products</PackageId><Version>0.1.0</Version>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Keep the SDK's implicit analyzer dependency identical on .NET 8 and 10. -->
+    <KnownILLinkPack Update="Microsoft.NET.ILLink.Tasks" ILLinkPackVersion="8.0.30" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <InternalsVisibleTo Include="Cormier.Licensing.Products.Tests" />
+  </ItemGroup>
+</Project>
