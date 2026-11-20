@@ -445,6 +445,10 @@ jobs:
           curl --fail --silent http://127.0.0.1:18080/health/live >/dev/null
           curl --fail --silent http://127.0.0.1:18080/metrics | grep --quiet realtimestack_health_requests_total
       - name: Build and smoke-test the managed Accounts archive
+        timeout-minutes: 15
+        env:
+          # DinD bridge TLS can stall while the builder's host network is reachable.
+          ACCOUNTS_BUILD_NETWORK: ${{ vars.CI_ACCOUNTS_BUILD_NETWORK || 'host' }}
         run: bash scripts/build-accounts-archive.sh
       - name: Scan managed Accounts OCI archive
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0

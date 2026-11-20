@@ -19,6 +19,14 @@ otherwise it is `${IMAGE_REPOSITORY}-accounts`. Grant the existing publisher
 access to that repository before merging a managed release. No credentials or
 deployment values belong in Git.
 
+The Accounts build/smoke/archive step has a 15-minute CI deadline. On the existing
+Docker-in-Docker runners it uses builder-host networking, matching the network
+that successfully reaches the unchanged HTTPS NuGet feed; the isolated bridge
+can stall TLS. `CI_ACCOUNTS_BUILD_NETWORK` overrides this CI setting. Standalone
+`build-accounts-archive.sh` keeps Docker's default networking unless
+`ACCOUNTS_BUILD_NETWORK` is supplied. Locked restore and certificate verification
+remain enabled; no global Docker, DNS or production network setting is changed.
+
 Publication does not deploy. The existing manual `promote.yml` dispatch, protected
 GitHub environment and `KUBERNETES_DEPLOY_ENABLED` gate remain. Promotion validates
 the successful main CI/publish provenance and resolves both manifests. It overrides

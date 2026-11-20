@@ -4,7 +4,12 @@ set -euo pipefail
 [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ]]
 mkdir -p artifacts
 image="realtimestack-accounts-ci:$GITHUB_SHA"
-docker build --file deploy/accounts.Dockerfile \
+build_args=()
+if [ -n "${ACCOUNTS_BUILD_NETWORK:-}" ]; then
+  [[ "$ACCOUNTS_BUILD_NETWORK" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]
+  build_args+=(--network "$ACCOUNTS_BUILD_NETWORK")
+fi
+docker build "${build_args[@]}" --file deploy/accounts.Dockerfile \
   --label "org.opencontainers.image.revision=$GITHUB_SHA" \
   --label "org.opencontainers.image.source=${GITHUB_SERVER_URL:?}/${GITHUB_REPOSITORY:?}" \
   --tag "$image" .
