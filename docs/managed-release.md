@@ -40,6 +40,14 @@ HIGH/CRITICAL gate does not mean the image has no vulnerabilities. Keep the
 chiseled distribution and supported framework; do not copy custom libc files or
 silently change runtime distributions to clear a report.
 
+The Swift reference container keeps its full layer cache, with a two-minute
+import and a five-minute optional export. A failed cache export is ignored so a
+successfully loaded image can proceed to its mandatory vulnerability scan and
+browser tests. This uses Docker's supported
+[cache timeout/error parameters](https://docs.docker.com/build/cache/backends/gha/);
+build, scan and test failures remain blocking. The November 20 run had loaded
+the image successfully before spending the remaining time exporting cache.
+
 Publication does not deploy. The existing manual `promote.yml` dispatch, protected
 GitHub environment and `KUBERNETES_DEPLOY_ENABLED` gate remain. Promotion validates
 the successful main CI/publish provenance and resolves both manifests. It overrides

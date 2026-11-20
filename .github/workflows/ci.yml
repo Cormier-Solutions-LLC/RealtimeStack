@@ -1302,8 +1302,8 @@ jobs:
           load: true
           provenance: false
           sbom: false
-          cache-from: type=gha,scope=swift-vapor
-          cache-to: type=gha,scope=swift-vapor,mode=max
+          cache-from: type=gha,scope=swift-vapor,timeout=2m
+          cache-to: type=gha,scope=swift-vapor,mode=max,timeout=5m,ignore-error=true
       - name: Scan the Vapor reference container
         if: matrix.part == 'container'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
