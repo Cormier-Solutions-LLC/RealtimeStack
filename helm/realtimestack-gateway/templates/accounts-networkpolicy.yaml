@@ -1,0 +1,63 @@
+{{- if and .Values.accounts.enabled .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "realtimestack-gateway.accountsName" . }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "realtimestack-gateway.accountsSelector" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: {{ toYaml .Values.networkPolicy.ingressNamespaceSelector | nindent 12 }}
+          podSelector: {{ toYaml .Values.networkPolicy.ingressPodSelector | nindent 12 }}
+      ports: [{ protocol: TCP, port: {{ .Values.accounts.containerPort }} }]
+    {{- if .Values.managedInstallation.registration.required }}
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "realtimestack-gateway.selectorLabels" . | nindent 14 }}
+      ports: [{ protocol: TCP, port: {{ .Values.accounts.containerPort }} }]
+    {{- end }}
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+    {{- if not (empty .Values.accounts.egress.namespaceSelector) }}
+    - to:
+        - namespaceSelector: {{ toYaml .Values.accounts.egress.namespaceSelector | nindent 12 }}
+          {{- if not (empty .Values.accounts.egress.podSelector) }}
+          podSelector: {{ toYaml .Values.accounts.egress.podSelector | nindent 12 }}
+          {{- end }}
+      ports:
+        {{- range .Values.accounts.egress.ports }}
+        - { protocol: TCP, port: {{ . }} }
+        {{- end }}
+    {{- end }}
+    {{- if .Values.accounts.egress.cidrs }}
+    - to:
+        {{- range .Values.accounts.egress.cidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports: [{ protocol: TCP, port: 443 }]
+    {{- end }}
+    {{- if eq .Values.redis.mode "managed" }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Values.redis.managedReleaseName }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.redis.port }} }
+        {{- if eq .Values.topology "ha" }}
+        - { protocol: TCP, port: {{ .Values.redis.sentinelPort }} }
+        {{- end }}
+    {{- else if .Values.networkPolicy.allowExternalRedisEgress }}
+    - to:
+        {{- range .Values.networkPolicy.externalRedisCidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports: [{ protocol: TCP, port: {{ .Values.redis.port }} }]
+    {{- end }}
+{{- end }}

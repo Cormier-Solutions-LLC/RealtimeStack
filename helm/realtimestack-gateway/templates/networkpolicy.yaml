@@ -34,7 +34,15 @@ spec:
         - { protocol: TCP, port: {{ .Values.service.targetPort }} }
     {{- end }}
   egress:
-    {{- if and .Values.licensing.serverUrl (not (empty .Values.licensing.egressNamespaceSelector)) }}
+    {{- if .Values.managedInstallation.registration.required }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "realtimestack-gateway.accountsSelector" . | nindent 14 }}
+      ports:
+        - { protocol: TCP, port: {{ .Values.accounts.containerPort }} }
+    {{- end }}
+    {{- if and (or .Values.licensing.serverUrl .Values.managedInstallation.checkIn.enabled) (not (empty .Values.licensing.egressNamespaceSelector)) }}
     - to:
         - namespaceSelector: {{ toYaml .Values.licensing.egressNamespaceSelector | nindent 12 }}
           {{- if not (empty .Values.licensing.egressPodSelector) }}
@@ -45,7 +53,7 @@ spec:
         - { protocol: TCP, port: {{ . }} }
         {{- end }}
     {{- end }}
-    {{- if and .Values.licensing.serverUrl (not (empty .Values.licensing.egressCidrs)) }}
+    {{- if and (or .Values.licensing.serverUrl .Values.managedInstallation.checkIn.enabled) (not (empty .Values.licensing.egressCidrs)) }}
     - to:
         {{- range .Values.licensing.egressCidrs }}
         - ipBlock: { cidr: {{ . | quote }} }

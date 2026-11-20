@@ -1,6 +1,35 @@
 {{- define "realtimestack-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "realtimestack-gateway.accountsName" -}}
+{{- default (printf "%s-accounts" (include "realtimestack-gateway.fullname" .)) .Values.accounts.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- define "realtimestack-gateway.accountsSelector" -}}
+app.kubernetes.io/name: {{ include "realtimestack-gateway.accountsName" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: accounts
+{{- end -}}
+{{- define "realtimestack-gateway.hostCheckInEnv" -}}
+- name: POD_NAMESPACE
+  valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+- name: POD_NAME
+  valueFrom: { fieldRef: { fieldPath: metadata.name } }
+- name: POD_UID
+  valueFrom: { fieldRef: { fieldPath: metadata.uid } }
+- name: NODE_NAME
+  valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+{{- if or (eq .component "accounts") (not .root.Values.licensing.serverUrl) }}
+- name: CORMIER_LICENSE_SERVER_URL
+  value: {{ .root.Values.managedInstallation.licensingOrigin | quote }}
+{{- end }}
+- name: CORMIER_LICENSE_INSTALLATION_ID
+  value: {{ .root.Values.managedInstallation.installationId | quote }}
+- name: CORMIER_LICENSE_INSTANCE_ID
+  value: {{ printf "%s:$(POD_UID)" .component | quote }}
+- name: CORMIER_LICENSE_AGENT_TOKEN_FILE
+  value: /secrets/check-in/agent-token
+{{- end -}}
 {{- define "realtimestack-gateway.fullname" -}}
 {{- if .Values.fullnameOverride }}{{ .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}{{ else }}{{ .Release.Name | trunc 63 | trimSuffix "-" }}{{ end -}}
 {{- end -}}

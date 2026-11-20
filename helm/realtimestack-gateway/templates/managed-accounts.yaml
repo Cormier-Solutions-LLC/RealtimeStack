@@ -1,0 +1,192 @@
+{{- $installation := .Values.managedInstallation -}}
+{{- if or .Values.accounts.enabled $installation.checkIn.enabled $installation.registration.required -}}
+{{- $_ := required "managedInstallation.installationId is required" $installation.installationId -}}
+{{- $_ := required "managedInstallation.licensingOrigin is required" $installation.licensingOrigin -}}
+{{- if or (lt (len $installation.installationId) 8) (gt (len $installation.installationId) 128) -}}{{- fail "managedInstallation.installationId must be 8-128 characters" -}}{{- end -}}
+{{- end -}}
+{{- if $installation.checkIn.enabled -}}
+{{- $_ := required "managedInstallation.checkIn.agentTokenSecret.name is required" $installation.checkIn.agentTokenSecret.name -}}
+{{- if and .Values.networkPolicy.enabled (empty .Values.licensing.egressNamespaceSelector) (empty .Values.licensing.egressCidrs) -}}{{- fail "Check-in requires explicit licensing HTTPS egress selectors or CIDRs" -}}{{- end -}}
+{{- if and .Values.licensing.serverUrl (ne .Values.licensing.serverUrl $installation.licensingOrigin) -}}{{- fail "licensing.serverUrl and managedInstallation.licensingOrigin must agree when check-in is enabled" -}}{{- end -}}
+{{- end -}}
+{{- if $installation.registration.required -}}
+{{- if not .Values.accounts.enabled -}}{{- fail "Required registration needs accounts.enabled" -}}{{- end -}}
+{{- $_ := required "managedInstallation.registration.cacheExistingClaim is required" $installation.registration.cacheExistingClaim -}}
+{{- end -}}
+{{- if .Values.accounts.enabled -}}
+{{- range $key := list "app.kubernetes.io/name" "app.kubernetes.io/instance" "app.kubernetes.io/component" -}}
+{{- if hasKey $.Values.accounts.podLabels $key -}}{{- fail "Accounts podLabels cannot override its service selectors" -}}{{- end -}}
+{{- end -}}
+{{- $_ := required "accounts.image.repository is required" .Values.accounts.image.repository -}}
+{{- $_ := required "accounts.image.digest is required; use trusted release evidence" .Values.accounts.image.digest -}}
+{{- $_ := required "accounts.keyringExistingClaim is required; ephemeral SSO keys are forbidden" .Values.accounts.keyringExistingClaim -}}
+{{- $_ := required "accounts.redisPrefix is required; isolate account tickets from gateway keys" .Values.accounts.redisPrefix -}}
+{{- if or (not (hasPrefix (printf "%s:" .Values.redis.instancePrefix) .Values.accounts.redisPrefix)) (not (hasSuffix ":" .Values.accounts.redisPrefix)) -}}{{- fail "accounts.redisPrefix must be a dedicated child of redis.instancePrefix ending in a colon" -}}{{- end -}}
+{{- $_ := required "accounts.sso.authority is required" .Values.accounts.sso.authority -}}
+{{- $_ := required "accounts.sso.publicUrl is required" .Values.accounts.sso.publicUrl -}}
+{{- $_ := required "accounts.sso.clientId is required" .Values.accounts.sso.clientId -}}
+{{- $_ := required "accounts.sso.clientSecret.name is required" .Values.accounts.sso.clientSecret.name -}}
+{{- $_ := required "managedInstallation.registration.statusTokenSecret.name is required" $installation.registration.statusTokenSecret.name -}}
+{{- if and (eq $installation.registration.statusTokenSecret.name .Values.accounts.sso.clientSecret.name) (eq $installation.registration.statusTokenSecret.key .Values.accounts.sso.clientSecret.key) -}}{{- fail "Registration status token must differ from the SSO credential reference" -}}{{- end -}}
+{{- if $installation.checkIn.enabled -}}
+{{- range $other := list $installation.registration.statusTokenSecret .Values.accounts.sso.clientSecret -}}
+{{- if and (eq $other.name $installation.checkIn.agentTokenSecret.name) (eq $other.key $installation.checkIn.agentTokenSecret.key) -}}{{- fail "Installation agent token requires a separate credential reference" -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if eq (include "realtimestack-gateway.accountsName" .) (include "realtimestack-gateway.fullname" .) -}}{{- fail "Accounts and gateway resource names must differ" -}}{{- end -}}
+{{- if and .Values.networkPolicy.enabled (empty .Values.accounts.egress.namespaceSelector) (empty .Values.accounts.egress.cidrs) -}}{{- fail "Accounts requires explicit HTTPS egress selectors or CIDRs" -}}{{- end -}}
+{{- if and .Values.networkPolicy.enabled (eq .Values.redis.mode "external") (or (not .Values.networkPolicy.allowExternalRedisEgress) (empty .Values.networkPolicy.externalRedisCidrs)) -}}{{- fail "Accounts external Redis requires explicit permitted Redis egress CIDRs" -}}{{- end -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "realtimestack-gateway.accountsName" . }}
+spec:
+  selector:
+    {{- include "realtimestack-gateway.accountsSelector" . | nindent 4 }}
+  ports:
+    - { name: http, port: {{ .Values.accounts.servicePort }}, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "realtimestack-gateway.accountsName" . }}
+  labels:
+    {{- include "realtimestack-gateway.accountsSelector" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.accounts.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels:
+      {{- include "realtimestack-gateway.accountsSelector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "realtimestack-gateway.accountsSelector" . | nindent 8 }}
+        {{- if eq .Values.redis.mode "managed" }}
+        {{ printf "%s-client" .Values.redis.managedReleaseName }}: "true"
+        {{- end }}
+        {{- with .Values.accounts.podLabels }}{{ toYaml . | nindent 8 }}{{- end }}
+      annotations:
+        checksum/accounts-values: {{ toJson (dict "accounts" .Values.accounts "installation" $installation "redis" .Values.redis) | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "realtimestack-gateway.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- if .Values.image.pullSecretName }}
+      imagePullSecrets: [{ name: {{ .Values.image.pullSecretName }} }]
+      {{- end }}
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: { type: RuntimeDefault }
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: accounts
+          image: {{ printf "%s@%s" .Values.accounts.image.repository .Values.accounts.image.digest | quote }}
+          imagePullPolicy: {{ .Values.accounts.image.pullPolicy }}
+          ports: [{ name: http, containerPort: {{ .Values.accounts.containerPort }} }]
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          env:
+            - { name: ASPNETCORE_HTTP_PORTS, value: {{ .Values.accounts.containerPort | quote }} }
+            - { name: ASPNETCORE_ENVIRONMENT, value: Production }
+            - { name: Sso__Enabled, value: "true" }
+            - { name: Sso__Authority, value: {{ .Values.accounts.sso.authority | quote }} }
+            - { name: Sso__PublicUrl, value: {{ .Values.accounts.sso.publicUrl | quote }} }
+            - { name: Sso__ClientId, value: {{ .Values.accounts.sso.clientId | quote }} }
+            - { name: Sso__ClientSecretFile, value: /secrets/sso/client-secret }
+            - { name: Sso__DataProtectionPath, value: /var/lib/realtimestack-accounts/keys }
+            - { name: Sso__ApplicationName, value: {{ .Values.accounts.applicationName | quote }} }
+            - { name: Sso__RedisPrefix, value: {{ .Values.accounts.redisPrefix | quote }} }
+            - { name: Sso__RedisEndpoint, value: {{ printf "%s%s" (include "realtimestack-gateway.redisEndpoint" .) (ternary ",ssl=true" "" .Values.redis.tls) | quote }} }
+            - { name: Sso__RedisUser, value: {{ .Values.redis.username | quote }} }
+            - { name: Sso__RedisPasswordFile, value: /secrets/redis/password }
+            {{- if and (eq .Values.redis.mode "managed") (eq .Values.topology "ha") }}
+            - { name: Sso__RedisSentinelServiceName, value: {{ .Values.redis.sentinelServiceName | quote }} }
+            - { name: Sso__RedisSentinelPasswordFile, value: /secrets/redis/sentinel-password }
+            {{- end }}
+            {{- range $i, $network := .Values.accounts.sso.knownProxyNetworks }}
+            - { name: Sso__KnownProxyNetworks__{{ $i }}, value: {{ $network | quote }} }
+            {{- end }}
+            {{- range $i, $proxy := .Values.accounts.sso.knownProxies }}
+            - { name: Sso__KnownProxies__{{ $i }}, value: {{ $proxy | quote }} }
+            {{- end }}
+            - { name: Licensing__Origin, value: {{ $installation.licensingOrigin | quote }} }
+            - { name: ProductConfiguration__Url, value: {{ printf "%s/v1/products/realtime/config" $installation.licensingOrigin | quote }} }
+            - { name: Registration__InstallationId, value: {{ $installation.installationId | quote }} }
+            - { name: Registration__DeploymentType, value: {{ $installation.deploymentType | quote }} }
+            - { name: Registration__ServiceTokenFile, value: /secrets/registration/token }
+            {{- if $installation.checkIn.enabled }}
+            {{- include "realtimestack-gateway.hostCheckInEnv" (dict "root" . "component" "accounts") | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.accounts.resources | nindent 12 }}
+          startupProbe: { httpGet: { path: /health/live, port: http }, periodSeconds: 3, failureThreshold: 40 }
+          readinessProbe: { httpGet: { path: /health/ready, port: http }, periodSeconds: 5, timeoutSeconds: 3 }
+          livenessProbe: { httpGet: { path: /health/live, port: http }, periodSeconds: 15, timeoutSeconds: 3 }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: keyring, mountPath: /var/lib/realtimestack-accounts }
+            - { name: sso-client, mountPath: /secrets/sso, readOnly: true }
+            - { name: redis-auth, mountPath: /secrets/redis, readOnly: true }
+            - { name: registration-token, mountPath: /secrets/registration, readOnly: true }
+            {{- if $installation.checkIn.enabled }}
+            - { name: installation-agent, mountPath: /secrets/check-in, readOnly: true }
+            {{- end }}
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 32Mi } }
+        - name: keyring
+          persistentVolumeClaim: { claimName: {{ .Values.accounts.keyringExistingClaim | quote }} }
+        - name: sso-client
+          secret:
+            secretName: {{ .Values.accounts.sso.clientSecret.name }}
+            defaultMode: 288
+            items: [{ key: {{ .Values.accounts.sso.clientSecret.key }}, path: client-secret }]
+        - name: redis-auth
+          secret:
+            secretName: {{ .Values.redis.credentialsSecret.name }}
+            defaultMode: 288
+            items:
+              - { key: {{ .Values.redis.credentialsSecret.passwordKey }}, path: password }
+              {{- if and (eq .Values.redis.mode "managed") (eq .Values.topology "ha") }}
+              - { key: {{ .Values.redis.managedAdminPasswordKey }}, path: sentinel-password }
+              {{- end }}
+        - name: registration-token
+          secret:
+            secretName: {{ $installation.registration.statusTokenSecret.name }}
+            defaultMode: 288
+            items: [{ key: {{ $installation.registration.statusTokenSecret.key }}, path: token }]
+        {{- if $installation.checkIn.enabled }}
+        - name: installation-agent
+          secret:
+            secretName: {{ $installation.checkIn.agentTokenSecret.name }}
+            defaultMode: 288
+            items: [{ key: {{ $installation.checkIn.agentTokenSecret.key }}, path: agent-token }]
+        {{- end }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "realtimestack-gateway.accountsName" . }}
+spec:
+  maxUnavailable: {{ if gt (int .Values.accounts.replicaCount) 1 }}1{{ else }}0{{ end }}
+  selector:
+    matchLabels:
+      {{- include "realtimestack-gateway.accountsSelector" . | nindent 6 }}
+{{- end }}

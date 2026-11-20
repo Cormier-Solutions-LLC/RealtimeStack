@@ -145,6 +145,12 @@ jobs:
           "repository=$($manifest.image)" >> $env:GITHUB_OUTPUT
           "registry=$($manifest.image.Split('/')[0])" >> $env:GITHUB_OUTPUT
           "credential_provider=$credentialProvider" >> $env:GITHUB_OUTPUT
+          if ($manifest.accounts) {
+            if ($manifest.accounts.sourceCommit -ne $env:EXPECTED_COMMIT -or $manifest.accounts.digest -notmatch '^sha256:[a-f0-9]{64}$' -or $manifest.accounts.archiveSha256 -notmatch '^[a-f0-9]{64}$') { throw 'Accounts evidence does not match the tested source and immutable archive.' }
+            if ($manifest.accounts.image -notmatch '^[a-z0-9][a-z0-9.-]*(?::[0-9]+)?/[a-z0-9][a-z0-9._/-]*$' -or $manifest.accounts.image -eq $manifest.image -or $manifest.accounts.image.Split('/')[0] -ne $manifest.image.Split('/')[0]) { throw 'Accounts evidence must use a distinct repository in the same authenticated registry.' }
+            "accounts_repository=$($manifest.accounts.image)" >> $env:GITHUB_OUTPUT
+            "accounts_digest=$($manifest.accounts.digest)" >> $env:GITHUB_OUTPUT
+          }
       - name: Validate credential provider registry
         env:
           SELECTED_REGISTRY: ${{ steps.artifact.outputs.registry }}
@@ -158,7 +164,12 @@ jobs:
           username: ${{ steps.artifact.outputs.credential_provider == 'github' && github.actor || steps.artifact.outputs.credential_provider == 'harbor' && secrets.HARBOR_PUBLISH_USERNAME || steps.artifact.outputs.credential_provider == 'dockerhub' && secrets.DOCKERHUB_USERNAME || steps.artifact.outputs.credential_provider == 'generic' && secrets.REGISTRY_USERNAME || '' }}
           password: ${{ steps.artifact.outputs.credential_provider == 'github' && github.token || steps.artifact.outputs.credential_provider == 'harbor' && secrets.HARBOR_PUBLISH_TOKEN || steps.artifact.outputs.credential_provider == 'dockerhub' && secrets.DOCKERHUB_TOKEN || steps.artifact.outputs.credential_provider == 'generic' && secrets.REGISTRY_PASSWORD || '' }}
       - name: Verify published manifest exists
-        run: docker buildx imagetools inspect "${{ steps.artifact.outputs.repository }}@${{ steps.artifact.outputs.digest }}" >/dev/null
+        env:
+          ACCOUNTS_REPOSITORY: ${{ steps.artifact.outputs.accounts_repository }}
+          ACCOUNTS_DIGEST: ${{ steps.artifact.outputs.accounts_digest }}
+        run: |
+          docker buildx imagetools inspect "${{ steps.artifact.outputs.repository }}@${{ steps.artifact.outputs.digest }}" >/dev/null
+          if [ -n "$ACCOUNTS_DIGEST" ]; then docker buildx imagetools inspect "$ACCOUNTS_REPOSITORY@$ACCOUNTS_DIGEST" >/dev/null; fi
       - name: Render the exact promotion bundle
         env:
           DEPLOY_ENABLED: ${{ vars.KUBERNETES_DEPLOY_ENABLED }}
@@ -166,6 +177,8 @@ jobs:
           HELM_VALUES_CONTENT: ${{ secrets.HELM_VALUES }}
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
           IMAGE_REPOSITORY: ${{ steps.artifact.outputs.repository }}
+          ACCOUNTS_REPOSITORY: ${{ steps.artifact.outputs.accounts_repository }}
+          ACCOUNTS_DIGEST: ${{ steps.artifact.outputs.accounts_digest }}
           RELEASE_NAME: ${{ inputs.releaseName }}
           NAMESPACE: ${{ inputs.namespace }}
         run: |
@@ -197,8 +210,14 @@ jobs:
               api_args+=(--api-versions "monitoring.coreos.com/v1alpha1/AlertmanagerConfig")
             fi
           fi
-          helm template "$RELEASE_NAME" helm/realtimestack-gateway --namespace "$NAMESPACE" "${values_args[@]}" "${api_args[@]}" --set-string image.repository="$IMAGE_REPOSITORY" --set-string image.digest="$DIGEST" > artifacts/promotion/rendered.yaml
-          printf '{"schemaVersion":1,"operation":"%s","environment":"%s","image":"%s","digest":"%s","release":"%s","namespace":"%s","workflowRunId":%s}\n' "${{ inputs.operation }}" "${{ inputs.environment }}" "$IMAGE_REPOSITORY" "$DIGEST" "$RELEASE_NAME" "$NAMESPACE" "${{ github.run_id }}" > artifacts/promotion/evidence.json
+          # Even a legacy chart must not silently ignore enabled Accounts values during rollback.
+          guard_chart="$RUNNER_TEMP/accounts-release-guard"
+          mkdir -p "$guard_chart/templates"
+          printf 'apiVersion: v2\nname: release-guard\nversion: 0.1.0\n' > "$guard_chart/Chart.yaml"
+          printf '{{- if and .Values.accounts .Values.accounts.enabled (not .Values.trustedAccountsDigest) -}}{{- fail "Enabled Accounts requires matching component release evidence; select a bundled release" -}}{{- end -}}' > "$guard_chart/templates/guard.yaml"
+          helm template guard "$guard_chart" "${values_args[@]}" --set-string trustedAccountsDigest="$ACCOUNTS_DIGEST" >/dev/null
+          helm template "$RELEASE_NAME" helm/realtimestack-gateway --namespace "$NAMESPACE" "${values_args[@]}" "${api_args[@]}" --set-string image.repository="$IMAGE_REPOSITORY" --set-string image.digest="$DIGEST" --set-string accounts.image.repository="$ACCOUNTS_REPOSITORY" --set-string accounts.image.digest="$ACCOUNTS_DIGEST" > artifacts/promotion/rendered.yaml
+          printf '{"schemaVersion":1,"operation":"%s","environment":"%s","image":"%s","digest":"%s","accountsImage":"%s","accountsDigest":"%s","sourceCommit":"%s","release":"%s","namespace":"%s","workflowRunId":%s}\n' "${{ inputs.operation }}" "${{ inputs.environment }}" "$IMAGE_REPOSITORY" "$DIGEST" "$ACCOUNTS_REPOSITORY" "$ACCOUNTS_DIGEST" "${{ steps.release.outputs.commit }}" "$RELEASE_NAME" "$NAMESPACE" "${{ github.run_id }}" > artifacts/promotion/evidence.json
           grep --quiet "@$DIGEST" artifacts/promotion/rendered.yaml
       - name: Deploy exact digest when the environment enables deployment
         if: vars.KUBERNETES_DEPLOY_ENABLED == 'true'
@@ -207,6 +226,8 @@ jobs:
           DIGEST: ${{ steps.artifact.outputs.digest }}
           HELM_VALUES_CONTENT: ${{ secrets.HELM_VALUES }}
           IMAGE_REPOSITORY: ${{ steps.artifact.outputs.repository }}
+          ACCOUNTS_REPOSITORY: ${{ steps.artifact.outputs.accounts_repository }}
+          ACCOUNTS_DIGEST: ${{ steps.artifact.outputs.accounts_digest }}
           RELEASE_NAME: ${{ inputs.releaseName }}
           NAMESPACE: ${{ inputs.namespace }}
         run: |
@@ -217,10 +238,14 @@ jobs:
           printf '%s' "$KUBECONFIG_CONTENT" > "$kubeconfig_path"
           printf '%s' "$HELM_VALUES_CONTENT" > "$values_path"
           chmod 600 "$kubeconfig_path" "$values_path"
-          KUBECONFIG="$kubeconfig_path" helm upgrade --install "$RELEASE_NAME" helm/realtimestack-gateway --namespace "$NAMESPACE" --atomic --wait --values "$values_path" --set-string image.repository="$IMAGE_REPOSITORY" --set-string image.digest="$DIGEST"
+          KUBECONFIG="$kubeconfig_path" helm upgrade --install "$RELEASE_NAME" helm/realtimestack-gateway --namespace "$NAMESPACE" --atomic --wait --values "$values_path" --set-string image.repository="$IMAGE_REPOSITORY" --set-string image.digest="$DIGEST" --set-string accounts.image.repository="$ACCOUNTS_REPOSITORY" --set-string accounts.image.digest="$ACCOUNTS_DIGEST"
           deployment_name=$(awk '/^kind: Deployment$/{found=1} found && /^  name:/{print $2; exit}' artifacts/promotion/rendered.yaml)
           test -n "$deployment_name"
           KUBECONFIG="$kubeconfig_path" kubectl -n "$NAMESPACE" rollout status deployment/"$deployment_name" --timeout=5m
+          accounts_deployments=$(KUBECONFIG="$kubeconfig_path" kubectl -n "$NAMESPACE" get deployments -l "app.kubernetes.io/component=accounts,app.kubernetes.io/instance=$RELEASE_NAME" -o name)
+          for accounts_deployment in $accounts_deployments; do
+            KUBECONFIG="$kubeconfig_path" kubectl -n "$NAMESPACE" rollout status "$accounts_deployment" --timeout=5m
+          done
       - uses: actions/upload-artifact@v7
         with:
           name: promotion-${{ inputs.environment }}-${{ github.run_id }}

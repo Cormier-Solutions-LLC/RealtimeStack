@@ -72,6 +72,23 @@ spec:
           envFrom:
             - configMapRef: { name: {{ include "realtimestack-gateway.fullname" . }} }
           env:
+            {{- if .Values.managedInstallation.checkIn.enabled }}
+            {{- include "realtimestack-gateway.hostCheckInEnv" (dict "root" . "component" "gateway") | nindent 12 }}
+            {{- end }}
+            {{- if or .Values.accounts.enabled .Values.managedInstallation.registration.required }}
+            - { name: Registration__Required, value: {{ .Values.managedInstallation.registration.required | quote }} }
+            {{- end }}
+            {{- if .Values.managedInstallation.registration.required }}
+            - name: Registration__InstallationId
+              value: {{ .Values.managedInstallation.installationId | quote }}
+            - name: Registration__AccountIssuer
+              value: {{ .Values.accounts.sso.authority | quote }}
+            - name: Registration__StatusUrl
+              value: {{ printf "http://%s:%v/internal/product/registration" (include "realtimestack-gateway.accountsName" .) .Values.accounts.servicePort | quote }}
+            - { name: Registration__AllowInsecureHttp, value: "true" }
+            - { name: Registration__ServiceTokenFile, value: /secrets/registration/token }
+            - { name: Registration__CacheFile, value: /var/lib/realtimestack-registration/receipt.json }
+            {{- end }}
             {{- if .Values.licensing.serverUrl }}
             - name: CORMIER_LICENSE_SERVER_URL
               value: {{ .Values.licensing.serverUrl | quote }}
@@ -142,11 +159,34 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            {{- if .Values.managedInstallation.checkIn.enabled }}
+            - { name: installation-agent, mountPath: /secrets/check-in, readOnly: true }
+            {{- end }}
+            {{- if .Values.managedInstallation.registration.required }}
+            - { name: registration-token, mountPath: /secrets/registration, readOnly: true }
+            - { name: registration-cache, mountPath: /var/lib/realtimestack-registration }
+            {{- end }}
             - { name: tmp, mountPath: /tmp }
             {{- if and .Values.persistence.enabled (eq .Values.persistence.provider "Sqlite") }}
             - { name: persistence, mountPath: {{ .Values.persistence.storage.mountPath | quote }} }
             {{- end }}
       volumes:
+        {{- if .Values.managedInstallation.checkIn.enabled }}
+        - name: installation-agent
+          secret:
+            secretName: {{ .Values.managedInstallation.checkIn.agentTokenSecret.name }}
+            defaultMode: 288
+            items: [{ key: {{ .Values.managedInstallation.checkIn.agentTokenSecret.key }}, path: agent-token }]
+        {{- end }}
+        {{- if .Values.managedInstallation.registration.required }}
+        - name: registration-token
+          secret:
+            secretName: {{ .Values.managedInstallation.registration.statusTokenSecret.name }}
+            defaultMode: 288
+            items: [{ key: {{ .Values.managedInstallation.registration.statusTokenSecret.key }}, path: token }]
+        - name: registration-cache
+          persistentVolumeClaim: { claimName: {{ .Values.managedInstallation.registration.cacheExistingClaim | quote }} }
+        {{- end }}
         {{- if and .Values.persistence.enabled (eq .Values.persistence.provider "Sqlite") }}
         - name: persistence
           persistentVolumeClaim: { claimName: {{ .Values.persistence.storage.existingClaim | quote }} }

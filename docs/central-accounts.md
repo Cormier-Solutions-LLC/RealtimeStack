@@ -71,9 +71,14 @@ gateway deployment, Redis and first-initialization Kubernetes code gates.
 Route these exact paths under the gateway's public HTTPS origin to the accounts
 service on port 8080:
 
+- `/` (launch and post-logout landing; redirects to `/account`)
 - `/account`
 - `/api/auth/sso/` and all its children
 - `/api/product/` and all its children
+
+The Helm chart can manage both hosts and their routes together. See
+[managed release configuration](managed-release.md) for protected values, existing
+keyring requirements and the paired immutable-image promotion/rollback process.
 
 Keep gateway/WebSocket/application protocol routes on the gateway. Forward HTTPS
 scheme only from explicitly configured trusted ingress networks/proxies. Apply

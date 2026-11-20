@@ -1,0 +1,21 @@
+{
+  "fullnameOverride": "example-gateway",
+  "image": { "repository": "registry.example.test/realtime/gateway", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+  "topology": "ha",
+  "replicaCount": 3,
+  "redis": { "mode": "managed", "managedReleaseName": "example-redis", "username": "example-user", "instancePrefix": "example:installation", "credentialsSecret": { "name": "example-redis-auth", "passwordKey": "application-password" } },
+  "licensing": { "egressNamespaceSelector": { "matchLabels": { "kubernetes.io/metadata.name": "edge-example" } }, "egressPodSelector": { "matchLabels": { "app.kubernetes.io/name": "traefik" } }, "egressTargetPorts": [8443] },
+  "ingressRoute": { "enabled": true, "host": "gateway.example.test", "path": "/legacy/ws", "ticketPath": "/legacy/tickets", "fallbackPath": "/example/http", "tlsSecretName": "example-tls" },
+  "gateway": { "allowedOrigins": ["https://gateway.example.test"], "realtimeOverrides": { "SessionCookieName": "legacy_session", "AspNetCoreSessionIdKey": "Legacy.SessionId", "SessionSource": "Cookie", "MaximumFrameBytes": 16384 }, "webSocketSubProtocols": ["legacy.realtime.v1", "realtimestack.v1"] },
+  "accounts": {
+    "enabled": true, "fullnameOverride": "example-accounts", "keyringExistingClaim": "example-accounts-keyring", "redisPrefix": "example:installation:accounts:",
+    "image": { "repository": "registry.example.test/realtime/accounts", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    "sso": { "authority": "https://access.example.test", "publicUrl": "https://gateway.example.test", "clientId": "example-realtime", "clientSecret": { "name": "example-access", "key": "client-secret" }, "knownProxyNetworks": ["192.0.2.0/24"] },
+    "egress": { "namespaceSelector": { "matchLabels": { "kubernetes.io/metadata.name": "edge-example" } }, "podSelector": { "matchLabels": { "app.kubernetes.io/name": "traefik" } }, "ports": [8443] }
+  },
+  "managedInstallation": {
+    "installationId": "kubernetes:example:realtime", "licensingOrigin": "https://licensing.example.test",
+    "checkIn": { "enabled": true, "agentTokenSecret": { "name": "example-check-in", "key": "agent-token" } },
+    "registration": { "required": false, "statusTokenSecret": { "name": "example-status", "key": "token" }, "cacheExistingClaim": "example-registration-receipt" }
+  }
+}

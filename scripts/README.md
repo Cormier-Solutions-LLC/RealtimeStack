@@ -10,6 +10,12 @@ The [runner setup validation workflow](../.github/workflows/runner-setup.yml) in
 
 ## Change-aware CI
 
+Managed central Accounts releases are documented in [managed release configuration](../docs/managed-release.md).
+`build-accounts-archive.sh` retains the tested managed host bytes alongside the
+gateway archive; `release-manifest.mjs` validates their immutable release evidence.
+Accounts remains opt-in in the chart and both components retain manual protected
+promotion. See that guide before changing a managed installation's Helm values.
+
 The [CI workflow](../.github/workflows/ci.yml) selects pull-request validation jobs with [the impact selector](ci-impact.mjs). It compares the PR head against the merge base with its target branch using full Git history, including deleted paths and both sides of renames. An isolated reference-adapter change runs that adapter and the shared build/contract tests, not every unrelated adapter. Shared runtime, protocol, SDK, browser UI, or full-circle fixture changes run all runtime consumers. Deployment/configuration changes retain bootstrap cross-shell and both-topology coverage. Dependency manifest changes additionally select dependency review.
 
 Documentation-only changes under `docs`/`refs` and root README/changelog/license files skip runtime validation; example changelogs and `scripts/README.md` still select their contract tests. Shared workflow/action or executable script changes, unknown inputs, and unavailable comparisons conservatively select the full PR suite. Update the selector and its tests when introducing a job or shared dependency.

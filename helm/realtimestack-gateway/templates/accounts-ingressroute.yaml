@@ -1,0 +1,19 @@
+{{- if and .Values.accounts.enabled .Values.accounts.ingressRoute.enabled }}
+{{- $_ := required "Accounts ingress requires ingressRoute.host even when gateway ingress is externally managed" .Values.ingressRoute.host -}}
+{{- $_ := required "Accounts ingress requires ingressRoute.tlsSecretName" .Values.ingressRoute.tlsSecretName -}}
+{{- if ne (trimPrefix "https://" .Values.accounts.sso.publicUrl) .Values.ingressRoute.host -}}{{- fail "Accounts public HTTPS origin must match the configured ingress host" -}}{{- end }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "realtimestack-gateway.accountsName" . }}
+spec:
+  entryPoints: [{{ .Values.ingressRoute.entryPoint | quote }}]
+  routes:
+    - match: Host(`{{ .Values.ingressRoute.host }}`) && (Path(`/`) || Path(`/account`) || PathPrefix(`/api/auth/sso/`) || PathPrefix(`/api/product/`))
+      kind: Rule
+      services:
+        - name: {{ include "realtimestack-gateway.accountsName" . }}
+          port: http
+  tls:
+    secretName: {{ .Values.ingressRoute.tlsSecretName | quote }}
+{{- end }}

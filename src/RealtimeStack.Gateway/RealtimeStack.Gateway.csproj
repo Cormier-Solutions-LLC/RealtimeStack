@@ -19,6 +19,7 @@
     <Compile Include="../../shared/Cormier.HostCheckIn/HostCheckIn.cs" Link="HostCheckIn.cs" />
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTP_PORTS" Value="8080" />
     <ContainerEnvironmentVariable Include="DOTNET_EnableDiagnostics" Value="0" />
+    <ContainerLabel Include="org.opencontainers.image.revision" Value="$(SourceRevisionId)" Condition="'$(SourceRevisionId)' != ''" />
   </ItemGroup>
 
   <ItemGroup>
