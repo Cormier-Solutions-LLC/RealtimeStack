@@ -31,6 +31,7 @@ if (access.Enabled) { app.UseAuthentication(); app.UseAuthorization(); }
 app.MapAccountsAccess(access);
 app.MapGet("/health/live", () => Results.Json(new { status = "live" }));
 app.MapGet("/health/ready", (HttpContext context) => { var ready = !access.Enabled || context.RequestServices.GetRequiredService<RedisTicketStore>().IsConnected; return Results.Json(new { status = ready ? "ready" : "storage-unavailable" }, statusCode: ready ? 200 : 503); });
+app.MapGet("/", () => Results.Redirect("/account"));
 app.MapGet("/account", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "wwwroot/account.html"), "text/html; charset=utf-8"));
 app.MapGet("/api/auth/sso/account.js", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "wwwroot/account.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/api/product/config", (HttpContext context, ProductConfigurationClient catalog) =>
