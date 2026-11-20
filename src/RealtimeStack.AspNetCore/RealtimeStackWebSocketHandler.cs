@@ -39,11 +39,13 @@ public sealed class RealtimeStackWebSocketHandler(
             return;
         }
 
-        if (!context.WebSockets.WebSocketRequestedProtocols.Contains(SubProtocol, StringComparer.Ordinal))
+        var subProtocol = options.WebSocketSubProtocols.FirstOrDefault(protocol =>
+            context.WebSockets.WebSocketRequestedProtocols.Contains(protocol, StringComparer.Ordinal));
+        if (subProtocol is null)
         {
             metrics.RecordHandshake("rejected", "subprotocol");
             context.Response.StatusCode = StatusCodes.Status426UpgradeRequired;
-            context.Response.Headers.SecWebSocketProtocol = SubProtocol;
+            context.Response.Headers.SecWebSocketProtocol = string.Join(", ", options.WebSocketSubProtocols);
             return;
         }
 
@@ -66,7 +68,7 @@ public sealed class RealtimeStackWebSocketHandler(
             return;
         }
 
-        using var socket = await context.WebSockets.AcceptWebSocketAsync(SubProtocol);
+        using var socket = await context.WebSockets.AcceptWebSocketAsync(subProtocol);
         await using var connection = new RealtimeStackConnection(
             socket,
             authentication.Identity!,

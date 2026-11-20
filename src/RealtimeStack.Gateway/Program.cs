@@ -1,4 +1,5 @@
 using RealtimeStack.Config;
+using Cormier.Licensing.Products;
 using Microsoft.Data.Sqlite;
 using Npgsql;
 using System.Reflection;
@@ -13,6 +14,8 @@ using RealtimeStack.Redis;
 var setupOnly = args.Contains("--realtimestack-setup", StringComparer.Ordinal);
 var hostArgs = args.Where(argument => argument != "--realtimestack-setup").ToArray();
 var builder = WebApplication.CreateSlimBuilder(hostArgs);
+builder.Services.AddCormierProductLicensing("RealtimeStack.Gateway",
+    Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>

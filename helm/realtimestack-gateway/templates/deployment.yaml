@@ -72,6 +72,19 @@ spec:
           envFrom:
             - configMapRef: { name: {{ include "realtimestack-gateway.fullname" . }} }
           env:
+            {{- if .Values.licensing.serverUrl }}
+            - name: CORMIER_LICENSE_SERVER_URL
+              value: {{ .Values.licensing.serverUrl | quote }}
+            - name: CORMIER_LICENSE_PUBLIC_KEYS
+              value: {{ .Values.licensing.publicKeys | quote }}
+            - name: CORMIER_LICENSE_DEPLOYMENT
+              value: {{ .Values.licensing.deploymentType | quote }}
+            {{- end }}
+            {{- if .Values.licensing.keySecret.name }}
+            - name: CORMIER_LICENSE_KEY
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.licensing.keySecret.name }}, key: {{ .Values.licensing.keySecret.key }} }
+            {{- end }}
             - name: ASPNETCORE_HTTP_PORTS
               value: {{ .Values.service.targetPort | quote }}
             - name: REALTIMESTACK_INSTANCE_ID

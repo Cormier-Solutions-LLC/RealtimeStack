@@ -126,6 +126,10 @@ public static class RealtimeStackGatewayHostingExtensions
         }
         realtimestack
             .Validate(options => IsValidRoute(options.EndpointPath), "RealtimeStack:EndpointPath must be an absolute route without query or fragment.")
+            .Validate(options => options.WebSocketSubProtocols.Length > 0 && options.WebSocketSubProtocols.All(protocol =>
+                !string.IsNullOrWhiteSpace(protocol) && protocol.Length <= 128 &&
+                protocol.All(character => char.IsAsciiLetterOrDigit(character) || character is '.' or '_' or '-')),
+                "RealtimeStack:WebSocketSubProtocols must contain explicit protocol tokens.")
             .Validate(options => IsValidRoute(options.TicketEndpointPath), "RealtimeStack:TicketEndpointPath must be an absolute route without query or fragment.")
             .Validate(options => !string.Equals(options.EndpointPath, options.TicketEndpointPath, StringComparison.OrdinalIgnoreCase),
                 "RealtimeStack endpoint and ticket endpoint paths must be different.")

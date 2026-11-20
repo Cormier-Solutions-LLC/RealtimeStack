@@ -21,6 +21,15 @@ namespace RealtimeStack.IntegrationTests;
 public sealed class WebSocketProtocolTests
 {
     [Fact]
+    public async Task ConfiguredWireProtocolKeepsExistingClientsCompatible()
+    {
+        await using var factory = new RealtimeStackFactory(subProtocols: ["compat.v1"]);
+        using var socket = await ConnectAsync(factory, subProtocol: "compat.v1");
+        Assert.Equal(WebSocketState.Open, socket.State);
+        Assert.Equal("compat.v1", socket.SubProtocol);
+    }
+
+    [Fact]
     public async Task HttpFallbackPollReturnsCorrelatedAcknowledgment()
     {
         await using var factory = new RealtimeStackFactory();
@@ -516,10 +525,11 @@ public sealed class WebSocketProtocolTests
         string origin = "http://localhost",
         bool useTicket = true,
         string? forwardedHost = null,
-        string endpointPath = "/realtimestack/ws")
+        string endpointPath = "/realtimestack/ws",
+        string subProtocol = RealtimeStackWebSocketHandler.SubProtocol)
     {
         var client = factory.Server.CreateWebSocketClient();
-        client.SubProtocols.Add(RealtimeStackWebSocketHandler.SubProtocol);
+        client.SubProtocols.Add(subProtocol);
         client.ConfigureRequest = request =>
         {
             request.Headers.Origin = origin;
@@ -580,7 +590,8 @@ public sealed class WebSocketProtocolTests
         TimeSpan? identityLifetime = null,
         TimeSpan? authenticationDelay = null,
         string endpointPath = "/realtimestack/ws",
-        string ticketEndpointPath = "/realtimestack/tickets") : WebApplicationFactory<Program>
+        string ticketEndpointPath = "/realtimestack/tickets",
+        string[]? subProtocols = null) : WebApplicationFactory<Program>
     {
         public FakeMessageBus Bus { get; } = new();
 
@@ -612,6 +623,7 @@ public sealed class WebSocketProtocolTests
                 {
                     AllowedOrigins = ["http://localhost", "https://gateway.example"],
                     EndpointPath = endpointPath,
+                    WebSocketSubProtocols = subProtocols ?? [RealtimeStackWebSocketHandler.SubProtocol],
                     TicketEndpointPath = ticketEndpointPath,
                     MaximumFrameBytes = 1024,
                     MaximumMessageBytes = 1024,

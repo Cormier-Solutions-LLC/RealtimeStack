@@ -21,6 +21,8 @@ public sealed class RealtimeStackOptions
 
     public string EndpointPath { get; set; } = "/realtimestack/ws";
 
+    public string[] WebSocketSubProtocols { get; set; } = ["realtimestack.v1"];
+
     public string SessionCookieName { get; set; } = "realtimestack_session";
 
     public RealtimeStackSessionSource SessionSource { get; set; } = RealtimeStackSessionSource.Cookie;

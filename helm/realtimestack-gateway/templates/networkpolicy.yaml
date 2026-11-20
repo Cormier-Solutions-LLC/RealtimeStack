@@ -34,6 +34,14 @@ spec:
         - { protocol: TCP, port: {{ .Values.service.targetPort }} }
     {{- end }}
   egress:
+    {{- if and .Values.licensing.serverUrl (not (empty .Values.licensing.egressCidrs)) }}
+    - to:
+        {{- range .Values.licensing.egressCidrs }}
+        - ipBlock: { cidr: {{ . | quote }} }
+        {{- end }}
+      ports:
+        - { protocol: TCP, port: 443 }
+    {{- end }}
     - to:
         - namespaceSelector: {}
           podSelector:
