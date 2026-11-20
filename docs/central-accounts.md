@@ -108,6 +108,7 @@ enable these gateway settings:
 | Environment variable | Value |
 | --- | --- |
 | `Registration__Required` | `true` only for installations requiring registration |
+| `Registration__AccountIssuer` | Exact HTTPS central Access issuer for registered user provenance |
 | `Registration__StatusUrl` | Exact internal accounts `/internal/product/registration` endpoint |
 | `Registration__InstallationId` | Same stable installation ID as the accounts service |
 | `Registration__ServiceTokenFile` | Mounted dedicated internal status token, also configured on accounts |
@@ -126,11 +127,40 @@ Missing, invalid, paid or unregistered responses cannot create a registration.
 They do not erase an already verified permanent registration. Changing the
 service token, endpoint or installation ID requires a fresh verified receipt.
 
-This opt-in check changes installation readiness only; it adds no charge,
-connection/resource cap or changes to wire/application authorization. Keep the
+This opt-in configuration verifies installation readiness and registered user
+provenance; it adds no charge, connection/resource cap or client envelope change. Keep the
 existing Kubernetes initialization key, application credentials and ticket gates.
 Do not enable it on a serving installation before owner registration and cache
 storage are ready. Shared libraries and default standalone gateway use stay free.
+
+When required, every interactive session also needs trusted host-written
+`registeredIdentity: { issuer, subject, emailVerified: true, registered: true }`
+in its existing Redis session record. The issuer must exactly match the configured
+Access issuer, and subject is its immutable verified account ID. Guest roles and
+names do not bypass this requirement. Hosts derive this attestation from verified
+central authentication; browsers cannot supply it. `RedisSessionRecord` provides
+the additive `RegisteredIdentity` init-property without changing its constructor
+or client envelopes. Tickets must remain bound to the same live registered
+session; a standalone ticket cannot bypass registration. Upgrade host session
+provisioners before enabling the managed requirement.
+
+## Authenticated host inventory
+
+Both managed components report their relevant host data at startup and every
+60 seconds to `/v1/installations/check-in`. Mount the product's separate
+`licensing-checkin` Secret key `agent-token` and set
+`CORMIER_LICENSE_AGENT_TOKEN_FILE`. Set stable `CORMIER_LICENSE_INSTALLATION_ID`
+and distinct `CORMIER_LICENSE_INSTANCE_ID` values, for example component prefix
+plus pod UID. Populate `POD_NAMESPACE`, `POD_NAME`, `POD_UID`, `NODE_NAME` from the
+downward API and supply the HTTPS `CORMIER_LICENSE_SERVER_URL`.
+
+The agent credential is bound centrally to product and installation; SSO, lease
+and administrator credentials cannot substitute. Payloads contain only component
+version, deployment type, hostname, OS/version, architecture, CPU/memory and
+host/container scope plus Kubernetes identity. The server timestamps receipt.
+Failures are reported as failed/stale while preserving existing valid work.
+Gateway detailed health checks include check-in status, and fixed warning logs
+report failure without credentials or request bodies.
 
 ## Validation
 

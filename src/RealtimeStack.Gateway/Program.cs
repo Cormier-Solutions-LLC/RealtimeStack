@@ -10,6 +10,7 @@ using RealtimeStack.Contracts;
 using RealtimeStack.Gateway;
 using RealtimeStack.HttpFallback;
 using RealtimeStack.Redis;
+using Cormier.HostCheckIn;
 
 var setupOnly = args.Contains("--realtimestack-setup", StringComparer.Ordinal);
 var hostArgs = args.Where(argument => argument != "--realtimestack-setup").ToArray();
@@ -26,6 +27,7 @@ builder.Logging.AddJsonConsole(options =>
 
 builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddCommandLine(hostArgs);
+builder.Services.AddInstallationHostCheckIn(builder.Configuration, "realtime", "RealtimeStack.Gateway", Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 builder.Services.AddSingleton(GatewayRegistrationOptions.Read(builder.Configuration));
 builder.Services.AddHttpClient("registration-state", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 32 * 1024; })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
@@ -38,6 +40,12 @@ builder.Services.AddRealtimeStackConfiguration(builder.Configuration, registrati
     .UseSqlite((_, connectionString) => new SqliteConnection(connectionString))
     .UsePostgreSql((_, connectionString) => new NpgsqlConnection(connectionString))
     .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
+builder.Services.AddSingleton<IRealtimeStackSessionStore>(provider => new RegisteredAccountSessionStore(
+    new RedisSessionStore(provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value),
+    provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value, provider.GetRequiredService<GatewayRegistrationOptions>()));
+builder.Services.AddSingleton<IConnectionTicketStore>(provider => new RegisteredAccountTicketStore(
+    new RedisConnectionTicketStore(provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value),
+    provider.GetRequiredService<IRealtimeStackSessionStore>(), provider.GetRequiredService<GatewayRegistrationOptions>()));
 var diagnosticsEnabled = builder.Configuration.GetValue<bool>("Diagnostics:Enabled");
 var diagnosticsPolicy = builder.Configuration["Diagnostics:AuthorizationPolicy"];
 var metricsPolicy = builder.Configuration["Metrics:AuthorizationPolicy"];
@@ -169,6 +177,7 @@ HealthStatusResponse CreateHealthResponse(string status)
             ["started"] = state.IsStarted ? "healthy" : "starting",
             ["draining"] = state.IsDraining ? "draining" : "accepting-traffic",
             ["registration"] = registration.HealthStatus,
+            ["hostCheckIn"] = app.Services.GetRequiredService<InstallationHostCheckIn>().HealthStatus,
         };
     }
 

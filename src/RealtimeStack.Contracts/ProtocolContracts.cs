@@ -87,7 +87,13 @@ public sealed record RedisSessionRecord(
     string UserId,
     IReadOnlyList<string> AllowedTopics,
     DateTimeOffset ExpiresAt,
-    bool Revoked = false);
+    bool Revoked = false)
+{
+    public RegisteredAccountIdentity? RegisteredIdentity { get; init; }
+}
+
+/// <summary>Server-side account provenance written only by the authenticated host after verified SSO.</summary>
+public sealed record RegisteredAccountIdentity(string Issuer, string Subject, bool EmailVerified, bool Registered);
 
 public sealed record ConnectionTicketRecord(
     string TenantId,

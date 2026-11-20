@@ -7,8 +7,10 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using RealtimeStack.Accounts;
+using Cormier.HostCheckIn;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddInstallationHostCheckIn(builder.Configuration, "realtime", "RealtimeStack.Accounts", Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 var access = builder.AddAccountsAccess();
 builder.Services.AddHttpClient("product-configuration", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 64 * 1024; }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient("registration", client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 64 * 1024; }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });

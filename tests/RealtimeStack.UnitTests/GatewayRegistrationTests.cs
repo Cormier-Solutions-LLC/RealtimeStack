@@ -56,7 +56,7 @@ public class GatewayRegistrationTests
     [Fact]
     public void RequiredRegistrationRejectsUnsafeOrIncompleteConfiguration()
     {
-        var values = new Dictionary<string, string?> { ["Registration:Required"] = "true", ["Registration:StatusUrl"] = "http://accounts.example.org/internal/product/registration", ["Registration:InstallationId"] = "installation-1", ["Registration:ServiceToken"] = new string('x', 32), ["Registration:CacheFile"] = Path.Combine(Path.GetTempPath(), "registration-fixture.json") };
+        var values = new Dictionary<string, string?> { ["Registration:Required"] = "true", ["Registration:AccountIssuer"] = "https://access.example.org", ["Registration:StatusUrl"] = "http://accounts.example.org/internal/product/registration", ["Registration:InstallationId"] = "installation-1", ["Registration:ServiceToken"] = new string('x', 32), ["Registration:CacheFile"] = Path.Combine(Path.GetTempPath(), "registration-fixture.json") };
         Assert.Throws<InvalidOperationException>(() => GatewayRegistrationOptions.Read(new ConfigurationBuilder().AddInMemoryCollection(values).Build()));
         values["Registration:AllowInsecureHttp"] = "true"; Assert.True(GatewayRegistrationOptions.Read(new ConfigurationBuilder().AddInMemoryCollection(values).Build()).Required);
         values["Registration:StatusUrl"] = "https://accounts.example.org/internal/product/registration?secret=query";

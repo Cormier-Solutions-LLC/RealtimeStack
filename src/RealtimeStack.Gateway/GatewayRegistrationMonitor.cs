@@ -8,6 +8,7 @@ namespace RealtimeStack.Gateway;
 
 public sealed record GatewayRegistrationOptions(bool Required, Uri? StatusUrl, string InstallationId, string ServiceToken, string CacheFile, TimeSpan PollInterval)
 {
+    public string AccountIssuer { get; init; } = "";
     public static GatewayRegistrationOptions Read(IConfiguration configuration)
     {
         if (!configuration.GetValue<bool>("Registration:Required")) return new(false, null, "", "", "", TimeSpan.FromMinutes(1));
@@ -16,12 +17,14 @@ public sealed record GatewayRegistrationOptions(bool Required, Uri? StatusUrl, s
         var file = configuration["Registration:ServiceTokenFile"];
         var token = !string.IsNullOrWhiteSpace(file) ? File.ReadAllText(file).Trim() : configuration["Registration:ServiceToken"] ?? "";
         var cache = configuration["Registration:CacheFile"] ?? "";
+        var issuer = configuration["Registration:AccountIssuer"]?.TrimEnd('/') ?? "";
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) ||
             !(uri.Scheme == "https" || uri.Scheme == "http" && configuration.GetValue<bool>("Registration:AllowInsecureHttp")) ||
             uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0 || uri.AbsolutePath != "/internal/product/registration" ||
-            installationId.Length is < 8 or > 128 || installationId.Any(char.IsControl) || token.Length < 32 || !Path.IsPathFullyQualified(cache))
-            throw new InvalidOperationException("Required registration needs an explicit trusted status endpoint, stable installation ID, dedicated service token and absolute persistent cache file.");
-        return new(true, uri, installationId, token, cache, TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue("Registration:PollSeconds", 60), 30, 600)));
+            installationId.Length is < 8 or > 128 || installationId.Any(char.IsControl) || token.Length < 32 || !Path.IsPathFullyQualified(cache) ||
+            !Uri.TryCreate(issuer, UriKind.Absolute, out var issuerUri) || issuerUri.Scheme != "https" || issuerUri.UserInfo.Length != 0 || issuerUri.AbsolutePath != "/" || issuerUri.Query.Length != 0 || issuerUri.Fragment.Length != 0)
+            throw new InvalidOperationException("Required registration needs a trusted status endpoint, exact HTTPS Access issuer, stable installation ID, dedicated service token and absolute persistent cache file.");
+        return new(true, uri, installationId, token, cache, TimeSpan.FromSeconds(Math.Clamp(configuration.GetValue("Registration:PollSeconds", 60), 30, 600))) { AccountIssuer = issuer };
     }
     public override string ToString() => $"GatewayRegistrationOptions {{ Required = {Required}, Credentials = [redacted] }}";
 }
