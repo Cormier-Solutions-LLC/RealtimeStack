@@ -18,6 +18,7 @@ defmodule RealtimeStackExample.MixProject do
   defp deps do
     [
       {:phoenix, "1.8.13"},
+      {:plug, "1.20.4"},
       {:bandit, "1.14.1"},
       {:redix, "1.9.1"},
       {:req, "0.7.4"},
