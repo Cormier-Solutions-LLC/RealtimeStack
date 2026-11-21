@@ -111,6 +111,33 @@ public sealed class PersistenceTests : IDisposable
         if (dialect == RelationalDialect.Snowflake) Assert.StartsWith("CREATE HYBRID TABLE", store.CreateTableSql);
     }
 
+    [Theory]
+    [InlineData(RelationalDialect.SqlServer, "DATALENGTH")]
+    [InlineData(RelationalDialect.AzureSql, "DATALENGTH")]
+    [InlineData(RelationalDialect.MySql, "CHAR_LENGTH")]
+    [InlineData(RelationalDialect.MariaDb, "CHAR_LENGTH")]
+    public async Task ScopedCommandsCompareTheOriginalLengthOfEveryIdentifier(RelationalDialect dialect, string lengthFunction)
+    {
+        // Inspect the selected dialect's parameterized commands without handing its SQL to SQLite.
+        var inspected = new InvalidOperationException("Scope command inspected.");
+        var key = new DurableStreamKey("workspace", "member-雪", "inbox", DurableRecordKind.Message);
+        var store = new RelationalPersistenceStore(() => new SqliteConnection("Data Source=:memory:"), dialect,
+            configureCommand: command =>
+            {
+                Assert.Contains($"tenant_id = @p0 AND {lengthFunction}(tenant_id) = {lengthFunction}(@p0)", command.CommandText);
+                Assert.Contains($"owner_id = @p1 AND {lengthFunction}(owner_id) = {lengthFunction}(@p1)", command.CommandText);
+                Assert.Contains($"stream_id = @p2 AND {lengthFunction}(stream_id) = {lengthFunction}(@p2)", command.CommandText);
+                Assert.Equal(key.TenantId, command.Parameters[0].Value);
+                Assert.Equal(key.OwnerId, command.Parameters[1].Value);
+                Assert.Equal(key.StreamId, command.Parameters[2].Value);
+                throw inspected;
+            });
+
+        Assert.Same(inspected, await Assert.ThrowsAsync<InvalidOperationException>(() => store.ReadAsync(key)));
+        Assert.Same(inspected, await Assert.ThrowsAsync<InvalidOperationException>(() => store.ReadLatestAsync(key)));
+        Assert.Same(inspected, await Assert.ThrowsAsync<InvalidOperationException>(() => store.AcknowledgeAsync(key, 1)));
+    }
+
     public void Dispose() => File.Delete(path);
     private sealed class FixedClock : TimeProvider
     {
