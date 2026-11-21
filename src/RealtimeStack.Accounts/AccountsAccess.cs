@@ -86,7 +86,9 @@ public static class AccountsAccess
                 options.RequireHttpsMetadata = true; options.SaveTokens = true; options.GetClaimsFromUserInfoEndpoint = false;
                 options.Scope.Clear(); options.Scope.Add("openid"); options.Scope.Add("profile"); options.Scope.Add("email"); options.Scope.Add("licensing");
                 options.ClaimActions.MapUniqueJsonKey("email_verified", "email_verified"); options.ClaimActions.MapUniqueJsonKey("god", "god");
+                // These signed claims are required again when validating the protected session.
                 options.ClaimActions.Remove("acr");
+                options.ClaimActions.Remove("iss");
                 options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidIssuer = access.Authority, ValidateAudience = true, ValidAudience = access.ClientId, ValidateLifetime = true, RequireSignedTokens = true, NameClaimType = "name", ClockSkew = TimeSpan.FromMinutes(1) };
                 options.Events.OnRedirectToIdentityProvider = context => { context.ProtocolMessage.RedirectUri = access.PublicUrl + AccountsAccessOptions.Callback; context.ProtocolMessage.SetParameter("resource", builder.Configuration["Licensing:Origin"]); return Task.CompletedTask; };
                 options.Events.OnAuthorizationCodeReceived = context => { context.TokenEndpointRequest?.SetParameter("resource", builder.Configuration["Licensing:Origin"]); return Task.CompletedTask; };
@@ -101,7 +103,13 @@ public static class AccountsAccess
                         context.Principal = WithCentralProfile(context.Principal!, state);
                         (context.Properties ?? throw new AccountStateUnavailableException()).Items[CredentialStampKey] = signedStamp;
                     }
-                    catch (AccountStateUnavailableException) { context.Fail("An active verified central account is required."); }
+                    catch (AccountStateUnavailableException)
+                    {
+                        // TicketReceived failures must explicitly stop remote sign-in.
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        await context.Response.WriteAsJsonAsync(new { error = "An active verified central account is required. Please sign in again." });
+                    }
                 };
                 options.Events.OnRemoteFailure = async context => { context.HandleResponse(); context.Response.StatusCode = 401; await context.Response.WriteAsJsonAsync(new { error = "Central sign-in could not be verified. Please sign in again." }); };
             });

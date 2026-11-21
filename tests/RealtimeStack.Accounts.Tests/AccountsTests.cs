@@ -37,6 +37,7 @@ public class AccountsTests
         Assert.True(options.TokenValidationParameters.ValidateIssuer); Assert.True(options.TokenValidationParameters.ValidateAudience); Assert.True(options.TokenValidationParameters.RequireSignedTokens);
         Assert.Contains("licensing", options.Scope); Assert.True(options.SaveTokens);
         Assert.DoesNotContain(options.ClaimActions, action => action.ClaimType == "acr");
+        Assert.DoesNotContain(options.ClaimActions, action => action.ClaimType == "iss");
     }
     [Fact] public void SignedCredentialStampMustBeSingleStrictAcrAndSurvivesCentralProfileRefresh()
     {

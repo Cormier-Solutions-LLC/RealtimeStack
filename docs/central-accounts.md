@@ -66,7 +66,9 @@ this operator gate adds no paid tier or connection restriction. The default
 remains false for independently operated OSS installations.
 Callbacks require the original signed credential revision to equal freshly
 retrieved Access account state. The protected session retains both that `acr`
-and its matching stamp. Password/email/verification/lock changes invalidate it;
+and its matching stamp, together with the token-validated `iss` claim. The OIDC
+claim filters preserve both standard claims. A failed callback returns 401 and
+issues no account cookie or success redirect. Password/email/verification/lock changes invalidate it;
 an old token cannot acquire a newly fetched stamp. Cookie validation refreshes
 central name/email and enforces a 30-second cache with a maximum 120-second
 transport outage. Disabled/missing accounts or malformed authority fail closed.
@@ -204,8 +206,10 @@ report failure without credentials or request bodies.
 
 The test project covers identity binding, signed claim types, code/PKCE settings,
 free-only catalog/receipt validation and account/installation swaps. To run the
-real Redis persistence/encryption test, set `REDIS_TEST_ENDPOINT` to an isolated
+real Redis persistence/encryption and signed OIDC middleware tests, set `REDIS_TEST_ENDPOINT` to an isolated
 Redis endpoint before `dotnet test`; CI already supplies its Redis service.
-The test creates and deletes only its own random key prefix. Verify full
+The tests exercise code flow, S256 PKCE, signed token validation, cross-replica
+cookie sessions, credential-revision revocation and rejected callbacks without
+cookie creation. They create and delete only their own random key prefixes. Verify full
 browser sign-in, registration, restart persistence and HTTPS ingress against the
 central issuer before reporting a live integration as complete.
