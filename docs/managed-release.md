@@ -148,3 +148,10 @@ reset installation identity, delete storage or undo registration data. An old
 gateway-only release cannot serve the enabled Accounts integration; select an
 appropriate paired release instead. A rendered plan, local image or passing test
 is not a live deployment.
+
+Managed account pages link the signed central God to Access shared integrations.
+The current Gateway and Accounts hosts have no email, payments, AI or cloud-storage
+vendor adapter, so they request no delegated vendor-settings grant. Access OIDC,
+Licensing APIs and host-configured Redis remain their existing service/infrastructure
+connections. Optional persistence plugins continue to use host-supplied connection
+factories; this link does not claim to migrate those library consumers' credentials.

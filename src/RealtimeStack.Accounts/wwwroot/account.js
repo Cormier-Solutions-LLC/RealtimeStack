@@ -13,8 +13,10 @@ async function refresh() {
   byId('register').hidden = !session.authenticated || session.registrationAllowed === false;
   byId('account').hidden = !session.authenticated || !session.accountUrl;
   byId('admin-accounts').hidden = !session.authenticated || !session.adminAccountsUrl;
+  byId('integrations').hidden = !session.authenticated || !session.integrationsUrl;
   if (session.accountUrl) byId('account').href = session.accountUrl;
   if (session.adminAccountsUrl) byId('admin-accounts').href = session.adminAccountsUrl;
+  if (session.integrationsUrl) byId('integrations').href = session.integrationsUrl;
   byId('identity').textContent = !session.configured ? 'Account registration has not been configured for this installation.' : session.authenticated ? `Signed in as ${session.user?.email || session.user?.name || 'your central account'}.` : 'Sign in to register this installation.';
   if (session.configured) {
     const login = new URL(session.loginUrl, location.href);

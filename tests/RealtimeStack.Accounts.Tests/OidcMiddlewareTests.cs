@@ -38,6 +38,9 @@ public sealed class OidcMiddlewareTests
         using var session = await fixture.Session(fixture.Second, cookies);
         Assert.True(session.RootElement.GetProperty("authenticated").GetBoolean());
         Assert.Equal(god, session.RootElement.GetProperty("registrationAllowed").GetBoolean());
+        var integrationsUrl = session.RootElement.GetProperty("integrationsUrl");
+        if (god) Assert.EndsWith("/admin/integrations", integrationsUrl.GetString());
+        else Assert.Equal(JsonValueKind.Null, integrationsUrl.ValueKind);
         Assert.Equal(god, session.RootElement.GetProperty("user").GetProperty("god").GetBoolean());
         // A previously authenticated request must still perform a new challenge.
         _ = await fixture.Begin(cookies);
