@@ -35,6 +35,8 @@ Set `HEARTBEAT_INTERVAL_MILLISECONDS` to the gateway's configured `RealtimeStack
 
 Startup validates all configuration and exits nonzero on a missing or invalid value or unavailable Redis. `TRUST_PROXY_HOPS` must match the exact number of trusted TLS-terminating proxies (`0` for direct traffic); ticket proxy requests are bounded to ten seconds. Lifecycle and proxy handlers emit structural JSON; Express application handlers log structural objects through the default console logger. They intentionally omit sensitive values, but do not assume all framework logs are redacted. `/health` checks Redis readiness and PING, returning 200 or 503; the global request limiter can also return 429. It does not probe the gateway. Shutdown on `SIGINT` or `SIGTERM` stops accepting work, closes the proxy and Redis client, and allows 15 seconds for WebSocket drain, with a forced-exit timer at 16 seconds.
 
+The proxy forwards only the public gateway methods and paths. The adapter sets `X-Forwarded-Proto` from its configured public origin and removes incoming forwarding headers before sending requests to the gateway.
+
 Run the repeatable checks with `npm ci && npm run check`. Run the container from the repository root so the canonical assets are in scope:
 
 ```text

@@ -21,7 +21,6 @@ function fixture() {
   let deadline;
   const cancelled = [];
   const handler = createUpgradeHandler({
-    publicOrigin: "http://127.0.0.1:15100",
     publicScheme: "http",
     gatewayUrl: "http://127.0.0.1:15101",
     proxy,
@@ -49,11 +48,15 @@ test("destroys upgrades with malformed request targets", () => {
 
 test("forwards only the configured websocket path", () => {
   const context = fixture();
-  const request = { url: "/realtimestack/ws?ticket=example" };
+  const request = {
+    url: "/realtimestack/ws?ticket=example",
+    headers: { "x-forwarded-for": "192.0.2.10", origin: "http://127.0.0.1:15100" },
+  };
   const head = Buffer.alloc(0);
   context.handler(request, context.socket, head);
   assert.equal(context.socket.destroyed, false);
   assert.equal([...context.upgradedSockets][0].browser, context.socket);
+  assert.deepEqual(request.headers, { origin: "http://127.0.0.1:15100" });
   assert.deepEqual(context.calls, [[request, context.socket, head, {
     target: "http://127.0.0.1:15101",
     changeOrigin: false,

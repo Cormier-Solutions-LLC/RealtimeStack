@@ -18,8 +18,10 @@ function fixture(overrides = {}) {
     async del(key) { return values.delete(key) ? 1 : 0; },
   };
   const proxyCalls = [];
+  const proxyRequestHeaders = [];
   const proxy = {
     web(incoming, response, options) {
+      proxyRequestHeaders.push({ ...incoming.headers });
       const chunks = [];
       incoming.on("data", chunk => chunks.push(chunk));
       incoming.on("end", () => {
@@ -48,7 +50,7 @@ function fixture(overrides = {}) {
     sdkAssetRoot: path.resolve(exampleRoot, "..", "..", "sdk", "typescript", "dist"),
     ...overrides,
   };
-  return { app: createApp({ config, redisClient, proxy, logger }), config, redisClient, proxy, proxyCalls, logs, values };
+  return { app: createApp({ config, redisClient, proxy, logger }), config, redisClient, proxy, proxyCalls, proxyRequestHeaders, logs, values };
 }
 
 function login(agent, config) {
@@ -215,6 +217,28 @@ test("forwards HTTP fallback requests without stripping their mounted path", asy
     prependPath: true,
     headers: { "x-forwarded-proto": "http" },
   });
+});
+
+test("forwards only public fallback methods without client forwarding headers", async () => {
+  const context = fixture();
+  const gateway = request(context.app);
+  await gateway.post("/realtimestack/http/connect").expect(202);
+  await gateway.get("/realtimestack/http/connections/connection-a/stream").expect(202);
+  await gateway.delete("/realtimestack/http/connections/connection-a").expect(202);
+  await gateway.post("/realtimestack/http/connections/connection-a/stream").expect(404);
+  await gateway.post("/realtimestack/http/unrecognized").expect(404);
+  await gateway.post("/realtimestack/http/connections/connection-a/messages")
+    .set("Forwarded", "for=192.0.2.10")
+    .set("X-Forwarded-Host", "example.test")
+    .set("X-Forwarded-Proto", "https")
+    .set("X-RealtimeStack-Connection", "connection-token")
+    .expect(202);
+  assert.equal(context.proxyCalls.length, 4);
+  const headers = context.proxyRequestHeaders.at(-1);
+  assert.equal(headers.forwarded, undefined);
+  assert.equal(headers["x-forwarded-host"], undefined);
+  assert.equal(headers["x-forwarded-proto"], undefined);
+  assert.equal(headers["x-realtimestack-connection"], "connection-token");
 });
 
 test("keeps fallback receiver exemptions bounded", async () => {
