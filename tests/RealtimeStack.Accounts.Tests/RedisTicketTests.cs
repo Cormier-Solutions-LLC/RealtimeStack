@@ -15,6 +15,28 @@ public sealed class RedisAvailableFactAttribute : FactAttribute
 public class RedisTicketTests
 {
     [RedisAvailableFact]
+    public async Task ManagedOwnerReceiptCannotBeReplacedByOrdinaryOrBrowserRoleClaims()
+    {
+        const string issuer="https://access.example.test";
+        var prefix="accounts-owner-test:"+Guid.NewGuid().ToString("N")+":";
+        var endpoint=Environment.GetEnvironmentVariable("REDIS_TEST_ENDPOINT")!;
+        var configuration=new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{{"Sso:RedisConnection",endpoint},{"Sso:RedisPrefix",prefix},{"Sso:Authority",issuer},{"Registration:RequireGod","true"}}).Build();
+        using var redis=await ConnectionMultiplexer.ConnectAsync(endpoint);using var store=new RedisTicketStore(configuration,new EphemeralDataProtectionProvider());
+        var key=prefix+"registration:"+Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("installation-1")));
+        ClaimsPrincipal Account(bool god,string type=ClaimValueTypes.Boolean)=>new(new ClaimsIdentity([new Claim("iss",issuer),new Claim("sub",god?"usr-owner":"usr-ordinary"),new Claim("email_verified","true",ClaimValueTypes.Boolean),new Claim("god",god?"true":"false",type)],"validated-oidc"));
+        try
+        {
+            await store.WriteRegistrationAsync("installation-1","owner-receipt",Account(true));
+            var original=(byte[])(await redis.GetDatabase().StringGetAsync(key))!;
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>store.WriteRegistrationAsync("installation-1","ordinary-replacement",Account(false)));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>store.WriteRegistrationAsync("installation-1","browser-role-replacement",Account(true,ClaimValueTypes.String)));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>store.WriteRegistrationAsync("installation-1","missing-principal"));
+            Assert.Equal(original,(byte[])(await redis.GetDatabase().StringGetAsync(key))!);Assert.Equal("owner-receipt",await store.ReadRegistrationAsync("installation-1"));
+            Assert.True(AccountsAccess.ValidIdentity(Account(false),issuer));Assert.True(AccountsAccess.CanRegisterInstallation(Account(false),issuer,requireGod:false));
+        }
+        finally{await redis.GetDatabase().KeyDeleteAsync(key);}
+    }
+    [RedisAvailableFact]
     public async Task TokensStayEncryptedAndRegistrationSurvivesStoreRestart()
     {
         var endpoint = Environment.GetEnvironmentVariable("REDIS_TEST_ENDPOINT")!;

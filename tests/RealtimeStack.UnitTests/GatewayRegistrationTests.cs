@@ -30,9 +30,10 @@ public class GatewayRegistrationTests
             clients.Body = Response(); await monitor.PollAsync(); Assert.True(monitor.Ready); Assert.True(File.Exists(options.CacheFile));
             Assert.Equal("Bearer " + options.ServiceToken, clients.Authorization);
             clients.Status = HttpStatusCode.ServiceUnavailable; await monitor.PollAsync(); Assert.True(monitor.Ready);
-            clients.Body = Response(registered: false); clients.Status = HttpStatusCode.OK; await monitor.PollAsync(); Assert.True(monitor.Ready);
+            clients.Body = Response(registered: false); clients.Status = HttpStatusCode.OK; await monitor.PollAsync(); Assert.True(monitor.Registered); Assert.False(monitor.Ready);
+            clients.Body = Response(); await monitor.PollAsync(); Assert.True(monitor.Ready);
             using var restarted = new GatewayRegistrationMonitor(options, clients, NullLogger<GatewayRegistrationMonitor>.Instance);
-            Assert.True(restarted.Ready); Assert.Equal("registered", restarted.HealthStatus);
+            Assert.True(restarted.Registered); Assert.False(restarted.Ready); await restarted.PollAsync(); Assert.True(restarted.Ready); Assert.Equal("registered", restarted.HealthStatus);
         }
         finally { if (Directory.Exists(folder)) Directory.Delete(folder, recursive: true); }
     }
@@ -63,7 +64,7 @@ public class GatewayRegistrationTests
         Assert.Throws<InvalidOperationException>(() => GatewayRegistrationOptions.Read(new ConfigurationBuilder().AddInMemoryCollection(values).Build()));
     }
     private static GatewayRegistrationOptions Options(string folder) => new(true, new Uri("https://accounts.example.org/internal/product/registration"), "installation-1", new string('x', 32), Path.Combine(folder, "registration.json"), TimeSpan.FromMinutes(1));
-    private static string Response(bool registered = true, string installation = "installation-1", int cents = 0) => System.Text.Json.JsonSerializer.Serialize(new { productId = "realtime", installationId = installation, registered, pricing = new { model = "free-registration", amountCents = cents, currency = "USD" } });
+    private static string Response(bool registered = true, string installation = "installation-1", int cents = 0) => System.Text.Json.JsonSerializer.Serialize(new { productId = "realtime", installationId = installation, registered, accountEnabled = true, accountStateCheckedAt = DateTimeOffset.UtcNow, pricing = new { model = "free-registration", amountCents = cents, currency = "USD" } });
     private sealed class FixtureClientFactory : IHttpClientFactory
     {
         public string Body { get; set; } = Response(registered: false);

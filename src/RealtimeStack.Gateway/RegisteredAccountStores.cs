@@ -4,7 +4,7 @@ using RealtimeStack.Redis;
 
 namespace RealtimeStack.Gateway;
 
-public sealed class RegisteredAccountSessionStore(IRealtimeStackSessionStore inner, RedisConnectionProvider connections, RedisOptions redis, GatewayRegistrationOptions options) : IRealtimeStackSessionStore
+public sealed class RegisteredAccountSessionStore(IRealtimeStackSessionStore inner, RedisConnectionProvider connections, RedisOptions redis, GatewayRegistrationOptions options, IRegisteredAccountAuthority authority) : IRealtimeStackSessionStore
 {
     public async ValueTask<RealtimeStackIdentity?> ValidateAsync(string sessionId, CancellationToken cancellationToken)
     {
@@ -16,12 +16,14 @@ public sealed class RegisteredAccountSessionStore(IRealtimeStackSessionStore inn
         RedisSessionRecord? record;
         try { record = JsonSerializer.Deserialize(value.ToString(), RealtimeStackJsonSerializerContext.Default.RedisSessionRecord); }
         catch (JsonException) { return null; }
-        return IsRegistered(record, identity, options.AccountIssuer) ? identity : null;
+        if (!IsRegistered(record, identity, options.AccountIssuer) || !await authority.ValidateAsync(record!.RegisteredIdentity!.Subject, record.RegisteredIdentity.CredentialStamp!, cancellationToken).ConfigureAwait(false)) return null;
+        return identity with { RegisteredIdentity = record.RegisteredIdentity };
     }
     public static bool IsRegistered(RedisSessionRecord? record, RealtimeStackIdentity identity, string issuer) =>
         record is { Revoked: false, RegisteredIdentity: { Registered: true, EmailVerified: true } registration } &&
         record.TenantId == identity.TenantId && record.UserId == identity.UserId && record.ExpiresAt >= identity.ExpiresAt && record.ExpiresAt > DateTimeOffset.UtcNow &&
-        registration.Issuer == issuer && issuer.Length > 0 && registration.Subject is { Length: > 0 and <= 200 } subject && !subject.Any(char.IsControl);
+        record.AllowedTopics is not null && identity.AllowedTopics.All(topic => record.AllowedTopics.Contains("*", StringComparer.Ordinal) || record.AllowedTopics.Contains(topic, StringComparer.Ordinal)) &&
+        registration.Issuer == issuer && issuer.Length > 0 && GatewayAccountAuthorityClient.ValidSubject(registration.Subject) && GatewayAccountAuthorityClient.ValidStamp(registration.CredentialStamp);
 }
 
 public sealed class RegisteredAccountTicketStore(IConnectionTicketStore inner, IRealtimeStackSessionStore sessions, GatewayRegistrationOptions options) : IConnectionTicketStore
@@ -41,6 +43,7 @@ public sealed class RegisteredAccountTicketStore(IConnectionTicketStore inner, I
         if (string.IsNullOrWhiteSpace(identity.SessionId)) return false;
         var session = await sessions.ValidateAsync(identity.SessionId, cancellationToken).ConfigureAwait(false);
         return session is not null && session.TenantId == identity.TenantId && session.UserId == identity.UserId &&
+            identity.RegisteredIdentity is not null && session.RegisteredIdentity == identity.RegisteredIdentity &&
             session.ExpiresAt >= identity.ExpiresAt && identity.AllowedTopics.All(topic => session.AllowedTopics.Contains("*", StringComparer.Ordinal) || session.AllowedTopics.Contains(topic, StringComparer.Ordinal));
     }
 }

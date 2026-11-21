@@ -40,8 +40,9 @@ public sealed class GatewayRegistrationMonitor : BackgroundService
     private CachedGatewayRegistration? receipt;
     public bool Required => options.Required;
     public bool Registered => Volatile.Read(ref receipt) is not null;
-    public bool Ready => !Required || Registered;
-    public string HealthStatus => !Required ? "not-required" : Registered ? "registered" : "setup-required";
+    private GatewayRegistrationStatus? authority;
+    public bool Ready => !Required || Registered && authority is { AccountEnabled: true, AccountStateCheckedAt: { } checkedAt } && checkedAt <= DateTimeOffset.UtcNow.AddSeconds(30) && DateTimeOffset.UtcNow - checkedAt <= TimeSpan.FromSeconds(120);
+    public string HealthStatus => !Required ? "not-required" : !Registered ? "setup-required" : Ready ? "registered" : "account-reauthentication-required";
 
     public GatewayRegistrationMonitor(GatewayRegistrationOptions options, IHttpClientFactory clients, ILogger<GatewayRegistrationMonitor> logger)
     {
@@ -58,6 +59,10 @@ public sealed class GatewayRegistrationMonitor : BackgroundService
             Validate(saved.Status, options.InstallationId);
             if (saved.ValidatedAt > DateTimeOffset.UtcNow.AddMinutes(1)) throw new InvalidDataException();
             receipt = saved;
+            // Keep permanent proof across restart, but obtain current owner
+            // authority before readiness. An earlier explicit denial must never
+            // revive from a previously positive persisted authority snapshot.
+            authority = null;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or FormatException or ArgumentException)
         { RefreshFailed(logger, null); }
@@ -82,18 +87,23 @@ public sealed class GatewayRegistrationMonitor : BackgroundService
             using var request = new HttpRequestMessage(HttpMethod.Get, options.StatusUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ServiceToken);
             using var response = await clients.CreateClient("registration-state").SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if ((int)response.StatusCode is >= 300 and < 500 && response.StatusCode != System.Net.HttpStatusCode.TooManyRequests) { Volatile.Write(ref authority, null); throw new InvalidDataException(); }
             if (!response.IsSuccessStatusCode) throw new HttpRequestException();
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (body.Length > 32 * 1024) throw new InvalidDataException();
             var status = JsonSerializer.Deserialize(body, GatewayRegistrationJsonContext.Default.GatewayRegistrationStatus) ?? throw new InvalidDataException();
             Validate(status, options.InstallationId);
+            if (status.AccountEnabled is null || status.AccountStateCheckedAt is null || status.AccountStateCheckedAt > DateTimeOffset.UtcNow.AddSeconds(30)) throw new InvalidDataException();
+            Volatile.Write(ref authority, status);
             if (Registered) return;
             var saved = new CachedGatewayRegistration(status, DateTimeOffset.UtcNow);
             Save(saved);
             Volatile.Write(ref receipt, saved);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception error) when (error is HttpRequestException or JsonException or InvalidDataException or TaskCanceledException or IOException or UnauthorizedAccessException)
+        catch (Exception error) when (error is JsonException or InvalidDataException)
+        { Volatile.Write(ref authority, null); RefreshFailed(logger, null); }
+        catch (Exception error) when (error is HttpRequestException or TaskCanceledException or IOException or UnauthorizedAccessException)
         { RefreshFailed(logger, null); }
     }
 
@@ -123,7 +133,11 @@ public sealed class GatewayRegistrationMonitor : BackgroundService
 }
 
 public sealed record GatewayRegistrationPricing(string Model, long AmountCents, string Currency);
-public sealed record GatewayRegistrationStatus(string ProductId, string InstallationId, bool Registered, GatewayRegistrationPricing? Pricing);
+public sealed record GatewayRegistrationStatus(string ProductId, string InstallationId, bool Registered, GatewayRegistrationPricing? Pricing)
+{
+    public bool? AccountEnabled { get; init; }
+    public DateTimeOffset? AccountStateCheckedAt { get; init; }
+}
 public sealed record CachedGatewayRegistration(GatewayRegistrationStatus Status, DateTimeOffset ValidatedAt);
 public sealed record GatewayRegistrationCache(string Payload, string Mac);
 
@@ -131,4 +145,6 @@ public sealed record GatewayRegistrationCache(string Payload, string Mac);
 [JsonSerializable(typeof(GatewayRegistrationStatus))]
 [JsonSerializable(typeof(CachedGatewayRegistration))]
 [JsonSerializable(typeof(GatewayRegistrationCache))]
+[JsonSerializable(typeof(GatewayAccountAuthorityRequest))]
+[JsonSerializable(typeof(GatewayAccountAuthorityResponse))]
 internal sealed partial class GatewayRegistrationJsonContext : JsonSerializerContext;

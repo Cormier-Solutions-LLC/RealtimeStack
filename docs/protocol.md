@@ -6,6 +6,26 @@ Connect to `/realtimestack/ws` with the `realtimestack.v1` WebSocket subprotocol
 
 Approved cross-origin and non-browser clients first POST `/realtimestack/tickets` using a valid same-origin session. The returned cryptographically random ticket is valid for 30 seconds by default, is bound to the request host, and is atomically consumed once via the `ticket` query parameter. A rejected audience also consumes the ticket to prevent probing or replay.
 
+Managed installations can opt into `Registration:Required` (default false).
+Their trusted host must attach server-derived `registeredIdentity` to its Redis
+session: `{issuer, subject, emailVerified:true, registered:true, credentialStamp}`.
+The stamp is the original signed Access ID-token `acr` credential revision
+(64 lowercase hexadecimal characters), never a browser-supplied assertion or a
+fresh stamp substituted for an older token. Ticket provenance retains the same
+issuer/subject/stamp so an old ticket cannot borrow a newly authenticated session.
+This metadata stays in server-owned session/ticket records; the wire envelope,
+protocol aliases, game state and browser ticket response are unchanged.
+
+The Gateway validates managed subjects through its authenticated Accounts
+sidecar (existing dedicated service credential, no OIDC secret on Gateway).
+Central authority caches at most 30 seconds and tolerates transport outages only
+until 120 seconds after the last verified central state. Disabled/missing accounts,
+revision changes and invalid authority responses fail closed. Required-mode
+connections revalidate on commands and heartbeats of at most 30 seconds; revoked
+connections close with standard policy code 1008. The permanent free installation
+registration receipt is retained separately from current owner/account authority.
+No paid limit is added. Standalone/free OSS use remains unchanged.
+
 ## Envelope
 
 Every client command is one complete UTF-8 text frame:

@@ -81,6 +81,7 @@ environment's `HELM_VALUES`. The new settings are:
 | `managedInstallation.checkIn.*` | Opt-in authenticated host reporting; existing dedicated agent-token Secret |
 | `managedInstallation.registration.statusTokenSecret` | Dedicated service-token Secret shared only by Accounts and gateway |
 | `managedInstallation.registration.required` | Default false; owner registration/host identity attestation must precede enabling |
+| `managedInstallation.registration.requireGod` | Set true for managed production enrollment/replacement; OSS default false; signed central God only |
 | `managedInstallation.registration.cacheExistingClaim` | Separate shared existing RWX receipt PVC, required only with the gate enabled |
 | `ingressRoute.ticketPath` | Optional exact existing application ticket route |
 | `gateway.realtimeOverrides` | Existing scalar limits, session cookie/source and ASP.NET session-key settings |

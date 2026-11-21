@@ -32,6 +32,7 @@ builder.Services.AddSingleton(GatewayRegistrationOptions.Read(builder.Configurat
 builder.Services.AddHttpClient("registration-state", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 32 * 1024; })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddSingleton<GatewayRegistrationMonitor>();
+builder.Services.AddSingleton<IRegisteredAccountAuthority, GatewayAccountAuthorityClient>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<GatewayRegistrationMonitor>());
 // Preserve standalone gateway defaults when a host replaces the shipped settings file.
 builder.Configuration["RealtimeStackSetup:GatewayEnabled"] ??= "true";
@@ -42,7 +43,7 @@ builder.Services.AddRealtimeStackConfiguration(builder.Configuration, registrati
     .UseCockroachDb((_, connectionString) => new NpgsqlConnection(connectionString)));
 builder.Services.AddSingleton<IRealtimeStackSessionStore>(provider => new RegisteredAccountSessionStore(
     new RedisSessionStore(provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value),
-    provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value, provider.GetRequiredService<GatewayRegistrationOptions>()));
+    provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value, provider.GetRequiredService<GatewayRegistrationOptions>(), provider.GetRequiredService<IRegisteredAccountAuthority>()));
 builder.Services.AddSingleton<IConnectionTicketStore>(provider => new RegisteredAccountTicketStore(
     new RedisConnectionTicketStore(provider.GetRequiredService<RedisConnectionProvider>(), provider.GetRequiredService<IOptions<RedisOptions>>().Value),
     provider.GetRequiredService<IRealtimeStackSessionStore>(), provider.GetRequiredService<GatewayRegistrationOptions>()));
@@ -95,6 +96,7 @@ var state = app.Services.GetRequiredService<GatewayState>();
 var registration = app.Services.GetRequiredService<GatewayRegistrationMonitor>();
 var metrics = app.Services.GetRequiredService<GatewayMetrics>();
 var gatewayOptions = app.Services.GetRequiredService<IOptions<GatewayOptions>>().Value;
+if (registration.Required && app.Services.GetRequiredService<IOptions<RealtimeStackOptions>>().Value.HeartbeatSeconds > 30) throw new InvalidOperationException("Managed registered connections require HeartbeatSeconds at most 30 for central account revocation.");
 var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("GatewayLifecycle");
 var serviceVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 var logStarted = LoggerMessage.Define<string, string>(

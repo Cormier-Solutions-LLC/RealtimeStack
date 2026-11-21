@@ -228,7 +228,7 @@ public sealed class RealtimeStackWebSocketHandler(
                 {
                     case IdentityRevalidation.Invalid:
                         await connection.RequestCloseAsync(
-                            RealtimeStackCloseStatus.AuthenticationExpired,
+                            connection.Identity.RegisteredIdentity is null ? RealtimeStackCloseStatus.AuthenticationExpired : WebSocketCloseStatus.PolicyViolation,
                             "authentication_invalid",
                             cancellationToken);
                         return "authentication_invalid";
@@ -279,7 +279,7 @@ public sealed class RealtimeStackWebSocketHandler(
                 case IdentityRevalidation.Invalid:
                     closeReason.TrySetResult("authentication_invalid");
                     await connection.RequestCloseAsync(
-                        RealtimeStackCloseStatus.AuthenticationExpired,
+                        connection.Identity.RegisteredIdentity is null ? RealtimeStackCloseStatus.AuthenticationExpired : WebSocketCloseStatus.PolicyViolation,
                         "authentication_invalid",
                         cancellationToken);
                     connectionCancellation.Cancel();
@@ -359,7 +359,8 @@ public sealed class RealtimeStackWebSocketHandler(
                 cancellationToken);
             if (refreshed is null ||
                 !string.Equals(refreshed.TenantId, connection.Identity.TenantId, StringComparison.Ordinal) ||
-                !string.Equals(refreshed.UserId, connection.Identity.UserId, StringComparison.Ordinal))
+                !string.Equals(refreshed.UserId, connection.Identity.UserId, StringComparison.Ordinal) ||
+                connection.Identity.RegisteredIdentity is not null && refreshed.RegisteredIdentity != connection.Identity.RegisteredIdentity)
             {
                 return IdentityRevalidation.Invalid;
             }

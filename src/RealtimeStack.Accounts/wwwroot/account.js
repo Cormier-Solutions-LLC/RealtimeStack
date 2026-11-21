@@ -10,7 +10,11 @@ async function refresh() {
   session = await request('/api/auth/sso/session');
   byId('login').hidden = !session.configured || session.authenticated;
   byId('logout').hidden = !session.authenticated;
-  byId('register').hidden = !session.authenticated;
+  byId('register').hidden = !session.authenticated || session.registrationAllowed === false;
+  byId('account').hidden = !session.authenticated || !session.accountUrl;
+  byId('admin-accounts').hidden = !session.authenticated || !session.adminAccountsUrl;
+  if (session.accountUrl) byId('account').href = session.accountUrl;
+  if (session.adminAccountsUrl) byId('admin-accounts').href = session.adminAccountsUrl;
   byId('identity').textContent = !session.configured ? 'Account registration has not been configured for this installation.' : session.authenticated ? `Signed in as ${session.user?.email || session.user?.name || 'your central account'}.` : 'Sign in to register this installation.';
   if (session.configured) {
     const login = new URL(session.loginUrl, location.href);

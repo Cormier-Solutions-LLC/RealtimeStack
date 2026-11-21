@@ -120,7 +120,7 @@ public sealed class RedisConnectionTicketStore(
             identity.AllowedTopics,
             expiresAt,
             audience,
-            identity.SessionId);
+            identity.SessionId) { RegisteredIdentity = identity.RegisteredIdentity };
         var json = JsonSerializer.Serialize(
             record,
             RealtimeStackJsonSerializerContext.Default.ConnectionTicketRecord);
@@ -186,7 +186,7 @@ public sealed class RedisConnectionTicketStore(
             record.UserId,
             record.AllowedTopics,
             record.ExpiresAt,
-            record.SessionId);
+            record.SessionId) { RegisteredIdentity = record.RegisteredIdentity };
     }
 
     private RedisKey TicketKey(string ticket) =>

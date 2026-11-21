@@ -36,6 +36,7 @@ namespace or client secret is compiled into the service.
 | `Registration__DeploymentType` | `kubernetes`, `docker`, `linux` or `windows` |
 | `Registration__ApplicationVersion` | Deployed gateway version |
 | `Registration__ServiceTokenFile` | Optional separate mounted token for internal status polling |
+| `Registration__RequireGod` | `true` for owner-managed installation enrollment; default `false` for OSS |
 
 Direct secret-valued configuration alternatives (`Sso__ClientSecret`,
 `Sso__RedisConnection`, `Registration__ServiceToken`) are supported for secret
@@ -52,10 +53,25 @@ opaque session cookies and encrypted registration receipts remain readable.
 Register the exact callback `${Sso__PublicUrl}/api/auth/sso/callback` in Access.
 This uses authorization code + S256 PKCE and `client_secret_post`. Access must
 include `iss`, immutable `sub`, Boolean `email_verified` and optional Boolean
-`god` in the signed ID token. The service requests `openid profile email licensing`
+`god` in the signed ID token, plus standard `acr` equal to
+`urn:cormier:access:credential:<64 lowercase hexadecimal revision>`.
+The service requests `openid profile email licensing`
 and the LicensingServer resource at authorization and token exchange. Its JWT
 access token is retained encrypted in Redis, never returned to the browser.
 Account identity is issuer plus subject; email does not link or promote accounts.
+Managed production values set `managedInstallation.registration.requireGod=true`.
+Only the signed Boolean central God can create or replace that installation's
+protected receipt. Ordinary registered users can still authenticate as guests;
+this operator gate adds no paid tier or connection restriction. The default
+remains false for independently operated OSS installations.
+Callbacks require the original signed credential revision to equal freshly
+retrieved Access account state. The protected session retains both that `acr`
+and its matching stamp. Password/email/verification/lock changes invalidate it;
+an old token cannot acquire a newly fetched stamp. Cookie validation refreshes
+central name/email and enforces a 30-second cache with a maximum 120-second
+transport outage. Disabled/missing accounts or malformed authority fail closed.
+The account page links to Access `/account`; only signed God receives
+`/admin/accounts`. No account credentials or profiles are edited locally.
 
 ## Build and route
 
@@ -128,6 +144,10 @@ cache with HMAC using the dedicated service token, bound to endpoint and
 installation ID, and writes it atomically with private file permissions.
 The last confirmed permanent free registration remains valid during sidecar or
 central outages, including gateway replacement when the cache volume is retained.
+Current account authority is separate: required readiness also needs the
+registration owner's enabled/verified state checked within 120 seconds. A
+restarted Gateway retains permanent proof but waits for fresh owner authority
+before readiness. A locked owner never erases the free registration receipt.
 Missing, invalid, paid or unregistered responses cannot create a registration.
 They do not erase an already verified permanent registration. Changing the
 service token, endpoint or installation ID requires a fresh verified receipt.
@@ -139,15 +159,28 @@ Do not enable it on a serving installation before owner registration and cache
 storage are ready. Shared libraries and default standalone gateway use stay free.
 
 When required, every interactive session also needs trusted host-written
-`registeredIdentity: { issuer, subject, emailVerified: true, registered: true }`
+`registeredIdentity: { issuer, subject, emailVerified: true, registered: true, credentialStamp }`
 in its existing Redis session record. The issuer must exactly match the configured
 Access issuer, and subject is its immutable verified account ID. Guest roles and
 names do not bypass this requirement. Hosts derive this attestation from verified
-central authentication; browsers cannot supply it. `RedisSessionRecord` provides
+central authentication and its original signed ID-token revision; browsers cannot
+supply it. A matching email or arbitrary guest label is insufficient.
+`RedisSessionRecord` provides
 the additive `RegisteredIdentity` init-property without changing its constructor
 or client envelopes. Tickets must remain bound to the same live registered
 session; a standalone ticket cannot bypass registration. Upgrade host session
 provisioners before enabling the managed requirement.
+
+Gateway uses the same existing dedicated status-service token for
+`POST /internal/account-state` with `{subject, credentialStamp}`; that route is
+internal only and returns `{subject, authorized, checkedAt}` without profiles or
+tokens. Gateway holds no OIDC secret. Tickets retain identical issuer/sub/stamp
+provenance and cannot reuse a newly authenticated session's revision. Existing
+connections check on commands, deliveries and heartbeats of at most 30 seconds.
+Disabled accounts, changed revisions or authority beyond 120 seconds close with
+policy code 1008. The HTTP fallback also rejects changed provenance. Applications
+whose adapters remain pending do not provision trusted sessions merely by
+carrying this metadata.
 
 ## Authenticated host inventory
 

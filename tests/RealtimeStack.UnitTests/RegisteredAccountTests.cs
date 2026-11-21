@@ -8,8 +8,9 @@ public class RegisteredAccountTests
 {
     private const string Issuer = "https://access.example.org";
     private static readonly DateTimeOffset Expiry = DateTimeOffset.UtcNow.AddHours(1);
-    private static RealtimeStackIdentity Identity(string? session = "session-fixture-123") => new("tenant", "guest-user", ["orders"], Expiry, session);
-    private static RedisSessionRecord Record() => new("tenant", "guest-user", ["orders"], Expiry) { RegisteredIdentity = new(Issuer, "usr-registered", true, true) };
+    private static RegisteredAccountIdentity Provenance() => new(Issuer, "usr-registered", true, true) { CredentialStamp = new string('a',64) };
+    private static RealtimeStackIdentity Identity(string? session = "session-fixture-123") => new("tenant", "guest-user", ["orders"], Expiry, session) { RegisteredIdentity = Provenance() };
+    private static RedisSessionRecord Record() => new("tenant", "guest-user", ["orders"], Expiry) { RegisteredIdentity = Provenance() };
     [Fact] public void GuestNamesCannotReplaceVerifiedRegisteredProvenance()
     {
         var valid = Record(); Assert.True(RegisteredAccountSessionStore.IsRegistered(valid, Identity(), Issuer));
@@ -22,6 +23,9 @@ public class RegisteredAccountTests
         var ticket = new Tickets { Identity = Identity(session: null) }; var sessions = new Sessions { Identity = Identity() }; var store = new RegisteredAccountTicketStore(ticket, sessions, options);
         Assert.Null(await store.ConsumeAsync("ticket", "audience", default));
         ticket.Identity = Identity(); Assert.NotNull(await store.ConsumeAsync("ticket", "audience", default));
+        ticket.Identity = Identity() with { RegisteredIdentity = Provenance() with { CredentialStamp = new string('b',64) } }; Assert.Null(await store.ConsumeAsync("ticket", "audience", default));
+        ticket.Identity = Identity() with { RegisteredIdentity = null }; Assert.Null(await store.ConsumeAsync("ticket", "audience", default));
+        ticket.Identity = Identity();
         sessions.Identity = null; Assert.Null(await store.ConsumeAsync("ticket", "audience", default));
         await Assert.ThrowsAsync<InvalidOperationException>(() => store.IssueAsync(Identity(), "audience", TimeSpan.FromSeconds(30), default).AsTask());
         var unrestricted = new RegisteredAccountTicketStore(ticket, sessions, options with { Required = false }); Assert.NotNull(await unrestricted.ConsumeAsync("ticket", "audience", default));

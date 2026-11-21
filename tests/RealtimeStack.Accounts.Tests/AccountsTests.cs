@@ -36,6 +36,15 @@ public class AccountsTests
         Assert.Equal("code", options.ResponseType); Assert.True(options.UsePkce); Assert.True(options.RequireHttpsMetadata); Assert.False(options.GetClaimsFromUserInfoEndpoint);
         Assert.True(options.TokenValidationParameters.ValidateIssuer); Assert.True(options.TokenValidationParameters.ValidateAudience); Assert.True(options.TokenValidationParameters.RequireSignedTokens);
         Assert.Contains("licensing", options.Scope); Assert.True(options.SaveTokens);
+        Assert.DoesNotContain(options.ClaimActions, action => action.ClaimType == "acr");
+    }
+    [Fact] public void SignedCredentialStampMustBeSingleStrictAcrAndSurvivesCentralProfileRefresh()
+    {
+        var identity=new ClaimsIdentity([new Claim("sub","usr-fixture")],"oidc");var principal=new ClaimsPrincipal(identity);
+        Assert.Null(AccountsAccess.CredentialStamp(principal));
+        var valid=new Claim("acr","urn:cormier:access:credential:"+new string('a',64));identity.AddClaim(valid);Assert.Equal(new string('a',64),AccountsAccess.CredentialStamp(principal));
+        var refreshed=AccountsAccess.WithCentralProfile(principal,new("usr-fixture",true,"fixture@example.test","Fixture",true,new string('b',64),DateTimeOffset.UtcNow));Assert.Equal(new string('a',64),AccountsAccess.CredentialStamp(refreshed));
+        identity.AddClaim(valid);Assert.Null(AccountsAccess.CredentialStamp(principal));
     }
     [Theory] [InlineData("subject-swap", "installation-1", 0)] [InlineData("usr-stable", "installation-swap", 0)] [InlineData("usr-stable", "installation-1", 1)]
     public void RegistrationRejectsAccountInstallationAndPriceChanges(string subject, string installation, int cents)

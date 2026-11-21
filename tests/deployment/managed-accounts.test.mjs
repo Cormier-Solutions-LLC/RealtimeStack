@@ -28,6 +28,7 @@ test('managed render preserves wire routes and isolates trusted credentials and 
   assert.match(accounts.spec.template.spec.containers[0].image, /@sha256:b{64}$/);
   assert.equal(env(accounts).Sso__ClientSecretFile, '/secrets/sso/client-secret');
   assert.equal(env(accounts).Registration__ServiceTokenFile, '/secrets/registration/token');
+  assert.equal(env(accounts).Registration__RequireGod, 'true');
   assert.equal(env(accounts).Sso__RedisSentinelPasswordFile, '/secrets/redis/sentinel-password');
   assert.equal(env(accounts).CORMIER_LICENSE_INSTANCE_ID, 'accounts:$(POD_UID)');
   assert.equal(env(gateway).CORMIER_LICENSE_INSTANCE_ID, 'gateway:$(POD_UID)');
@@ -47,6 +48,11 @@ test('managed render preserves wire routes and isolates trusted credentials and 
   const policy = docs.find(o => o.kind === 'NetworkPolicy' && o.metadata.name === 'example-accounts');
   assert.ok(policy.spec.egress.some(r => r.ports.some(p => p.port === 8443)));
   assert.equal(policy.spec.ingress.some(r => r.from.some(f => f.podSelector?.matchLabels?.['app.kubernetes.io/name'] === 'realtimestack-gateway')), false);
+});
+
+test('standalone registration keeps the configurable non-God default', enabled, () => {
+  const value=structuredClone(fixture);delete value.managedInstallation.registration.requireGod;
+  assert.equal(env(deployment(render(value),'example-accounts')).Registration__RequireGod,'false');
 });
 test('external legacy gateway route stays outside Helm ownership while Accounts gets its own route', enabled, () => {
   const v=structuredClone(fixture);v.ingressRoute.enabled=false;

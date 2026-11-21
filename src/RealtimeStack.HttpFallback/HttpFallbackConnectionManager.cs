@@ -183,7 +183,8 @@ internal sealed class HttpFallbackConnectionManager(
             var identity = await authenticator.RevalidateSessionAsync(state.Connection.SessionId, cancellationToken);
             if (identity is null ||
                 !string.Equals(identity.TenantId, state.Connection.Identity.TenantId, StringComparison.Ordinal) ||
-                !string.Equals(identity.UserId, state.Connection.Identity.UserId, StringComparison.Ordinal))
+                !string.Equals(identity.UserId, state.Connection.Identity.UserId, StringComparison.Ordinal) ||
+                state.Connection.Identity.RegisteredIdentity is not null && identity.RegisteredIdentity != state.Connection.Identity.RegisteredIdentity)
             {
                 return false;
             }

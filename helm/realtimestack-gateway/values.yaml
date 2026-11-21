@@ -39,6 +39,7 @@ managedInstallation:
     agentTokenSecret: { name: "", key: agent-token }
   registration:
     required: false
+    requireGod: false
     statusTokenSecret: { name: "", key: token }
     cacheExistingClaim: ""
 

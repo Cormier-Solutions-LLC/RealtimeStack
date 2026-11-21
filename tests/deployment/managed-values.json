@@ -16,6 +16,6 @@
   "managedInstallation": {
     "installationId": "kubernetes:example:realtime", "licensingOrigin": "https://licensing.example.test",
     "checkIn": { "enabled": true, "agentTokenSecret": { "name": "example-check-in", "key": "agent-token" } },
-    "registration": { "required": false, "statusTokenSecret": { "name": "example-status", "key": "token" }, "cacheExistingClaim": "example-registration-receipt" }
+    "registration": { "required": false, "requireGod": true, "statusTokenSecret": { "name": "example-status", "key": "token" }, "cacheExistingClaim": "example-registration-receipt" }
   }
 }

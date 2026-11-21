@@ -384,6 +384,27 @@ public sealed class WebSocketProtocolTests
     }
 
     [Fact]
+    public async Task ManagedCredentialRevisionChangeCannotPublishAndClosesPolicyViolation()
+    {
+        await using var factory=new RealtimeStackFactory();
+        factory.SessionStore.Registration=new("https://access.example.test","usr-managed",true,true){CredentialStamp=new string('a',64)};
+        using var socket=await ConnectAsync(factory,origin:"https://gateway.example",useTicket:false,forwardedHost:"gateway.example");
+        factory.SessionStore.Registration=factory.SessionStore.Registration with {CredentialStamp=new string('b',64)};
+        await SendAsync(socket,Envelope(ProtocolMessageTypes.Publish,"old-managed-revision"));
+        await WaitForCloseAsync(socket);Assert.Equal(WebSocketCloseStatus.PolicyViolation,socket.CloseStatus);Assert.Empty(factory.Bus.Published);
+    }
+
+    [Fact]
+    public async Task ManagedAccountRevocationClosesOnHeartbeatWithoutIncomingCommands()
+    {
+        await using var factory=new RealtimeStackFactory();
+        factory.SessionStore.Registration=new("https://access.example.test","usr-managed",true,true){CredentialStamp=new string('a',64)};
+        using var socket=await ConnectAsync(factory,origin:"https://gateway.example",useTicket:false,forwardedHost:"gateway.example");
+        factory.SessionStore.Revoked=true;
+        await WaitForCloseAsync(socket);Assert.Equal(WebSocketCloseStatus.PolicyViolation,socket.CloseStatus);Assert.Empty(factory.Bus.Published);
+    }
+
+    [Fact]
     public async Task RevokedSessionCannotReceiveSubscribedDeliveryAndIsClosed()
     {
         await using var factory = new RealtimeStackFactory();
@@ -645,6 +666,7 @@ public sealed class WebSocketProtocolTests
         private int _validationCount;
 
         public bool Revoked { get; set; }
+        public RegisteredAccountIdentity? Registration { get; set; }
 
         public int ValidationCount => Volatile.Read(ref _validationCount);
 
@@ -652,7 +674,7 @@ public sealed class WebSocketProtocolTests
         {
             Interlocked.Increment(ref _validationCount);
             return ValueTask.FromResult<RealtimeStackIdentity?>(sessionId == "valid-session-123456" && !Revoked
-                ? new RealtimeStackIdentity("tenant-1", "user-1", ["orders"], DateTimeOffset.UtcNow.AddMinutes(5))
+                ? new RealtimeStackIdentity("tenant-1", "user-1", ["orders"], DateTimeOffset.UtcNow.AddMinutes(5)){RegisteredIdentity=Registration}
                 : null);
         }
     }

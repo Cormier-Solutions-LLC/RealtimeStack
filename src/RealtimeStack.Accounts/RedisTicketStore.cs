@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -14,9 +15,14 @@ public sealed class RedisTicketStore : ITicketStore, IDisposable
     private readonly IDataProtector protector;
     private readonly IDataProtector registrationProtector;
     private readonly string prefix;
+    private readonly bool requireGod;
+    private readonly string issuer;
     public bool IsConnected => connection.IsConnected;
     public RedisTicketStore(IConfiguration configuration, IDataProtectionProvider protection)
     {
+        requireGod = configuration.GetValue<bool>("Registration:RequireGod");
+        issuer = configuration["Sso:Authority"]?.TrimEnd('/') ?? "";
+        if (requireGod && !AccountsAccessOptions.SecureOrigin(issuer)) throw new InvalidOperationException("Owner-managed registration requires an exact HTTPS Access issuer.");
         prefix = configuration["Sso:RedisPrefix"] ?? "";
         if (prefix.Length is < 8 or > 100 || !prefix.EndsWith(':') || prefix.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is ':' or '-' or '_')))
             throw new InvalidOperationException("SSO requires a Secret-backed Redis connection and an isolated Sso:RedisPrefix ending in a colon.");
@@ -61,7 +67,11 @@ public sealed class RedisTicketStore : ITicketStore, IDisposable
     }
     public Task RemoveAsync(string key) => connection.GetDatabase().KeyDeleteAsync(Key(key));
     private string RegistrationKey(string installationId) => prefix + "registration:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(installationId)));
-    public Task WriteRegistrationAsync(string installationId, string receipt) => connection.GetDatabase().StringSetAsync(RegistrationKey(installationId), registrationProtector.Protect(Encoding.UTF8.GetBytes(receipt)));
+    public Task WriteRegistrationAsync(string installationId, string receipt, ClaimsPrincipal? authenticatedAccount = null)
+    {
+        if (requireGod && !AccountsAccess.CanRegisterInstallation(authenticatedAccount, issuer, requireGod)) throw new UnauthorizedAccessException("The signed central owner is required to manage this installation registration.");
+        return connection.GetDatabase().StringSetAsync(RegistrationKey(installationId), registrationProtector.Protect(Encoding.UTF8.GetBytes(receipt)));
+    }
     public async Task<string?> ReadRegistrationAsync(string installationId)
     {
         var value = await connection.GetDatabase().StringGetAsync(RegistrationKey(installationId)).ConfigureAwait(false);

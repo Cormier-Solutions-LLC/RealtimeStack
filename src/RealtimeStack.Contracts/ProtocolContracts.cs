@@ -80,7 +80,10 @@ public sealed record RealtimeStackIdentity(
     string UserId,
     IReadOnlyList<string> AllowedTopics,
     DateTimeOffset ExpiresAt,
-    string? SessionId = null);
+    string? SessionId = null)
+{
+    public RegisteredAccountIdentity? RegisteredIdentity { get; init; }
+}
 
 public sealed record RedisSessionRecord(
     string TenantId,
@@ -93,7 +96,10 @@ public sealed record RedisSessionRecord(
 }
 
 /// <summary>Server-side account provenance written only by the authenticated host after verified SSO.</summary>
-public sealed record RegisteredAccountIdentity(string Issuer, string Subject, bool EmailVerified, bool Registered);
+public sealed record RegisteredAccountIdentity(string Issuer, string Subject, bool EmailVerified, bool Registered)
+{
+    public string? CredentialStamp { get; init; }
+}
 
 public sealed record ConnectionTicketRecord(
     string TenantId,
@@ -101,7 +107,10 @@ public sealed record ConnectionTicketRecord(
     IReadOnlyList<string> AllowedTopics,
     DateTimeOffset ExpiresAt,
     string Audience,
-    string? SessionId = null);
+    string? SessionId = null)
+{
+    public RegisteredAccountIdentity? RegisteredIdentity { get; init; }
+}
 
 public sealed record ConnectionTicketResponse(string Ticket, DateTimeOffset ExpiresAt);
 

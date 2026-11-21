@@ -106,12 +106,13 @@ public sealed class RealtimeStackConnectionRegistry(
                         cancellationToken);
                     if (refreshed is null ||
                         !string.Equals(refreshed.TenantId, identity.TenantId, StringComparison.Ordinal) ||
-                        !string.Equals(refreshed.UserId, identity.UserId, StringComparison.Ordinal))
+                        !string.Equals(refreshed.UserId, identity.UserId, StringComparison.Ordinal) ||
+                        identity.RegisteredIdentity is not null && refreshed.RegisteredIdentity != identity.RegisteredIdentity)
                     {
                         AddBoundedClose(
                             ref closeTasks,
                             connection,
-                            RealtimeStackCloseStatus.AuthenticationExpired,
+                            identity.RegisteredIdentity is null ? RealtimeStackCloseStatus.AuthenticationExpired : WebSocketCloseStatus.PolicyViolation,
                             "authentication_expired",
                             cancellationToken);
                         continue;

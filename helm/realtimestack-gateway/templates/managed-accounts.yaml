@@ -131,6 +131,7 @@ spec:
             - { name: ProductConfiguration__Url, value: {{ printf "%s/v1/products/realtime/config" $installation.licensingOrigin | quote }} }
             - { name: Registration__InstallationId, value: {{ $installation.installationId | quote }} }
             - { name: Registration__DeploymentType, value: {{ $installation.deploymentType | quote }} }
+            - { name: Registration__RequireGod, value: {{ $installation.registration.requireGod | quote }} }
             - { name: Registration__ServiceTokenFile, value: /secrets/registration/token }
             {{- if $installation.checkIn.enabled }}
             {{- include "realtimestack-gateway.hostCheckInEnv" (dict "root" . "component" "accounts") | nindent 12 }}
