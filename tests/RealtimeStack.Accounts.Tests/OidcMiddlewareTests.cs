@@ -19,11 +19,40 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using RealtimeStack.Accounts;
 using StackExchange.Redis;
+using System.Collections.Concurrent;
 
 namespace RealtimeStack.Accounts.Tests;
 
 public sealed class OidcMiddlewareTests
 {
+    [RedisAvailableTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ProductionSharedFilesystemKeyringPreservesSignedOwnerAndOrdinarySessionsWithSafeDiagnostics(bool god)
+    {
+        using var issuer = new Issuer { God = god };
+        await using var fixture = await Fixture.Start(issuer, persistedKeyring: true);
+        var cookies = new BrowserCookies();
+        using var callback = await fixture.Send(fixture.First, cookies, await fixture.Begin(cookies));
+        Assert.Equal(HttpStatusCode.Redirect, callback.StatusCode);
+        using var session = await fixture.Session(fixture.Second, cookies);
+        Assert.True(session.RootElement.GetProperty("authenticated").GetBoolean());
+        Assert.Equal(god, session.RootElement.GetProperty("registrationAllowed").GetBoolean());
+        Assert.Equal(god, session.RootElement.GetProperty("user").GetProperty("god").GetBoolean());
+        // A previously authenticated request must still perform a new challenge.
+        _ = await fixture.Begin(cookies);
+        var logs = fixture.Diagnostics.Messages.Where(message => message.StartsWith("Access ", StringComparison.Ordinal)).ToArray();
+        Assert.Contains(logs, message => message.Contains("stage=Login reason=Challenged", StringComparison.Ordinal));
+        Assert.Contains(logs, message => message.Contains("stage=TicketReceived reason=Accepted", StringComparison.Ordinal));
+        Assert.Contains(logs, message => message.Contains("stage=SignedIn reason=Accepted", StringComparison.Ordinal));
+        Assert.Contains(logs, message => message.Contains("stage=CookieValidation reason=Accepted", StringComparison.Ordinal));
+        Assert.Contains(logs, message => message.Contains("stage=store succeeded=true", StringComparison.Ordinal));
+        Assert.Contains(logs, message => message.Contains("stage=retrieve found=true decrypted=true parsed=true", StringComparison.OrdinalIgnoreCase));
+        var output = string.Join('\n', logs);
+        foreach (var confidential in new[] { Issuer.Secret, issuer.Subject, issuer.Nonce, issuer.Challenge, "fixture-access-token", "owner@example.test", new string('a', 64) })
+            Assert.DoesNotContain(confidential, output, StringComparison.Ordinal);
+    }
+
     [RedisAvailableFact]
     public async Task SignedCodePkceCallbackPersistsIssuerStampAndGodAcrossAccountReplicas()
     {
@@ -72,8 +101,23 @@ public sealed class OidcMiddlewareTests
         Assert.Null(response.Headers.Location);
         Assert.False(response.Headers.TryGetValues("Set-Cookie", out var headers) && headers.Any(value => value.StartsWith("__Host-RealtimeStack.Accounts=", StringComparison.Ordinal)));
         Assert.Empty(await fixture.Keys());
+        Assert.Contains(fixture.Diagnostics.Messages, message => message.StartsWith("Access authentication stage=TicketReceived reason=", StringComparison.Ordinal) && !message.Contains("reason=Accepted", StringComparison.Ordinal));
+        Assert.DoesNotContain(fixture.Diagnostics.Messages, message => message.StartsWith("Access authentication stage=SignedIn", StringComparison.Ordinal));
         using var session = await fixture.Session(fixture.Second, cookies);
         Assert.False(session.RootElement.GetProperty("authenticated").GetBoolean());
+    }
+
+    private sealed class LogCapture : ILoggerProvider
+    {
+        public ConcurrentQueue<string> Messages { get; } = new();
+        public ILogger CreateLogger(string categoryName) => new Sink(this);
+        public void Dispose() { }
+        private sealed class Sink(LogCapture capture) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+            public bool IsEnabled(LogLevel logLevel) => true;
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) => capture.Messages.Enqueue(formatter(state, exception));
+        }
     }
 
     private sealed class BrowserCookies
@@ -99,26 +143,33 @@ public sealed class OidcMiddlewareTests
         public required string Prefix { get; init; }
         public required ConnectionMultiplexer Redis { get; init; }
         public required Issuer Authority { get; init; }
+        public required LogCapture Diagnostics { get; init; }
+        public string? KeyringDirectory { get; init; }
         private readonly HttpClient client = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
-        public static async Task<Fixture> Start(Issuer issuer, bool stripIssuer = false)
+        public static async Task<Fixture> Start(Issuer issuer, bool stripIssuer = false, bool persistedKeyring = false)
         {
             var endpoint = Environment.GetEnvironmentVariable("REDIS_TEST_ENDPOINT")!;
             var prefix = "accounts-oidc-fixture:" + Guid.NewGuid().ToString("N") + ":";
             var protection = new EphemeralDataProtectionProvider();
+            var diagnostics = new LogCapture();
+            var keyringDirectory = persistedKeyring ? Path.Combine(Path.GetTempPath(), "accounts-oidc-fixture-" + Guid.NewGuid().ToString("N")) : null;
+            if (keyringDirectory is not null) Directory.CreateDirectory(keyringDirectory);
             async Task<WebApplication> Host()
             {
-                var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+                var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = persistedKeyring ? "Production" : "Testing" });
                 builder.Logging.ClearProviders();
+                builder.Logging.AddProvider(diagnostics);
                 builder.WebHost.UseUrls("http://127.0.0.1:0");
                 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["Sso:Enabled"] = "true", ["Sso:Authority"] = Issuer.Origin, ["Sso:PublicUrl"] = Issuer.PublicOrigin,
                     ["Sso:ClientId"] = "realtime", ["Sso:ClientSecret"] = Issuer.Secret, ["Licensing:Origin"] = "https://licensing.example.test",
-                    ["Sso:RedisConnection"] = endpoint, ["Sso:RedisPrefix"] = prefix, ["Registration:RequireGod"] = "true"
+                    ["Sso:RedisConnection"] = endpoint, ["Sso:RedisPrefix"] = prefix, ["Registration:RequireGod"] = "true",
+                    ["Sso:DataProtectionPath"] = keyringDirectory, ["Sso:ApplicationName"] = "RealtimeStack.Accounts"
                 });
                 var access = builder.AddAccountsAccess();
-                builder.Services.AddSingleton<IDataProtectionProvider>(protection);
+                if (!persistedKeyring) builder.Services.AddSingleton<IDataProtectionProvider>(protection);
                 builder.Services.AddSingleton(_ => new AccountStateClient(Issuer.Origin, "realtime", Issuer.Secret, issuer.Handler()));
                 builder.Services.PostConfigure<OpenIdConnectOptions>(AccountsAccessOptions.OidcScheme, options =>
                 {
@@ -140,7 +191,7 @@ public sealed class OidcMiddlewareTests
                 app.MapAccountsAccess(access);
                 await app.StartAsync(); return app;
             }
-            return new Fixture { First = await Host(), Second = await Host(), Prefix = prefix, Redis = await ConnectionMultiplexer.ConnectAsync(endpoint), Authority = issuer };
+            return new Fixture { First = await Host(), Second = await Host(), Prefix = prefix, Redis = await ConnectionMultiplexer.ConnectAsync(endpoint), Authority = issuer, Diagnostics = diagnostics, KeyringDirectory = keyringDirectory };
         }
 
         public async Task<HttpResponseMessage> Send(WebApplication app, BrowserCookies cookies, string path)
@@ -173,6 +224,13 @@ public sealed class OidcMiddlewareTests
             await First.DisposeAsync(); await Second.DisposeAsync();
             var keys = await Keys(); if (keys.Length > 0) await Redis.GetDatabase().KeyDeleteAsync(keys);
             Redis.Dispose(); client.Dispose();
+            if (KeyringDirectory is not null)
+            {
+                var absolute = Path.GetFullPath(KeyringDirectory);
+                if (!absolute.StartsWith(Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.GetTempPath())) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(absolute).StartsWith("accounts-oidc-fixture-", StringComparison.Ordinal))
+                    throw new InvalidOperationException("Fixture cleanup scope changed.");
+                Directory.Delete(absolute, recursive: true);
+            }
         }
     }
 
@@ -183,6 +241,7 @@ public sealed class OidcMiddlewareTests
         private readonly RSA key = RSA.Create(2048);
         public string Subject { get; } = "usr-synthetic-owner";
         public string? Failure { get; init; }
+        public bool God { get; init; } = true;
         public string StateStamp { get; set; } = new('a', 64);
         public string Nonce { get; set; } = "";
         public string Challenge { get; set; } = "";
@@ -219,7 +278,7 @@ public sealed class OidcMiddlewareTests
             Assert.Equal(Secret, form["client_secret"]); Assert.Equal("realtime", form["client_id"]);
             PkceVerified = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(form["code_verifier"]!))) == Challenge;
             Assert.True(PkceVerified);
-            var claims = new Dictionary<string, object> { ["sub"] = Subject, ["email"] = "owner@example.test", ["name"] = "Synthetic owner", ["email_verified"] = Failure != "unverified", ["god"] = true, ["nonce"] = Nonce };
+            var claims = new Dictionary<string, object> { ["sub"] = Subject, ["email"] = "owner@example.test", ["name"] = "Synthetic owner", ["email_verified"] = Failure != "unverified", ["god"] = God, ["nonce"] = Nonce };
             if (Failure != "missing-acr") claims["acr"] = "urn:cormier:access:credential:" + new string('a', 64);
             var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor { Issuer = Origin, Audience = "realtime", IssuedAt = DateTime.UtcNow, NotBefore = DateTime.UtcNow.AddSeconds(-1), Expires = DateTime.UtcNow.AddMinutes(5), Claims = claims, SigningCredentials = new(new RsaSecurityKey(key) { KeyId = "synthetic-fixture" }, SecurityAlgorithms.RsaSha256) });
             return Response(new { access_token = "fixture-access-token", token_type = "Bearer", expires_in = 300, id_token = token });

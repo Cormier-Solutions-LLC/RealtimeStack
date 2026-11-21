@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using StackExchange.Redis;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace RealtimeStack.Accounts;
 
@@ -17,9 +18,11 @@ public sealed class RedisTicketStore : ITicketStore, IDisposable
     private readonly string prefix;
     private readonly bool requireGod;
     private readonly string issuer;
+    private readonly ILogger<RedisTicketStore> logger;
     public bool IsConnected => connection.IsConnected;
-    public RedisTicketStore(IConfiguration configuration, IDataProtectionProvider protection)
+    public RedisTicketStore(IConfiguration configuration, IDataProtectionProvider protection, ILogger<RedisTicketStore>? logger = null)
     {
+        this.logger = logger ?? NullLogger<RedisTicketStore>.Instance;
         requireGod = configuration.GetValue<bool>("Registration:RequireGod");
         issuer = configuration["Sso:Authority"]?.TrimEnd('/') ?? "";
         if (requireGod && !AccountsAccessOptions.SecureOrigin(issuer)) throw new InvalidOperationException("Owner-managed registration requires an exact HTTPS Access issuer.");
@@ -51,21 +54,33 @@ public sealed class RedisTicketStore : ITicketStore, IDisposable
     public async Task<string> StoreAsync(AuthenticationTicket ticket)
     {
         var handle = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        await RenewAsync(handle, ticket).ConfigureAwait(false); return handle;
+        await RenewAsync(handle, ticket).ConfigureAwait(false);
+        AccountsAuthenticationDiagnostics.Stored(logger);
+        return handle;
     }
-    public Task RenewAsync(string key, AuthenticationTicket ticket)
+    public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
         var ttl = (ticket.Properties.ExpiresUtc ?? DateTimeOffset.UtcNow.AddHours(8)) - DateTimeOffset.UtcNow;
-        return connection.GetDatabase().StringSetAsync(Key(key), protector.Protect(TicketSerializer.Default.Serialize(ticket)), ttl > TimeSpan.Zero ? ttl : TimeSpan.FromSeconds(1));
+        var stored = await connection.GetDatabase().StringSetAsync(Key(key), protector.Protect(TicketSerializer.Default.Serialize(ticket)), ttl > TimeSpan.Zero ? ttl : TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+        AccountsAuthenticationDiagnostics.Renewed(logger, stored);
     }
     public async Task<AuthenticationTicket?> RetrieveAsync(string key)
     {
         var value = await connection.GetDatabase().StringGetAsync(Key(key)).ConfigureAwait(false);
-        if (!value.HasValue) return null;
-        try { return TicketSerializer.Default.Deserialize(protector.Unprotect((byte[])value!)); }
-        catch (CryptographicException) { return null; }
+        if (!value.HasValue) { AccountsAuthenticationDiagnostics.Retrieved(logger, false, false, false); return null; }
+        try
+        {
+            var ticket = TicketSerializer.Default.Deserialize(protector.Unprotect((byte[])value!));
+            AccountsAuthenticationDiagnostics.Retrieved(logger, true, true, ticket is not null);
+            return ticket;
+        }
+        catch (CryptographicException) { AccountsAuthenticationDiagnostics.Retrieved(logger, true, false, false); return null; }
     }
-    public Task RemoveAsync(string key) => connection.GetDatabase().KeyDeleteAsync(Key(key));
+    public async Task RemoveAsync(string key)
+    {
+        var removed = await connection.GetDatabase().KeyDeleteAsync(Key(key)).ConfigureAwait(false);
+        AccountsAuthenticationDiagnostics.Removed(logger, removed);
+    }
     private string RegistrationKey(string installationId) => prefix + "registration:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(installationId)));
     public Task WriteRegistrationAsync(string installationId, string receipt, ClaimsPrincipal? authenticatedAccount = null)
     {

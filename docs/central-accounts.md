@@ -213,3 +213,14 @@ cookie sessions, credential-revision revocation and rejected callbacks without
 cookie creation. They create and delete only their own random key prefixes. Verify full
 browser sign-in, registration, restart persistence and HTTPS ingress against the
 central issuer before reporting a live integration as complete.
+
+Authentication diagnostics use fixed stage/reason enums and boolean metadata.
+They distinguish a login challenge, token validation, ticket acceptance,
+completed sign-in, cookie validation and the session response. Redis ticket
+events report only store/renew/retrieve/remove outcomes. Claim values, subject
+IDs, ticket handles, token properties, cookies, request bodies and exception
+messages are excluded. Use these events to locate a failed live roundtrip;
+an HTTP redirect or a Ready pod alone does not establish an authenticated session.
+The signed middleware suite also exercises independent Production hosts using
+one filesystem keyring, central-state validation and owner-only registration,
+including ordinary authenticated accounts that cannot replace the owner receipt.
