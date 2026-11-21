@@ -2,10 +2,26 @@ import crypto from "node:crypto";
 import express from "express";
 import { rateLimit } from "express-rate-limit";
 import session from "express-session";
+import { gatewayHeaders } from "./gateway-headers.mjs";
 
 const gatewayCookieName = "realtimestack_session";
 const rfc3339Timestamp = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
 const exampleCookieName = "realtimestack_example_session";
+const publicPersistenceRoutes = [
+  "/realtimestack/persistence/records/read",
+  "/realtimestack/persistence/records/ack",
+  "/realtimestack/persistence/tasks/read",
+];
+const fallbackRoute = /^\/realtimestack\/http\/connections\/[A-Za-z0-9_-]+(?:\/(stream|messages|poll))?$/u;
+const fallbackMethods = { stream: "GET", messages: "POST", poll: "POST" };
+
+function isPublicGatewayRoute(method, pathname) {
+  if (pathname === "/realtimestack/http/connect" || publicPersistenceRoutes.includes(pathname)) {
+    return method === "POST";
+  }
+  const route = fallbackRoute.exec(pathname);
+  return route !== null && method === (fallbackMethods[route[1]] ?? "DELETE");
+}
 
 function parseRfc3339(value) {
   if (typeof value !== "string") return Number.NaN;
@@ -242,7 +258,7 @@ export function createApp({
         target: config.gatewayUrl,
         changeOrigin: false,
         xfwd: false,
-        headers: { "x-forwarded-proto": config.publicScheme },
+        headers: gatewayHeaders(request, config.publicScheme),
         proxyTimeout: ticketDeadlineMilliseconds,
         timeout: ticketDeadlineMilliseconds,
       });
@@ -252,8 +268,8 @@ export function createApp({
     }
   });
 
-  app.use(["/realtimestack/http", "/realtimestack/persistence/records/read", "/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read"], (request, response) => {
-    if (request.originalUrl.startsWith("/realtimestack/persistence/") && (request.method !== "POST" || !["/realtimestack/persistence/records/read", "/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read"].includes(request.originalUrl.split("?")[0]))) return response.sendStatus(404);
+  app.use(["/realtimestack/http", ...publicPersistenceRoutes], (request, response) => {
+    if (!isPublicGatewayRoute(request.method, request.originalUrl.split("?", 1)[0])) return response.sendStatus(404);
     try {
       request.url = request.originalUrl;
       proxy.web(request, response, {
@@ -261,7 +277,7 @@ export function createApp({
         changeOrigin: false,
         xfwd: false,
         prependPath: true,
-        headers: { "x-forwarded-proto": config.publicScheme },
+        headers: gatewayHeaders(request, config.publicScheme),
       });
     } catch {
       if (!response.headersSent) response.status(503).json({ code: "service_unavailable", message: "The reference application dependency is unavailable." });

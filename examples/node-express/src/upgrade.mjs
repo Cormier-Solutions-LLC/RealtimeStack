@@ -1,5 +1,6 @@
+import { gatewayHeaders } from "./gateway-headers.mjs";
+
 export function createUpgradeHandler({
-  publicOrigin,
   publicScheme,
   gatewayUrl,
   proxy,
@@ -9,15 +10,7 @@ export function createUpgradeHandler({
   cancel = clearTimeout,
 }) {
   return (request, socket, head) => {
-    let pathname;
-    try {
-      pathname = new URL(request.url ?? "/", publicOrigin).pathname;
-    } catch {
-      socket.destroy();
-      return;
-    }
-
-    if (pathname !== "/realtimestack/ws") {
+    if (request.url?.split("?", 1)[0] !== "/realtimestack/ws") {
       socket.destroy();
       return;
     }
@@ -65,7 +58,7 @@ export function createUpgradeHandler({
         target: gatewayUrl,
         changeOrigin: false,
         xfwd: false,
-        headers: { "x-forwarded-proto": publicScheme },
+        headers: gatewayHeaders(request, publicScheme),
       });
     } catch (error) {
       proxy.off("proxyReqWs", onProxyRequest);
