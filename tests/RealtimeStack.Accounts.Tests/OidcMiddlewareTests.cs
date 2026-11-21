@@ -30,7 +30,7 @@ public sealed class OidcMiddlewareTests
     [InlineData(false)]
     public async Task ProductionSharedFilesystemKeyringPreservesSignedOwnerAndOrdinarySessionsWithSafeDiagnostics(bool god)
     {
-        using var issuer = new Issuer { God = god };
+        using var issuer = new Issuer { God = god, UsePar = true };
         await using var fixture = await Fixture.Start(issuer, persistedKeyring: true);
         var cookies = new BrowserCookies();
         using var callback = await fixture.Send(fixture.First, cookies, await fixture.Begin(cookies));
@@ -38,6 +38,9 @@ public sealed class OidcMiddlewareTests
         using var session = await fixture.Session(fixture.Second, cookies);
         Assert.True(session.RootElement.GetProperty("authenticated").GetBoolean());
         Assert.Equal(god, session.RootElement.GetProperty("registrationAllowed").GetBoolean());
+        var integrationsUrl = session.RootElement.GetProperty("integrationsUrl");
+        if (god) Assert.EndsWith("/admin/integrations", integrationsUrl.GetString());
+        else Assert.Equal(JsonValueKind.Null, integrationsUrl.ValueKind);
         Assert.Equal(god, session.RootElement.GetProperty("user").GetProperty("god").GetBoolean());
         // A previously authenticated request must still perform a new challenge.
         _ = await fixture.Begin(cookies);
@@ -207,6 +210,13 @@ public sealed class OidcMiddlewareTests
             using var response = await Send(First, cookies, "/api/auth/sso/login");
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
             var query = QueryHelpers.ParseQuery(response.Headers.Location!.Query);
+            if (Authority.UsePar)
+            {
+                Assert.Equal("realtime", query["client_id"]);
+                Assert.Equal("urn:ietf:params:oauth:request_uri:synthetic", query["request_uri"]);
+                Assert.NotEmpty(Authority.PushedState);
+                return AccountsAccessOptions.Callback + "?code=fixture-code&state=" + Uri.EscapeDataString(Authority.PushedState);
+            }
             Assert.Equal("code", query["response_type"]); Assert.Equal("S256", query["code_challenge_method"]);
             Assert.Equal("realtime", query["client_id"]); Assert.Equal(Issuer.PublicOrigin + AccountsAccessOptions.Callback, query["redirect_uri"]);
             Authority.Nonce = query["nonce"]!; Authority.Challenge = query["code_challenge"]!;
@@ -242,6 +252,8 @@ public sealed class OidcMiddlewareTests
         public string Subject { get; } = "usr-synthetic-owner";
         public string? Failure { get; init; }
         public bool God { get; init; } = true;
+        public bool UsePar { get; init; }
+        public string PushedState { get; private set; } = "";
         public string StateStamp { get; set; } = new('a', 64);
         public string Nonce { get; set; } = "";
         public string Challenge { get; set; } = "";
@@ -260,7 +272,17 @@ public sealed class OidcMiddlewareTests
         private async Task<HttpResponseMessage> Reply(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath;
-            if (path == "/.well-known/openid-configuration") return Response(new { issuer = Origin, authorization_endpoint = Origin + "/authorize", token_endpoint = Origin + "/token", jwks_uri = Origin + "/jwks", response_types_supported = ResponseTypes, subject_types_supported = SubjectTypes, id_token_signing_alg_values_supported = SigningAlgorithms, token_endpoint_auth_methods_supported = ClientAuthentication, code_challenge_methods_supported = ChallengeMethods });
+            if (path == "/.well-known/openid-configuration") return Response(new { issuer = Origin, authorization_endpoint = Origin + "/authorize", token_endpoint = Origin + "/token", jwks_uri = Origin + "/jwks", response_types_supported = ResponseTypes, subject_types_supported = SubjectTypes, id_token_signing_alg_values_supported = SigningAlgorithms, token_endpoint_auth_methods_supported = ClientAuthentication, code_challenge_methods_supported = ChallengeMethods, pushed_authorization_request_endpoint = UsePar ? Origin + "/par" : null });
+            if (path == "/par" && UsePar)
+            {
+                var pushed = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync(cancellationToken));
+                Assert.Equal("realtime", pushed["client_id"]); Assert.Equal(Secret, pushed["client_secret"]);
+                Assert.Equal("code", pushed["response_type"]); Assert.Equal("S256", pushed["code_challenge_method"]);
+                Assert.Equal(PublicOrigin + AccountsAccessOptions.Callback, pushed["redirect_uri"]);
+                Assert.Equal("https://licensing.example.test", pushed["resource"]);
+                Nonce = pushed["nonce"]!; Challenge = pushed["code_challenge"]!; PushedState = pushed["state"]!;
+                return new(HttpStatusCode.Created) { Content = JsonContent.Create(new { request_uri = "urn:ietf:params:oauth:request_uri:synthetic", expires_in = 60 }) };
+            }
             if (path == "/jwks")
             {
                 var jwk = JsonWebKeyConverter.ConvertFromRSASecurityKey(new RsaSecurityKey(key) { KeyId = "synthetic-fixture" });

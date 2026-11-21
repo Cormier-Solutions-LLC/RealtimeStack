@@ -173,6 +173,7 @@ public static class AccountsAccess
             return Results.Json(new { configured = access.Enabled, authenticated, loginUrl = access.Enabled ? access.PublicUrl + "/api/auth/sso/login" : null,
                 registrationAllowed = authenticated && CanRegisterInstallation(context.User, access.Authority, app.Configuration.GetValue<bool>("Registration:RequireGod")),
                 accountUrl = access.Enabled ? access.Authority + "/account" : null, adminAccountsUrl = authenticated && IsGod(context.User) ? access.Authority + "/admin/accounts" : null,
+                integrationsUrl = authenticated && IsGod(context.User) ? access.Authority + "/admin/integrations" : null,
                 user = authenticated ? new { subject = context.User.FindFirstValue("sub"), email = context.User.FindFirstValue("email"), name = context.User.FindFirstValue("name"), god = IsGod(context.User) } : null,
                 csrfToken = authenticated ? antiforgery.GetAndStoreTokens(context).RequestToken : null });
         });
