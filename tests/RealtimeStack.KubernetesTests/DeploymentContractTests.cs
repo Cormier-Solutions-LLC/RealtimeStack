@@ -479,6 +479,7 @@ public sealed class DeploymentContractTests
     public void PromotionReusesAnImmutableDigestAndSupportsRollback()
     {
         var publish = Read(".github/workflows/publish.yml");
+        var releaseManifest = Read("scripts/release-manifest.mjs");
         var promote = Read(".github/workflows/promote.yml");
         var deploymentTools = Read("scripts/setup-ci-deployment-tools.sh");
         var powershellSetup = Read("scripts/setup-ci-powershell.sh");
@@ -505,7 +506,7 @@ public sealed class DeploymentContractTests
         Assert.Contains("workflow_run:", publish, StringComparison.Ordinal);
         Assert.Contains("download-artifact", publish, StringComparison.Ordinal);
         Assert.DoesNotContain("dotnet publish", publish, StringComparison.Ordinal);
-        Assert.Contains("archiveSha256", publish, StringComparison.Ordinal);
+        Assert.Contains("archiveSha256", releaseManifest, StringComparison.Ordinal);
         Assert.Contains("vars.CONTAINER_REGISTRY", publish, StringComparison.Ordinal);
         Assert.Contains("vars.REGISTRY_CREDENTIAL_PROVIDER", publish, StringComparison.Ordinal);
         Assert.Contains("vars.GHCR_PUBLISH_REGISTRY", publish, StringComparison.Ordinal);
@@ -541,8 +542,8 @@ public sealed class DeploymentContractTests
         Assert.Contains("secrets.REGISTRY_PASSWORD", promote, StringComparison.Ordinal);
         Assert.DoesNotContain("secrets[", promote, StringComparison.Ordinal);
         Assert.Contains("release-manifest.json", promote, StringComparison.Ordinal);
-        Assert.Contains("\"schemaVersion\":3", publish, StringComparison.Ordinal);
-        Assert.Contains("releaseVersion", publish, StringComparison.Ordinal);
+        Assert.Contains("schemaVersion: 3", releaseManifest, StringComparison.Ordinal);
+        Assert.Contains("releaseVersion", releaseManifest, StringComparison.Ordinal);
         Assert.Contains("Package the versioned Helm chart", publish, StringComparison.Ordinal);
         Assert.Contains("contents: write", publish, StringComparison.Ordinal);
         Assert.Contains("Publish the Helm chart in the public GitHub release", publish, StringComparison.Ordinal);
@@ -551,7 +552,7 @@ public sealed class DeploymentContractTests
         Assert.Contains("docs/release-notes/${RELEASE_VERSION}.md", publish, StringComparison.Ordinal);
         Assert.DoesNotContain("--clobber", publish, StringComparison.Ordinal);
         Assert.Contains("${release_version}", publish, StringComparison.Ordinal);
-        Assert.Contains("credentialProvider", publish, StringComparison.Ordinal);
+        Assert.Contains("credentialProvider", releaseManifest, StringComparison.Ordinal);
         Assert.Contains("credentialProvider", promote, StringComparison.Ordinal);
         Assert.Contains("legacyCredentialProvider", promote, StringComparison.Ordinal);
         Assert.Contains("$manifest.schemaVersion -eq 1", promote, StringComparison.Ordinal);

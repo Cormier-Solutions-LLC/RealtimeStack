@@ -1,6 +1,48 @@
 nameOverride: ""
 fullnameOverride: ""
 
+# Optional interactive account host. Credentials and durable storage are pre-provisioned.
+accounts:
+  enabled: false
+  fullnameOverride: ""
+  replicaCount: 2
+  image: { repository: "", digest: "", pullPolicy: IfNotPresent }
+  servicePort: 80
+  containerPort: 8080
+  ingressRoute: { enabled: true }
+  keyringExistingClaim: ""
+  applicationName: RealtimeStack.Accounts
+  redisPrefix: ""
+  podLabels: {}
+  sso:
+    authority: ""
+    publicUrl: ""
+    clientId: ""
+    clientSecret: { name: "", key: client-secret }
+    knownProxyNetworks: []
+    knownProxies: []
+  egress:
+    namespaceSelector: {}
+    podSelector: {}
+    ports: [443]
+    cidrs: []
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 384Mi }
+
+managedInstallation:
+  installationId: ""
+  licensingOrigin: ""
+  deploymentType: kubernetes
+  checkIn:
+    enabled: false
+    agentTokenSecret: { name: "", key: agent-token }
+  registration:
+    required: false
+    requireGod: false
+    statusTokenSecret: { name: "", key: token }
+    cacheExistingClaim: ""
+
 licensing:
   serverUrl: ""
   publicKeys: ""
@@ -46,6 +88,7 @@ ingressRoute:
   host: ""
   path: /realtimestack/ws
   fallbackPath: /realtimestack/http
+  ticketPath: ""
   affinityCookieName: realtimestack_affinity
   affinityCookieSameSite: lax
   tlsSecretName: ""
@@ -111,6 +154,9 @@ observability:
       key: url
 
 gateway:
+  # Optional legacy-compatible scalar RealtimeStack options; never put secrets here.
+  realtimeOverrides: {}
+  webSocketSubProtocols: []
   shutdownDrainSeconds: 25
   detailedHealthChecks: false
   allowedOrigins:

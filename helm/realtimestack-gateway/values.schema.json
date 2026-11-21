@@ -61,6 +61,310 @@
     }
   ],
   "properties": {
+    "accounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "fullnameOverride",
+        "replicaCount",
+        "image",
+        "servicePort",
+        "containerPort",
+        "ingressRoute",
+        "keyringExistingClaim",
+        "applicationName",
+        "redisPrefix",
+        "podLabels",
+        "sso",
+        "egress",
+        "resources"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "fullnameOverride": {
+          "type": "string",
+          "maxLength": 63,
+          "pattern": "^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        },
+        "replicaCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "repository",
+            "digest",
+            "pullPolicy"
+          ],
+          "properties": {
+            "repository": {
+              "type": "string",
+              "pattern": "^$|^[a-z0-9][a-z0-9.:-]*/[a-z0-9._/-]+$"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^$|^sha256:[a-f0-9]{64}$"
+            },
+            "pullPolicy": {
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ]
+            }
+          }
+        },
+        "servicePort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "containerPort": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "ingressRoute": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled"
+          ],
+          "properties": {
+        "ticketPath": {
+          "type": "string",
+          "pattern": "^$|^/[A-Za-z0-9._/-]+$"
+        },
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        "keyringExistingClaim": {
+          "type": "string",
+          "maxLength": 253,
+          "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+        },
+        "applicationName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "redisPrefix": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "podLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "sso": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "authority",
+            "publicUrl",
+            "clientId",
+            "clientSecret",
+            "knownProxyNetworks",
+            "knownProxies"
+          ],
+          "properties": {
+            "authority": {
+              "type": "string",
+              "pattern": "^$|^https://[^\\s/?#@]+$"
+            },
+            "publicUrl": {
+              "type": "string",
+              "pattern": "^$|^https://[^\\s/?#@]+$"
+            },
+            "clientId": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "clientSecret": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "key"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+                },
+                "key": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]+$"
+                }
+              }
+            },
+            "knownProxyNetworks": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "knownProxies": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "egress": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "namespaceSelector",
+            "podSelector",
+            "ports",
+            "cidrs"
+          ],
+          "properties": {
+            "namespaceSelector": {
+              "type": "object"
+            },
+            "podSelector": {
+              "type": "object"
+            },
+            "ports": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            },
+            "cidrs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "resources": {
+          "type": "object"
+        }
+      }
+    },
+    "managedInstallation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "installationId",
+        "licensingOrigin",
+        "deploymentType",
+        "checkIn",
+        "registration"
+      ],
+      "properties": {
+        "installationId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[^\\x00-\\x1f\\x7f]*$"
+        },
+        "licensingOrigin": {
+          "type": "string",
+          "pattern": "^$|^https://[^\\s/?#@]+$"
+        },
+        "deploymentType": {
+          "enum": [
+            "kubernetes",
+            "docker",
+            "linux",
+            "windows"
+          ]
+        },
+        "checkIn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "agentTokenSecret"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "agentTokenSecret": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "key"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+                },
+                "key": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]+$"
+                }
+              }
+            }
+          }
+        },
+        "registration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required",
+            "statusTokenSecret",
+            "cacheExistingClaim"
+          ],
+          "properties": {
+            "requireGod": { "type": "boolean" },
+            "required": {
+              "type": "boolean"
+            },
+            "statusTokenSecret": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "key"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+                },
+                "key": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]+$"
+                }
+              }
+            },
+            "cacheExistingClaim": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^$|^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+            }
+          }
+        }
+      }
+    },
     "topology": { "enum": ["ha", "non-ha"] },
     "topologySpreadConstraints": {
       "type": "object",
@@ -121,6 +425,80 @@
       "type": "object",
       "required": ["allowedOrigins", "trustedNetworks", "shutdownDrainSeconds"],
       "properties": {
+        "realtimeOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "SessionCookieName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "SessionSource": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "AspNetCoreSessionIdKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "MaximumFrameBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "MaximumMessageBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "OutboundQueueCapacity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "MaximumSubscriptions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "MaximumTrackedCorrelations": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "SlowConsumerStrikeLimit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "HeartbeatSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "IdleTimeoutSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "TicketLifetimeSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            }
+          }
+        },
+        "webSocketSubProtocols": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,127}$"
+          }
+        },
         "shutdownDrainSeconds": { "type": "integer", "minimum": 1, "maximum": 300 },
         "allowedOrigins": { "type": "array", "minItems": 1, "items": { "type": "string", "format": "uri" } },
         "trustedNetworks": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }

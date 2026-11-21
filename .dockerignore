@@ -15,4 +15,6 @@
 !vendor/Cormier.Licensing.Products/
 !vendor/Cormier.Licensing.Products/**
 **/bin
+!examples/ruby-rails/bin
+!examples/ruby-rails/bin/rails
 **/obj

@@ -32,7 +32,7 @@ export function selectJobs(paths, eventName = 'pull_request') {
       add(runtimeJobs);
     } else if (path.startsWith('bootstrap/') || path.startsWith('helm/') || path.startsWith('cluster/')) {
       add([...automationJobs, 'build-test-aot', 'full-circle']);
-    } else if (path.startsWith('tests/bootstrap/')) {
+    } else if (path.startsWith('tests/bootstrap/') || path.startsWith('tests/deployment/')) {
       add(automationJobs);
     } else if (path.startsWith('tests/') || path.startsWith('tools/') || path.startsWith('load/')
       || path.startsWith('observability/') || path === 'scripts/README.md') {

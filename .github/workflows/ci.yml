@@ -133,7 +133,8 @@ jobs:
           bash -n scripts/realtimestack-redis-secret.sh
           bash -n scripts/realtimestack-certificate.sh
           bash -n scripts/prepare-managed-redis-chart.sh
-          shellcheck scripts/realtimestack-bootstrap.sh scripts/realtimestack-redis-secret.sh scripts/realtimestack-certificate.sh scripts/prepare-managed-redis-chart.sh
+          bash -n scripts/build-accounts-archive.sh
+          shellcheck scripts/realtimestack-bootstrap.sh scripts/realtimestack-redis-secret.sh scripts/realtimestack-certificate.sh scripts/prepare-managed-redis-chart.sh scripts/build-accounts-archive.sh
       - name: Test bootstrap contract and cross-shell parity
         env:
           BOOTSTRAP_SKIP_LIFECYCLE: '1'
@@ -217,6 +218,10 @@ jobs:
           grep --quiet 'bitnamilegacy/redis@sha256:25bf63f3caf75af4628c0dfcf39859ad1ac8abe135be85e99699f9637b16dc28' /tmp/redis.yaml
           grep --quiet 'bitnamilegacy/redis-sentinel@sha256:0ca3ea1d2f823c2d9265e0d9e682dc435f219f8d3385aed75b5bb0f365f516a9' /tmp/redis.yaml
           grep --quiet 'bitnamilegacy/redis-exporter@sha256:d111b8a14d96f7edd67324776d6801b76023035d9390d03fbb13d1c21bda8b88' /tmp/redis.yaml
+      - name: Validate managed Accounts release and chart contracts
+        env:
+          HELM_BINARY: /tmp/realtimestack-helm
+        run: node --test tests/deployment/*.test.mjs
 
   bootstrap-powershell-windows:
     needs: changes
@@ -391,7 +396,7 @@ jobs:
           tail --lines 1 /tmp/openmetrics.txt | grep --quiet '^# EOF$'
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/diagnostics/v1/snapshot)" = "404"
       - name: Create OCI archive with .NET SDK
-        run: dotnet publish src/RealtimeStack.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore /t:PublishContainer /p:ContainerArchiveOutputPath=${{ github.workspace }}/artifacts/realtimestack-gateway.tar.gz
+        run: dotnet publish src/RealtimeStack.Gateway --configuration Release --runtime linux-x64 --self-contained --no-restore /t:PublishContainer /p:SourceRevisionId=${{ github.sha }} /p:ContainerArchiveOutputPath=${{ github.workspace }}/artifacts/realtimestack-gateway.tar.gz
       - name: Smoke-test rootless read-only OCI image
         id: container-smoke
         run: |
@@ -439,6 +444,29 @@ jobs:
           curl --fail --silent http://127.0.0.1:18080/health/startup >/dev/null
           curl --fail --silent http://127.0.0.1:18080/health/live >/dev/null
           curl --fail --silent http://127.0.0.1:18080/metrics | grep --quiet realtimestack_health_requests_total
+      - name: Build and smoke-test the managed Accounts archive
+        timeout-minutes: 15
+        env:
+          # DinD bridge TLS can stall while the builder's host network is reachable.
+          ACCOUNTS_BUILD_NETWORK: ${{ vars.CI_ACCOUNTS_BUILD_NETWORK || 'host' }}
+        run: bash scripts/build-accounts-archive.sh
+      - name: Record full Accounts vulnerability report
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          input: artifacts/realtimestack-accounts.tar.gz
+          format: sarif
+          output: artifacts/trivy-accounts.full.sarif
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: '0'
+      - name: Scan managed Accounts OCI archive
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          input: artifacts/realtimestack-accounts.tar.gz
+          format: sarif
+          output: artifacts/trivy-accounts.sarif
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: true
+          exit-code: '1'
       - name: Scan source and artifacts
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
@@ -487,6 +515,10 @@ jobs:
           path: |
             artifacts/native
             artifacts/realtimestack-gateway.tar.gz
+            artifacts/realtimestack-accounts.tar.gz
+            artifacts/realtimestack-accounts.tar.gz.sha256
+            artifacts/trivy-accounts.sarif
+            artifacts/trivy-accounts.full.sarif
             artifacts/test-results
             artifacts/trivy-filesystem.sarif
             artifacts/trivy-image.sarif
@@ -1270,8 +1302,7 @@ jobs:
           load: true
           provenance: false
           sbom: false
-          cache-from: type=gha,scope=swift-vapor
-          cache-to: type=gha,scope=swift-vapor,mode=max
+          cache-from: type=gha,scope=swift-vapor,timeout=2m
       - name: Scan the Vapor reference container
         if: matrix.part == 'container'
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
@@ -1290,6 +1321,24 @@ jobs:
         env:
           SWIFT_VAPOR_IMAGE: realtimestack-swift-vapor:${{ github.sha }}
         run: npx playwright test --config playwright.swift-vapor.config.mjs
+      - name: Export optional Vapor build cache after validation
+        if: matrix.part == 'container'
+        timeout-minutes: 6
+        continue-on-error: true
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          DOCKER_BUILD_SUMMARY: 'false'
+          DOCKER_BUILD_RECORD_UPLOAD: 'false'
+        with:
+          context: .
+          file: examples/swift-vapor/Dockerfile
+          build-args: |
+            SWIFT_BUILD_IMAGE=${{ env.CI_SWIFT_IMAGE }}
+            GO_IMAGE=${{ env.CI_GO_CADDY_IMAGE }}
+            SWIFT_RUNTIME_IMAGE=${{ env.CI_SWIFT_RUNTIME_IMAGE }}
+          provenance: false
+          sbom: false
+          cache-to: type=gha,scope=swift-vapor,mode=max,timeout=5m,ignore-error=true
       - name: Upload Vapor failure evidence
         if: failure()
         uses: actions/upload-artifact@v7

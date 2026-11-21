@@ -14,6 +14,7 @@ permissions:
 env:
   CONTAINER_REGISTRY: ${{ vars.CONTAINER_REGISTRY }}
   IMAGE_REPOSITORY: ${{ vars.IMAGE_REPOSITORY }}
+  ACCOUNTS_IMAGE_REPOSITORY: ${{ vars.ACCOUNTS_IMAGE_REPOSITORY }}
   REGISTRY_CREDENTIAL_PROVIDER: ${{ vars.REGISTRY_CREDENTIAL_PROVIDER }}
   CI_NODE_DOWNLOAD_MIRROR: ${{ vars.CI_NODE_DOWNLOAD_MIRROR || 'https://nodejs.org/dist' }}
   CI_GH_VERSION: ${{ vars.CI_GH_VERSION || '2.101.0' }}
@@ -68,6 +69,9 @@ jobs:
           test -n "$REGISTRY_PASSWORD"
           printf '%s' "$CONTAINER_REGISTRY" | grep --quiet --extended-regexp '^[a-z0-9][a-z0-9.-]*(:[0-9]+)?$'
           printf '%s' "$IMAGE_REPOSITORY" | grep --quiet --extended-regexp '^[a-z0-9][a-z0-9._/-]*$'
+          accounts_repository="${ACCOUNTS_IMAGE_REPOSITORY:-${IMAGE_REPOSITORY}-accounts}"
+          printf '%s' "$accounts_repository" | grep --quiet --extended-regexp '^[a-z0-9][a-z0-9._/-]*$'
+          test "$accounts_repository" != "$IMAGE_REPOSITORY"
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ${{ env.CONTAINER_REGISTRY }}
@@ -81,6 +85,7 @@ jobs:
           load_output=$(docker load --input artifacts/realtimestack-gateway.tar.gz)
           source_ref=$(printf '%s\n' "$load_output" | sed -n 's/^Loaded image: //p' | tail -n 1)
           test -n "$source_ref"
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$source_ref")" = "$SOURCE_SHA"
           normalized_repository=$(printf '%s' "$IMAGE_REPOSITORY" | tr '[:upper:]' '[:lower:]')
           target_ref="${CONTAINER_REGISTRY}/${normalized_repository}:${SOURCE_SHA}"
           release_version=$(sed -n "s/.*<ApplicationVersion[^>]*>\([^<]*\)<\/ApplicationVersion>.*/\1/p" Directory.Build.props)
@@ -109,7 +114,26 @@ jobs:
           digest=$(docker buildx imagetools inspect "$target_ref" --format '{{json .Manifest.Digest}}' | tr -d '"')
           test -n "$digest"
           archive_sha=$(sha256sum artifacts/realtimestack-gateway.tar.gz | cut -d' ' -f1)
-          printf '{"schemaVersion":3,"releaseVersion":"%s","versionRelease":%s,"sourceCommit":"%s","image":"%s","credentialProvider":"%s","digest":"%s","archiveSha256":"%s","ciRunId":%s}\n' "$release_version" "$is_release" "$SOURCE_SHA" "${CONTAINER_REGISTRY}/${normalized_repository}" "$REGISTRY_CREDENTIAL_PROVIDER" "$digest" "$archive_sha" "${{ github.event.workflow_run.id }}" > artifacts/release-manifest.json
+          accounts_load=$(docker load --input artifacts/realtimestack-accounts.tar.gz)
+          sha256sum --check artifacts/realtimestack-accounts.tar.gz.sha256
+          accounts_ref=$(printf '%s\n' "$accounts_load" | sed -n 's/^Loaded image: //p' | tail -n 1)
+          test -n "$accounts_ref"
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$accounts_ref")" = "$SOURCE_SHA"
+          accounts_repository="${ACCOUNTS_IMAGE_REPOSITORY:-${IMAGE_REPOSITORY}-accounts}"
+          accounts_image="${CONTAINER_REGISTRY}/${accounts_repository}"
+          docker tag "$accounts_ref" "$accounts_image:$SOURCE_SHA"
+          docker push "$accounts_image:$SOURCE_SHA"
+          if [ "$is_release" = 'true' ]; then
+            docker tag "$accounts_ref" "$accounts_image:$release_version"
+            docker push "$accounts_image:$release_version"
+          fi
+          accounts_digest=$(docker buildx imagetools inspect "$accounts_image:$SOURCE_SHA" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          accounts_archive_sha=$(sha256sum artifacts/realtimestack-accounts.tar.gz | cut -d' ' -f1)
+          # schemaVersion:3 gains an additive Accounts component; older gateway-only evidence remains readable.
+          RELEASE_VERSION="$release_version" VERSION_RELEASE="$is_release" CI_RUN_ID="${{ github.event.workflow_run.id }}" \
+            GATEWAY_IMAGE="${CONTAINER_REGISTRY}/${normalized_repository}" GATEWAY_DIGEST="$digest" GATEWAY_ARCHIVE_SHA256="$archive_sha" \
+            ACCOUNTS_IMAGE="$accounts_image" ACCOUNTS_DIGEST="$accounts_digest" ACCOUNTS_ARCHIVE_SHA256="$accounts_archive_sha" \
+            node scripts/release-manifest.mjs
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "is_release=$is_release" >> "$GITHUB_OUTPUT"
           echo "release_version=$release_version" >> "$GITHUB_OUTPUT"

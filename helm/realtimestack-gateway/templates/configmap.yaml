@@ -21,6 +21,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: {{ include "realtimestack-gateway.fullname" . }}
+  labels:
+    {{- include "realtimestack-gateway.labels" . | nindent 4 }}
+data:
   RealtimeStackSetup__GatewayEnabled: "true"
   RealtimeStackSetup__HttpFallbackEnabled: "true"
   RealtimeStackSetup__Persistence__Enabled: {{ .Values.persistence.enabled | quote }}
@@ -30,15 +34,20 @@ metadata:
   RealtimeStackSetup__Persistence__CommandTimeoutSeconds: {{ .Values.persistence.commandTimeoutSeconds | quote }}
   RealtimeStackSetup__Persistence__ApiEnabled: {{ and .Values.persistence.enabled .Values.persistence.api.enabled | quote }}
   RealtimeStackSetup__Persistence__ApiBasePath: {{ .Values.persistence.api.basePath | quote }}
-  name: {{ include "realtimestack-gateway.fullname" . }}
-  labels:
-    {{- include "realtimestack-gateway.labels" . | nindent 4 }}
-data:
   Gateway__ServiceName: {{ include "realtimestack-gateway.fullname" . | quote }}
   Gateway__ShutdownDrainSeconds: {{ .Values.gateway.shutdownDrainSeconds | quote }}
   Gateway__DetailedHealthChecks: {{ .Values.gateway.detailedHealthChecks | quote }}
   Gateway__Topology: {{ .Values.topology | quote }}
   RealtimeStack__EndpointPath: {{ .Values.ingressRoute.path | quote }}
+  {{- if .Values.ingressRoute.ticketPath }}
+  RealtimeStack__TicketEndpointPath: {{ .Values.ingressRoute.ticketPath | quote }}
+  {{- end }}
+  {{- range $key, $value := .Values.gateway.realtimeOverrides }}
+  RealtimeStack__{{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- range $index, $protocol := .Values.gateway.webSocketSubProtocols }}
+  RealtimeStack__WebSocketSubProtocols__{{ $index }}: {{ $protocol | quote }}
+  {{- end }}
   HttpFallback__BasePath: {{ .Values.ingressRoute.fallbackPath | quote }}
   Diagnostics__Enabled: {{ .Values.diagnostics.enabled | quote }}
   Diagnostics__ProductionEnabled: {{ .Values.diagnostics.productionEnabled | quote }}
