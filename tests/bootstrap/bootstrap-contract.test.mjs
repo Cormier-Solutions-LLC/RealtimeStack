@@ -414,6 +414,27 @@ test("unknown fields and inline secrets fail closed with field paths", () => {
   assert(errors.some(item => item.path === "$.redis.password" && item.message.includes("inline secret")));
 });
 
+test("both managed Redis topologies render the same command allowlist as the base values", async () => {
+  const baseValues = await readFile(resolve(repositoryRoot, "cluster/redis/managed-values.yaml"), "utf8");
+  const baseCommands = /^\s+commands: "([^"]+)"$/m.exec(baseValues)?.[1];
+  assert.ok(baseCommands);
+  for (const topology of ["non-ha", "ha"]) {
+    const config = configuration(topology);
+    const [user] = buildPlan("install", config, profiles[topology]).managedRedis.values.auth.acl.users;
+    assert.equal(user.commands, baseCommands);
+    assert.equal(user.keys, `~${config.redis.instancePrefix}:*`);
+    assert.equal(user.channels, `&${config.redis.instancePrefix}:*`);
+    const commands = user.commands.split(" ");
+    assert.ok(commands.every(command => !command.startsWith("+@")));
+    for (const command of ["+info", "+scan", "+swapdb"]) {
+      assert.ok(!commands.includes(command), command);
+    }
+    for (const command of ["+get", "+set", "+publish", "+subscribe", "+xreadgroup", "+evalsha"]) {
+      assert.ok(commands.includes(command), command);
+    }
+  }
+});
+
 test("normalized plan and rendered values are deterministic and secret-reference-only", () => {
   const config = configuration("ha");
   const first = buildPlan("update", config, profiles.ha, { timeoutSeconds: 420 });

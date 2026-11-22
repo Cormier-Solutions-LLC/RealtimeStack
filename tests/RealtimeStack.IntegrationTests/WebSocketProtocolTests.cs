@@ -162,6 +162,53 @@ public sealed class WebSocketProtocolTests
     }
 
     [Fact]
+    public async Task HttpFallbackAdmitsOneMessageBodyPerConnection()
+    {
+        await using var factory = new RealtimeStackFactory();
+        using var client = factory.CreateClient();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var connect = await client.PostAsync("/realtimestack/http/connect?ticket=valid-ticket", null, timeout.Token);
+        connect.EnsureSuccessStatusCode();
+        using var connection = await JsonDocument.ParseAsync(await connect.Content.ReadAsStreamAsync(timeout.Token));
+        var id = connection.RootElement.GetProperty("connectionId").GetString()!;
+        var token = connection.RootElement.GetProperty("connectionToken").GetString()!;
+        var path = $"/realtimestack/http/connections/{id}/messages";
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            Envelope(ProtocolMessageTypes.Ping, "first"), RealtimeStackJsonSerializerContext.Default.MessageEnvelope);
+        using var body = new PausedRequestBody(payload);
+        var first = factory.Server.SendAsync(context =>
+        {
+            context.Request.Method = HttpMethods.Post;
+            context.Request.Path = path;
+            context.Request.Headers["X-RealtimeStack-Connection"] = token;
+            context.Request.Body = body;
+        }, timeout.Token);
+
+        using var next = new HttpRequestMessage(HttpMethod.Post, path);
+        next.Headers.Add("X-RealtimeStack-Connection", token);
+        next.Content = JsonContent.Create(Envelope(ProtocolMessageTypes.Ping, "second"),
+            RealtimeStackJsonSerializerContext.Default.MessageEnvelope);
+        try
+        {
+            await body.Started.Task.WaitAsync(timeout.Token);
+            using var conflict = await client.SendAsync(next, timeout.Token);
+            Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+        }
+        finally
+        {
+            body.Release.TrySetResult();
+        }
+        Assert.Equal(StatusCodes.Status202Accepted, (await first).Response.StatusCode);
+
+        using var retry = new HttpRequestMessage(HttpMethod.Post, path);
+        retry.Headers.Add("X-RealtimeStack-Connection", token);
+        retry.Content = JsonContent.Create(Envelope(ProtocolMessageTypes.Ping, "second"),
+            RealtimeStackJsonSerializerContext.Default.MessageEnvelope);
+        using var accepted = await client.SendAsync(retry, timeout.Token);
+        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+    }
+
+    [Fact]
     public async Task HttpFallbackDoesNotDispatchUploadThatFinishesAfterClose()
     {
         await using var factory = new RealtimeStackFactory();
@@ -731,6 +778,19 @@ public sealed class WebSocketProtocolTests
             return ticket == "valid-ticket"
                 ? new RealtimeStackIdentity("tenant-1", "user-1", ["orders"], DateTimeOffset.UtcNow.Add(identityLifetime))
                 : null;
+        }
+    }
+
+    private sealed class PausedRequestBody(byte[] payload) : MemoryStream(payload)
+    {
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            Started.TrySetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return await base.ReadAsync(buffer, cancellationToken);
         }
     }
 

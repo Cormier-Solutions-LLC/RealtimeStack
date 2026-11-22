@@ -82,6 +82,7 @@ fun main() {
         val config = ReferenceConfig.load()
         val store = LettuceSessionStore.connect(config.redisUrl)
         val client = HttpClient(CIO) {
+            followRedirects = false
             install(ClientWebSockets) { maxFrameSize = MAXIMUM_BODY_BYTES.toLong() }
             install(HttpTimeout)
         }
@@ -277,9 +278,15 @@ private suspend fun proxyHttpFallback(
     config: ReferenceConfig,
     upstreamMethod: HttpMethod,
 ) {
+    val requestTarget = call.request.uri
+    val path = requestTarget.substringBefore('?')
+    if (!isPublicGatewayRoute(upstreamMethod, path)) {
+        call.respond(HttpStatusCode.NotFound)
+        return
+    }
     val body = readLimitedBody(call.receiveChannel())
-    val streaming = upstreamMethod == HttpMethod.Get && call.request.path().endsWith("/stream")
-    client.prepareRequest(config.gatewayUrl.resolve(call.request.uri).toString()) {
+    val streaming = upstreamMethod == HttpMethod.Get
+    client.prepareRequest(config.gatewayUrl.resolve(requestTarget).toString()) {
         method = upstreamMethod
         timeout {
             requestTimeoutMillis = if (streaming) HttpTimeoutConfig.INFINITE_TIMEOUT_MS else 40_000
@@ -301,6 +308,24 @@ private suspend fun proxyHttpFallback(
         call.respondBytesWriter(contentType, response.status) {
             response.bodyAsChannel().copyTo(this)
         }
+    }
+}
+
+private val fallbackConnectionPath =
+    Regex("^/realtimestack/http/connections/[A-Za-z0-9_-]+(?:/(stream|messages|poll))?$")
+
+private fun isPublicGatewayRoute(method: HttpMethod, path: String): Boolean {
+    when (path) {
+        "/realtimestack/http/connect",
+        "/realtimestack/persistence/records/read",
+        "/realtimestack/persistence/records/ack",
+        "/realtimestack/persistence/tasks/read" -> return method == HttpMethod.Post
+    }
+    val route = fallbackConnectionPath.matchEntire(path) ?: return false
+    return method == when (route.groupValues[1]) {
+        "stream" -> HttpMethod.Get
+        "messages", "poll" -> HttpMethod.Post
+        else -> HttpMethod.Delete
     }
 }
 

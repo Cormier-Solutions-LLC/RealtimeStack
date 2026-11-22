@@ -34,6 +34,24 @@ public sealed class AspNetCoreHostingIntegrationTests
     }
 
     [Fact]
+    public async Task AddRealtimeStackGatewaySuppressesHostingRequestLogsWithProviderSpecificLogging()
+    {
+        var builder = WebApplication.CreateBuilder();
+        var values = ValidConfiguration();
+        values["Logging:Console:LogLevel:Default"] = "Trace";
+        values["Logging:LogLevel:Microsoft.AspNetCore.Hosting.Diagnostics"] = "Trace";
+        builder.Configuration.AddInMemoryCollection(values);
+        builder.Services.AddRealtimeStackGateway(builder.Configuration);
+        await using var app = builder.Build();
+        var factory = app.Services.GetRequiredService<ILoggerFactory>();
+
+        var hosting = factory.CreateLogger("Microsoft.AspNetCore.Hosting.Diagnostics");
+        Assert.False(hosting.IsEnabled(LogLevel.Information));
+        Assert.True(hosting.IsEnabled(LogLevel.Warning));
+        Assert.True(factory.CreateLogger("Microsoft.AspNetCore.Routing").IsEnabled(LogLevel.Information));
+    }
+
+    [Fact]
     public async Task AddRealtimeStackGatewayBindsConfigurationAndRegistersPublicIntegrationServices()
     {
         await using var provider = CreateServices(new Dictionary<string, string?>

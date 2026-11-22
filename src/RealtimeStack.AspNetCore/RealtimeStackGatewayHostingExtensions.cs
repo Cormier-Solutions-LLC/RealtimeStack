@@ -16,6 +16,7 @@ namespace RealtimeStack.AspNetCore;
 public static class RealtimeStackGatewayHostingExtensions
 {
     internal const string DiagnosticsCorsPolicy = "RealtimeStack.DiagnosticsOrigins";
+    private const string HostingDiagnosticsCategory = "Microsoft.AspNetCore.Hosting.Diagnostics";
     private static readonly ConditionalWeakTable<IEndpointRouteBuilder, object> MappedEndpoints = new();
 
     public static IServiceCollection AddRealtimeStackGateway(
@@ -265,10 +266,11 @@ public static class RealtimeStackGatewayHostingExtensions
                         rule.ProviderName,
                         rule.CategoryName,
                         logLevel: LogLevel.Trace,
-                        filter: (provider, category, level) => controller.HasOverride(category ?? string.Empty)
+                        filter: (provider, category, level) => AllowsHostingDiagnostic(category, level) &&
+                            (controller.HasOverride(category ?? string.Empty)
                             ? level >= controller.EffectiveLevel(category ?? string.Empty)
                             : level >= (rule.LogLevel ?? LogLevel.Trace) &&
-                                (rule.Filter?.Invoke(provider, category, level) ?? true)));
+                                (rule.Filter?.Invoke(provider, category, level) ?? true))));
                 }
                 if (!baselineRules.Any(rule => rule.ProviderName is null && rule.CategoryName is null))
                 {
@@ -276,9 +278,10 @@ public static class RealtimeStackGatewayHostingExtensions
                         providerName: null,
                         categoryName: null,
                         logLevel: LogLevel.Trace,
-                        filter: (_, category, level) => controller.HasOverride(category ?? string.Empty)
+                        filter: (_, category, level) => AllowsHostingDiagnostic(category, level) &&
+                            (controller.HasOverride(category ?? string.Empty)
                             ? level >= controller.EffectiveLevel(category ?? string.Empty)
-                            : level >= baselineMinimum));
+                            : level >= baselineMinimum)));
                 }
             });
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, RedisSubscriberService>());
@@ -289,6 +292,11 @@ public static class RealtimeStackGatewayHostingExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, DiagnosticsAuditPersistenceService>());
         return services;
     }
+
+    // ASP.NET Core logs the query string before the gateway can consume a connection ticket.
+    private static bool AllowsHostingDiagnostic(string? category, LogLevel level) =>
+        level >= LogLevel.Warning ||
+        !string.Equals(category, HostingDiagnosticsCategory, StringComparison.OrdinalIgnoreCase);
 
     public static IApplicationBuilder UseRealtimeStackGateway(this IApplicationBuilder app)
     {

@@ -11,7 +11,7 @@ app.MapRealtimeStackGateway();
 app.MapRealtimeStackHttpFallback();
 ```
 
-Configure `HttpFallback:BasePath` explicitly when `/realtimestack/http` is not appropriate. `ConnectionTimeoutSeconds` bounds how long a newly created connection may wait for its first receiver, and `PollTimeoutSeconds` bounds each long-poll request. The browser SDK only uses these endpoints when `transports` includes `http-streaming`; installing this package does not change existing WebSocket clients.
+Configure `HttpFallback:BasePath` explicitly when `/realtimestack/http` is not appropriate. `ConnectionTimeoutSeconds` bounds the wait for a first receiver and the time allowed to read each command body. Each connection admits one command body at a time and returns HTTP 409 for overlapping body reads. `PollTimeoutSeconds` bounds each long-poll request. The browser SDK uses these endpoints when `transports` includes `http-streaming`.
 
 Fallback connection state is held by the gateway process. Multi-replica deployments must keep every request for one fallback connection on the same replica; the supplied Traefik `IngressRoute` configures cookie affinity for this purpose. Its affinity cookie defaults to `SameSite=Lax`; set `ingressRoute.affinityCookieSameSite` to `none` for an intentionally cross-site browser origin (the chart always marks this cookie `Secure`). Configure equivalent connection affinity when using a different ingress or load balancer.
 

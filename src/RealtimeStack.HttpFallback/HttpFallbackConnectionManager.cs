@@ -221,6 +221,7 @@ internal sealed class HttpFallbackConnectionManager(
         public HttpFallbackTransport Transport { get; } = transport;
         public CancellationTokenSource Lifetime { get; } = new();
         public Task Background { get; set; } = Task.CompletedTask;
+        public SemaphoreSlim InboundBodyGate { get; } = new(1, 1);
         public SemaphoreSlim InboundGate { get; } = new(1, 1);
 
         public bool TryAttachStream()

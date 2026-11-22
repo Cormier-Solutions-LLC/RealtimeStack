@@ -22,7 +22,8 @@ auth:
     users:
       - username: realtimestack
         enabled: "on"
-        commands: "+@read +@write +@connection +@pubsub +@scripting +@stream"
+        # Keep in sync with the bootstrap contract. Sentinel administration uses a separate credential.
+        commands: "+auth +hello +ping +echo +quit +client|id +client|getname +client|setname +client|setinfo +command +select|0 +get +set +setex +psetex +del +exists +expire +pexpire +publish +subscribe +unsubscribe +xadd +xgroup|create +xreadgroup +xautoclaim +xack +zadd +zcard +zrange +zrangebyscore +zrem +zremrangebyrank +zremrangebyscore +eval +evalsha +script|load"
         keys: "~realtimestack:*"
         channels: "&realtimestack:*"
 tls: { enabled: false }

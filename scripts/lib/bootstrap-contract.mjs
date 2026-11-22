@@ -538,7 +538,8 @@ function renderManagedRedis(config, profile) {
           users: [{
             username: config.redis.credentialKey,
             enabled: "on",
-            commands: "+@read +@write +@connection +@pubsub +@scripting +@stream",
+            // Keep in sync with the managed Redis base values. Data commands are limited to prefixed keys and channels.
+            commands: "+auth +hello +ping +echo +quit +client|id +client|getname +client|setname +client|setinfo +command +select|0 +get +set +setex +psetex +del +exists +expire +pexpire +publish +subscribe +unsubscribe +xadd +xgroup|create +xreadgroup +xautoclaim +xack +zadd +zcard +zrange +zrangebyscore +zrem +zremrangebyrank +zremrangebyscore +eval +evalsha +script|load",
             keys: `~${config.redis.instancePrefix}:*`,
             channels: `&${config.redis.instancePrefix}:*`,
           }],
