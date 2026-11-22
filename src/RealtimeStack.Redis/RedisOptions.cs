@@ -30,6 +30,8 @@ public sealed class RedisOptions
 
     public string PubSubChannel { get; set; } = "events";
 
+    public int PubSubQueueCapacity { get; set; } = 512;
+
     public bool StreamsEnabled { get; set; }
 
     public string StreamKeyPrefix { get; set; } = "streams";

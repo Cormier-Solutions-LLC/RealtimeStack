@@ -219,6 +219,7 @@ redis:
   sessionKeyPrefix: sessions
   ticketKeyPrefix: tickets
   pubSubChannel: events
+  pubSubQueueCapacity: 512
   managedAdminPasswordKey: redis-password
 
 resources:

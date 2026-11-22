@@ -36,6 +36,8 @@ Supply `User`/`Password` together from runtime secret configuration when require
 | `IRealtimeStackMessageBus` / `RedisRealtimeStackMessageBus` | Publishes/subscribes on literal `<InstancePrefix>:<PubSubChannel>`; returns an async-disposable subscription and discards malformed incoming contracts |
 | `IDurableRealtimeStackStore` / `RedisDurableRealtimeStackStore` | Explicit append, consumer-group read, pending recovery, completion marker and acknowledgement operations for enabled Streams |
 
+Pub/sub uses a best-effort queue per subscription. `Redis:PubSubQueueCapacity` defaults to 512 pending messages. When full, the subscriber drops new messages and increments `realtimestack.redis.pubsub.dropped`. Concurrent arrivals can be reordered. Use Redis Streams for events that require durable delivery.
+
 The session writer must store camel-case `RedisSessionRecord` JSON with an appropriate Redis TTL. A consumed ticket cannot be reused, even if the attempted audience was wrong. Keep ticket values, cookies and serialized session records out of logs. Pub/Sub is ephemeral: offline subscribers miss messages, and publication is not proof that a browser received or processed an event. Host authorization must still filter tenant, user and topic scope; sharing a Redis channel does not grant client access.
 
 ## Optional Streams

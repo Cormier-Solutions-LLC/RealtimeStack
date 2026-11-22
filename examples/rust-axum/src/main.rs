@@ -175,6 +175,33 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn is_public_gateway_route(method: &Method, path: &str) -> bool {
+    match path {
+        "/realtimestack/http/connect"
+        | "/realtimestack/persistence/records/read"
+        | "/realtimestack/persistence/records/ack"
+        | "/realtimestack/persistence/tasks/read" => return *method == Method::POST,
+        _ => {}
+    }
+    let Some(connection) = path.strip_prefix("/realtimestack/http/connections/") else {
+        return false;
+    };
+    let (id, operation) = connection.split_once('/').unwrap_or((connection, ""));
+    if id.is_empty()
+        || !id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+    {
+        return false;
+    }
+    match operation {
+        "" => *method == Method::DELETE && !connection.ends_with('/'),
+        "stream" => *method == Method::GET,
+        "messages" | "poll" => *method == Method::POST,
+        _ => false,
+    }
+}
+
 async fn http_fallback(
     State(state): State<Arc<AppState>>,
     method: Method,
@@ -182,10 +209,14 @@ async fn http_fallback(
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Response, AppError> {
+    let path = uri.path();
+    if !is_public_gateway_route(&method, path) {
+        return Ok(StatusCode::NOT_FOUND.into_response());
+    }
     let mut url = state.config.gateway_url.clone();
-    url.set_path(uri.path());
+    url.set_path(path);
     url.set_query(uri.query());
-    let client = if method == Method::GET && uri.path().ends_with("/stream") {
+    let client = if method == Method::GET && path.ends_with("/stream") {
         &state.stream_http
     } else {
         &state.http
@@ -720,6 +751,31 @@ mod tests {
             HeaderValue::from_static("example, realtimestack.v1"),
         );
         assert!(offers_protocol(&headers));
+    }
+
+    #[test]
+    fn allows_only_public_gateway_methods_and_paths() {
+        for (method, path) in [
+            (Method::POST, "/realtimestack/http/connect"),
+            (Method::GET, "/realtimestack/http/connections/example-id/stream"),
+            (Method::POST, "/realtimestack/http/connections/example-id/messages"),
+            (Method::POST, "/realtimestack/http/connections/example-id/poll"),
+            (Method::DELETE, "/realtimestack/http/connections/example-id"),
+            (Method::POST, "/realtimestack/persistence/records/read"),
+            (Method::POST, "/realtimestack/persistence/records/ack"),
+            (Method::POST, "/realtimestack/persistence/tasks/read"),
+        ] {
+            assert!(is_public_gateway_route(&method, path));
+        }
+        for (method, path) in [
+            (Method::GET, "/realtimestack/http/unknown"),
+            (Method::GET, "/realtimestack/http/connections/invalid.id/stream"),
+            (Method::POST, "/realtimestack/http/connections/example-id/stream"),
+            (Method::DELETE, "/realtimestack/http/connections/example-id/"),
+            (Method::POST, "/realtimestack/persistence/tasks/ack"),
+        ] {
+            assert!(!is_public_gateway_route(&method, path));
+        }
     }
 
     #[test]

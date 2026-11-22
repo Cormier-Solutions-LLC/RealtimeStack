@@ -21,7 +21,7 @@ internal sealed class HttpFallbackConnectionManager(
 {
     private readonly ConcurrentDictionary<string, State> _connections = new(StringComparer.Ordinal);
 
-    public State? Create(AuthenticationResult authentication)
+    public async ValueTask<State?> CreateAsync(AuthenticationResult authentication)
     {
         if (gatewayState.IsDraining || registry.IsDraining)
         {
@@ -36,16 +36,19 @@ internal sealed class HttpFallbackConnectionManager(
             realtimestackOptions,
             metrics,
             authentication.SessionId);
+        if (!registry.Add(connection))
+        {
+            connection.Abort(WebSocketCloseStatus.InternalServerError);
+            await connection.DisposeAsync();
+            return null;
+        }
         var state = new State(id, token, connection, transport);
         if (!_connections.TryAdd(id, state))
         {
+            registry.Remove(connection.Id, "connection_registration_failed");
             connection.Abort(WebSocketCloseStatus.InternalServerError);
-            return null;
-        }
-        if (!registry.Add(connection))
-        {
-            _connections.TryRemove(id, out _);
-            connection.Abort(WebSocketCloseStatus.InternalServerError);
+            await connection.DisposeAsync();
+            state.Lifetime.Dispose();
             return null;
         }
         state.Background = RunAsync(state);
@@ -119,17 +122,23 @@ internal sealed class HttpFallbackConnectionManager(
         {
             return;
         }
-        registry.Remove(state.Connection.Id, reason);
-        state.Lifetime.Cancel();
         try
         {
-            await state.Connection.RequestCloseAsync(WebSocketCloseStatus.NormalClosure, reason, cancellationToken);
+            state.Lifetime.Cancel();
+            try
+            {
+                await state.Connection.RequestCloseAsync(WebSocketCloseStatus.NormalClosure, reason, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                state.Connection.Abort(WebSocketCloseStatus.NormalClosure);
+            }
+            await state.Connection.DisposeAsync();
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        finally
         {
-            state.Connection.Abort(WebSocketCloseStatus.NormalClosure);
+            registry.Remove(state.Connection.Id, reason);
         }
-        await state.Connection.DisposeAsync();
     }
 
     private async Task RunAsync(State state)

@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using RealtimeStack.Contracts;
 using RealtimeStack.Redis;
@@ -98,6 +99,62 @@ public sealed class RedisMessagingTests
         Assert.Equal(expected.MessageId, actual.MessageId);
         Assert.Equal(expected.TenantId, actual.TenantId);
         Assert.Equal(expected.Payload.GetProperty("value").GetInt32(), actual.Payload.GetProperty("value").GetInt32());
+    }
+
+    [Fact]
+    public async Task PubSubDropsOverflowAndResumesDeliveryAfterTheHandlerReturns()
+    {
+        var options = Options();
+        options.PubSubQueueCapacity = 1;
+        await using var provider = new RedisConnectionProvider(options);
+        var bus = new RedisRealtimeStackMessageBus(provider, options);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var queuedDelivered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var laterDelivered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var dropped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Name == "realtimestack.redis.pubsub.dropped")
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((_, _, _, _) => dropped.TrySetResult());
+        listener.Start();
+
+        await using var subscription = await bus.SubscribeAsync(
+            async message =>
+            {
+                if (message.MessageId == "first")
+                {
+                    entered.TrySetResult();
+                    await release.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                }
+                else if (message.MessageId == "later")
+                {
+                    laterDelivered.TrySetResult();
+                }
+                else
+                {
+                    queuedDelivered.TrySetResult();
+                }
+            },
+            CancellationToken.None);
+
+        var message = BusMessage();
+        await bus.PublishAsync(message with { MessageId = "first" }, CancellationToken.None);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await bus.PublishAsync(message with { MessageId = "second" }, CancellationToken.None);
+        await bus.PublishAsync(message with { MessageId = "third" }, CancellationToken.None);
+        await dropped.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(queuedDelivered.Task.IsCompleted);
+
+        release.TrySetResult();
+        await queuedDelivered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await bus.PublishAsync(message with { MessageId = "later" }, CancellationToken.None);
+        await laterDelivered.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]

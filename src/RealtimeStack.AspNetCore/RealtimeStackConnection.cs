@@ -96,6 +96,7 @@ public sealed class RealtimeStackConnection : IAsyncDisposable
     {
         _transport = transport;
         _identity = identity;
+        AdmissionIdentity = (identity.TenantId, identity.UserId);
         SessionId = sessionId;
         _options = options;
         _metrics = metrics;
@@ -116,6 +117,8 @@ public sealed class RealtimeStackConnection : IAsyncDisposable
     public RealtimeStackIdentity Identity => Volatile.Read(ref _identity);
 
     public string? SessionId { get; }
+
+    internal (string TenantId, string UserId) AdmissionIdentity { get; }
 
     public WebSocket Socket => (_transport as RealtimeStackWebSocketServerTransport)?.Socket ??
         throw new InvalidOperationException("This connection does not use a WebSocket transport.");
