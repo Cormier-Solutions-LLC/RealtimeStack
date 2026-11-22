@@ -426,6 +426,9 @@ test("both managed Redis topologies render the same command allowlist as the bas
     assert.equal(user.channels, `&${config.redis.instancePrefix}:*`);
     const commands = user.commands.split(" ");
     assert.ok(commands.every(command => !command.startsWith("+@")));
+    for (const command of ["+info", "+scan", "+swapdb"]) {
+      assert.ok(!commands.includes(command), command);
+    }
     for (const command of ["+get", "+set", "+publish", "+subscribe", "+xreadgroup", "+evalsha"]) {
       assert.ok(commands.includes(command), command);
     }
