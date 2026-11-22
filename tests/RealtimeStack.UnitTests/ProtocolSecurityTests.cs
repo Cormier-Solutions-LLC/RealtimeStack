@@ -297,6 +297,24 @@ public sealed class ProtocolSecurityTests
     }
 
     [Fact]
+    public async Task CloseAbortsTransportWhenSendCannotFinish()
+    {
+        using var metrics = new GatewayMetrics();
+        var socket = new SignalingWebSocket(blockSend: true);
+        await using var connection = new RealtimeStackConnection(socket, Identity(), new RealtimeStackOptions(), metrics);
+        Assert.True(connection.TryEnqueue(RealtimeStackDispatcher.Error(null, ProtocolErrorCodes.InternalError, "queued")));
+        var sender = connection.RunSenderAsync(CancellationToken.None);
+        await socket.SendEntered.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await connection.RequestCloseAsync(RealtimeStackCloseStatus.HeartbeatTimeout, "heartbeat_timeout", CancellationToken.None)
+            .AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+        await IgnoreCancellationAsync(sender.WaitAsync(TimeSpan.FromSeconds(5)));
+
+        Assert.Equal(WebSocketState.Aborted, socket.State);
+        Assert.Equal(0, connection.QueuedMessageCount);
+    }
+
+    [Fact]
     public async Task CanceledCloseCanBeRetried()
     {
         using var metrics = new GatewayMetrics();
@@ -440,6 +458,12 @@ public sealed class ProtocolSecurityTests
         public Task SendEntered => _sendEntered.Task;
 
         public void ReleaseSend() => _releaseSend.TrySetResult();
+
+        public override void Abort()
+        {
+            base.Abort();
+            _releaseSend.TrySetCanceled();
+        }
 
         public override async Task SendAsync(
             ArraySegment<byte> buffer,

@@ -59,6 +59,7 @@ internal sealed class RealtimeStackWebSocketServerTransport(WebSocket socket) : 
 
 public sealed class RealtimeStackConnection : IAsyncDisposable
 {
+    private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(1);
     private readonly IRealtimeStackServerTransport _transport;
     private readonly RealtimeStackOptions _options;
     private readonly GatewayMetrics _metrics;
@@ -232,7 +233,7 @@ public sealed class RealtimeStackConnection : IAsyncDisposable
                     RealtimeStackJsonSerializerContext.Default.ServerMessageEnvelope);
                 await _sendLock.WaitAsync(cancellationToken);
                 lockTaken = true;
-                if (!_transport.IsOpen)
+                if (!IsOpen)
                 {
                     return;
                 }
@@ -268,6 +269,8 @@ public sealed class RealtimeStackConnection : IAsyncDisposable
             return;
         }
 
+        using var closeDeadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        closeDeadline.CancelAfter(CloseTimeout);
         var lockTaken = false;
         try
         {
@@ -276,19 +279,21 @@ public sealed class RealtimeStackConnection : IAsyncDisposable
             {
                 interruptible.CancelPendingSend();
             }
-            await _sendLock.WaitAsync(cancellationToken);
+            await _sendLock.WaitAsync(closeDeadline.Token);
             lockTaken = true;
-            await _transport.CloseAsync(status, description, cancellationToken);
+            await _transport.CloseAsync(status, description, closeDeadline.Token);
             _metrics.RecordCloseCode((int)status);
-        }
-        catch (Exception exception) when (exception is WebSocketException or IOException or ObjectDisposedException)
-        {
-            _metrics.RecordCloseCode((int)WebSocketCloseStatus.InternalServerError);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             Interlocked.CompareExchange(ref _closeRequested, 0, 1);
             throw;
+        }
+        catch (Exception exception) when (exception is WebSocketException or IOException or ObjectDisposedException ||
+            (exception is OperationCanceledException && closeDeadline.IsCancellationRequested))
+        {
+            _metrics.RecordCloseCode((int)WebSocketCloseStatus.InternalServerError);
+            _transport.Abort();
         }
         finally
         {
