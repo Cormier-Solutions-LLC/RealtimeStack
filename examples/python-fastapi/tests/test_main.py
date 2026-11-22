@@ -242,6 +242,36 @@ async def test_ticket_rejects_streamed_oversized_body_before_forwarding() -> Non
 
 
 @pytest.mark.asyncio
+async def test_fallback_proxy_only_forwards_public_methods_and_paths() -> None:
+    forwarded = []
+
+    async def gateway(request: httpx.Request) -> httpx.Response:
+        forwarded.append((request.method, request.url.path, request.url.query))
+        return httpx.Response(200)
+
+    app = create_app(settings())
+    async with httpx.AsyncClient(transport=httpx.MockTransport(gateway)) as upstream:
+        app.state.http = upstream
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://reference.test") as client:
+            for method, path in (
+                ("GET", "/realtimestack/http/unknown"),
+                ("POST", "/realtimestack/http/connections/connection-id/stream"),
+                ("GET", "/realtimestack/http/connections/invalid.id/stream"),
+                ("POST", "/realtimestack/persistence/tasks/ack"),
+            ):
+                response = await client.request(method, path)
+                assert response.status_code == 404
+            assert forwarded == []
+
+            stream = "/realtimestack/http/connections/connection-id/stream"
+            assert (await client.get(f"{stream}?cursor=A%2FB")).status_code == 200
+            assert (await client.post("/realtimestack/persistence/tasks/read")).status_code == 200
+
+    assert forwarded == [("GET", stream, b"cursor=A%2FB"), ("POST", "/realtimestack/persistence/tasks/read", b"")]
+
+
+@pytest.mark.asyncio
 async def test_http_fallback_forwards_all_affinity_cookies() -> None:
     async def gateway(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(

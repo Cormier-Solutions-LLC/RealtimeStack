@@ -459,6 +459,16 @@
               "minimum": 1,
               "maximum": 2147483647
             },
+            "MaximumConnections": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "MaximumConnectionsPerIdentity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
             "MaximumSubscriptions": {
               "type": "integer",
               "minimum": 1,
@@ -572,6 +582,7 @@
         "sentinelServiceName": { "type": "string", "minLength": 1 },
         "username": { "type": "string", "minLength": 1 },
         "managedAdminPasswordKey": { "type": "string", "minLength": 1 },
+        "pubSubQueueCapacity": { "type": "integer", "minimum": 1, "maximum": 4096 },
         "credentialsSecret": {
           "type": "object",
           "required": ["name", "passwordKey"],

@@ -36,6 +36,8 @@ public sealed class RealtimeStackOptions
     public int MaximumMessageBytes { get; set; } = 64 * 1024;
 
     public int OutboundQueueCapacity { get; set; } = 128;
+    public int MaximumConnections { get; set; } = 4_096;
+    public int MaximumConnectionsPerIdentity { get; set; } = 64;
 
     public int MaximumSubscriptions { get; set; } = 64;
 

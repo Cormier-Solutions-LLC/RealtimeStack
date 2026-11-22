@@ -79,6 +79,7 @@ data:
   Redis__SessionKeyPrefix: {{ .Values.redis.sessionKeyPrefix | quote }}
   Redis__TicketKeyPrefix: {{ .Values.redis.ticketKeyPrefix | quote }}
   Redis__PubSubChannel: {{ .Values.redis.pubSubChannel | quote }}
+  Redis__PubSubQueueCapacity: {{ .Values.redis.pubSubQueueCapacity | quote }}
   Redis__User: {{ .Values.redis.username | quote }}
   {{- range $index, $origin := .Values.gateway.allowedOrigins }}
   RealtimeStack__AllowedOrigins__{{ $index }}: {{ $origin | quote }}

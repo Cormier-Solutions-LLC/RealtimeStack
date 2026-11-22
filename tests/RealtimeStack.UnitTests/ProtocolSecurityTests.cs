@@ -297,6 +297,36 @@ public sealed class ProtocolSecurityTests
     }
 
     [Fact]
+    public async Task ConnectionLimitsAreSharedAcrossSessionsAndCapacityReturnsOnRemove()
+    {
+        using var metrics = new GatewayMetrics();
+        var options = new RealtimeStackOptions { MaximumConnections = 2, MaximumConnectionsPerIdentity = 1 };
+        var registry = new RealtimeStackConnectionRegistry(metrics, authenticator: null, options);
+        var identity = Identity();
+        await using var original = new RealtimeStackConnection(new OpenWebSocket(), identity, options, metrics, "session-1");
+        await using var secondSession = new RealtimeStackConnection(new OpenWebSocket(), identity, options, metrics, "session-2");
+        await using var secondTenant = new RealtimeStackConnection(
+            new OpenWebSocket(), identity with { TenantId = "tenant-2" }, options, metrics);
+        await using var anotherUser = new RealtimeStackConnection(
+            new OpenWebSocket(), identity with { UserId = "user-2" }, options, metrics);
+
+        Assert.True(registry.Add(original));
+        Assert.False(registry.Add(secondSession));
+        Assert.True(registry.Add(secondTenant));
+        Assert.False(registry.Add(anotherUser));
+        Assert.Equal(2, registry.Count);
+
+        Assert.True(registry.Remove(original.Id, "complete"));
+        Assert.False(registry.Remove(original.Id, "complete"));
+        Assert.True(registry.Add(secondSession));
+        Assert.True(registry.Remove(secondSession.Id, "complete"));
+        registry.BeginDrain();
+        Assert.False(registry.Add(anotherUser));
+        Assert.Equal(1, registry.Count);
+        Assert.True(registry.Remove(secondTenant.Id, "complete"));
+    }
+
+    [Fact]
     public async Task CloseAbortsTransportWhenSendCannotFinish()
     {
         using var metrics = new GatewayMetrics();

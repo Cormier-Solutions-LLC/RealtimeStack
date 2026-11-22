@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager, suppress
@@ -26,6 +27,23 @@ logging.getLogger("websockets").setLevel(logging.CRITICAL)
 SESSION_COOKIE = "realtimestack_session"
 PROTOCOL = "realtimestack.v1"
 TICKET_DEADLINE_SECONDS = 15
+PUBLIC_POST_ROUTES = frozenset(
+    {
+        "/realtimestack/http/connect",
+        "/realtimestack/persistence/records/read",
+        "/realtimestack/persistence/records/ack",
+        "/realtimestack/persistence/tasks/read",
+    }
+)
+FALLBACK_CONNECTION_ROUTE = re.compile(r"/realtimestack/http/connections/[A-Za-z0-9_-]+(?:/(stream|messages|poll))?")
+FALLBACK_CONNECTION_METHODS = {None: "DELETE", "stream": "GET", "messages": "POST", "poll": "POST"}
+
+
+def is_public_gateway_route(method: str, path: str) -> bool:
+    if path in PUBLIC_POST_ROUTES:
+        return method == "POST"
+    connection = FALLBACK_CONNECTION_ROUTE.fullmatch(path)
+    return connection is not None and method == FALLBACK_CONNECTION_METHODS[connection[1]]
 
 
 class LoginRequest(BaseModel):
@@ -321,12 +339,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.api_route("/realtimestack/persistence/{path:path}", methods=["POST"])
     @app.api_route("/realtimestack/http/{path:path}", methods=["GET", "POST", "DELETE"])
-    async def http_fallback(path: str, request: Request) -> StreamingResponse:
-        if request.url.path.startswith("/realtimestack/persistence/") and path not in {
-            "records/read",
-            "records/ack",
-            "tasks/read",
-        }:
+    async def http_fallback(request: Request) -> StreamingResponse:
+        path = request.url.path
+        if not is_public_gateway_route(request.method, path):
             raise HTTPException(404, detail="Not found.")
         body = bytearray()
         async for chunk in request.stream():
@@ -347,7 +362,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         outbound = request.app.state.http.build_request(
             request.method,
-            f"{configured.GATEWAY_URL}{request.url.path}{query}",
+            f"{configured.GATEWAY_URL}{path}{query}",
             content=bytes(body),
             headers=headers,
             timeout=timeout,

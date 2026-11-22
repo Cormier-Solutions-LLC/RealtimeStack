@@ -70,7 +70,7 @@ public static class HttpFallbackHostingExtensions
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
-        var state = manager.Create(authentication);
+        var state = await manager.CreateAsync(authentication);
         if (state is null)
         {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

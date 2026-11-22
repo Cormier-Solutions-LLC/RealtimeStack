@@ -120,16 +120,19 @@ public sealed class RealtimeStackWebSocketHandler(
         }
         finally
         {
-            connectionCancellation.Cancel();
-            registry.Remove(connection.Id, closeReason);
             try
             {
+                connectionCancellation.Cancel();
                 await Task.WhenAll(sender, heartbeat);
             }
             catch (OperationCanceledException) when (connectionCancellation.IsCancellationRequested)
             {
                 // Linked cancellation is expected during teardown but remains observable.
                 metrics.RecordHandlerCancellation();
+            }
+            finally
+            {
+                registry.Remove(connection.Id, closeReason);
             }
         }
     }

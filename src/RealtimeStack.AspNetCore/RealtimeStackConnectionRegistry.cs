@@ -7,15 +7,34 @@ using StackExchange.Redis;
 
 namespace RealtimeStack.Gateway;
 
-public sealed class RealtimeStackConnectionRegistry(
-    GatewayMetrics metrics,
-    RealtimeStackAuthenticator? authenticator = null)
+public sealed class RealtimeStackConnectionRegistry
 {
     private static readonly ReconnectAdvice RestartAdvice = new(500, 30_000, 0.2, true);
     private readonly ConcurrentDictionary<string, RealtimeStackConnection> _connections = new(StringComparer.Ordinal);
+    private readonly Dictionary<(string TenantId, string UserId), int> _connectionsByIdentity = new();
+    private readonly object _admissionLock = new();
+    private readonly GatewayMetrics _metrics;
+    private readonly RealtimeStackAuthenticator? _authenticator;
+    private readonly RealtimeStackOptions _options;
     private int _draining;
+    private int _count;
 
-    public int Count => _connections.Count;
+    public RealtimeStackConnectionRegistry(GatewayMetrics metrics, RealtimeStackAuthenticator? authenticator = null)
+        : this(metrics, authenticator, new RealtimeStackOptions())
+    {
+    }
+
+    public RealtimeStackConnectionRegistry(
+        GatewayMetrics metrics,
+        RealtimeStackAuthenticator? authenticator,
+        RealtimeStackOptions options)
+    {
+        _metrics = metrics;
+        _authenticator = authenticator;
+        _options = options;
+    }
+
+    public int Count => Volatile.Read(ref _count);
 
     public bool IsDraining => Volatile.Read(ref _draining) == 1;
 
@@ -41,39 +60,57 @@ public sealed class RealtimeStackConnectionRegistry(
             connection.QueuedMessageCount))
         .ToArray();
 
-    public void BeginDrain() => Interlocked.Exchange(ref _draining, 1);
+    public void BeginDrain()
+    {
+        lock (_admissionLock)
+        {
+            Volatile.Write(ref _draining, 1);
+        }
+    }
 
     public bool Add(RealtimeStackConnection connection)
     {
-        if (IsDraining)
+        lock (_admissionLock)
         {
-            return false;
-        }
+            var identityCount = _connectionsByIdentity.GetValueOrDefault(connection.AdmissionIdentity);
+            if (IsDraining || _count >= _options.MaximumConnections ||
+                identityCount >= _options.MaximumConnectionsPerIdentity ||
+                !_connections.TryAdd(connection.Id, connection))
+            {
+                return false;
+            }
 
-        if (!_connections.TryAdd(connection.Id, connection))
-        {
-            return false;
+            _connectionsByIdentity[connection.AdmissionIdentity] = identityCount + 1;
+            Volatile.Write(ref _count, _count + 1);
+            _metrics.RecordConnectionOpened();
+            return true;
         }
-
-        if (IsDraining)
-        {
-            _connections.TryRemove(connection.Id, out _);
-            return false;
-        }
-
-        metrics.RecordConnectionOpened();
-        return true;
     }
 
     public bool Remove(string connectionId, string reason)
     {
-        if (!_connections.TryRemove(connectionId, out var connection))
+        lock (_admissionLock)
         {
-            return false;
-        }
+            if (!_connections.TryRemove(connectionId, out var connection))
+            {
+                return false;
+            }
 
-        metrics.RecordConnectionClosed(reason, DateTimeOffset.UtcNow - connection.CreatedAt);
-        return true;
+            var key = connection.AdmissionIdentity;
+            var remaining = _connectionsByIdentity[key] - 1;
+            if (remaining == 0)
+            {
+                _connectionsByIdentity.Remove(key);
+            }
+            else
+            {
+                _connectionsByIdentity[key] = remaining;
+            }
+
+            Volatile.Write(ref _count, _count - 1);
+            _metrics.RecordConnectionClosed(reason, DateTimeOffset.UtcNow - connection.CreatedAt);
+            return true;
+        }
     }
 
     public async ValueTask DeliverAsync(RealtimeStackBusMessage message, CancellationToken cancellationToken)
@@ -97,11 +134,11 @@ public sealed class RealtimeStackConnectionRegistry(
                 continue;
             }
 
-            if (connection.SessionId is not null && authenticator is not null)
+            if (connection.SessionId is not null && _authenticator is not null)
             {
                 try
                 {
-                    var refreshed = await authenticator.RevalidateSessionAsync(
+                    var refreshed = await _authenticator.RevalidateSessionAsync(
                         connection.SessionId,
                         cancellationToken);
                     if (refreshed is null ||
@@ -153,7 +190,7 @@ public sealed class RealtimeStackConnectionRegistry(
                 connection.HasExceededSlowConsumerLimit &&
                 connection.TryMarkSlowConsumerDisconnect())
             {
-                metrics.RecordSlowConsumerDisconnect();
+                _metrics.RecordSlowConsumerDisconnect();
                 AddBoundedClose(
                     ref closeTasks,
                     connection,

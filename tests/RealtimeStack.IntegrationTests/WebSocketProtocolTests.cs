@@ -30,6 +30,36 @@ public sealed class WebSocketProtocolTests
     }
 
     [Fact]
+    public async Task WebSocketAndHttpFallbackShareTheConfiguredIdentityLimit()
+    {
+        await using var factory = new RealtimeStackFactory(maximumConnectionsPerIdentity: 1);
+        using var client = factory.CreateClient();
+        using var socket = await ConnectAsync(factory);
+        var registry = factory.Services.GetRequiredService<RealtimeStackConnectionRegistry>();
+        await WaitForRegistryCountAsync(registry, 1);
+        Assert.Equal(1, registry.Count);
+
+        const string connectPath = "/realtimestack/http/connect?ticket=valid-ticket";
+        using var rejected = await client.PostAsync(connectPath, content: null);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, rejected.StatusCode);
+        Assert.Equal(1, registry.Count);
+
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "test_complete", deadline.Token);
+        await WaitForRegistryCountAsync(registry, 0);
+        Assert.Equal(0, registry.Count);
+
+        using var admitted = await client.PostAsync(connectPath, content: null);
+        admitted.EnsureSuccessStatusCode();
+        using var connection = await JsonDocument.ParseAsync(await admitted.Content.ReadAsStreamAsync());
+        var id = connection.RootElement.GetProperty("connectionId").GetString();
+        using var close = new HttpRequestMessage(HttpMethod.Delete, $"/realtimestack/http/connections/{id}");
+        close.Headers.Add("X-RealtimeStack-Connection", connection.RootElement.GetProperty("connectionToken").GetString());
+        using var closed = await client.SendAsync(close, deadline.Token);
+        Assert.Equal(HttpStatusCode.NoContent, closed.StatusCode);
+    }
+
+    [Fact]
     public async Task HttpFallbackPollReturnsCorrelatedAcknowledgment()
     {
         await using var factory = new RealtimeStackFactory();
@@ -612,7 +642,8 @@ public sealed class WebSocketProtocolTests
         TimeSpan? authenticationDelay = null,
         string endpointPath = "/realtimestack/ws",
         string ticketEndpointPath = "/realtimestack/tickets",
-        string[]? subProtocols = null) : WebApplicationFactory<Program>
+        string[]? subProtocols = null,
+        int maximumConnectionsPerIdentity = 64) : WebApplicationFactory<Program>
     {
         public FakeMessageBus Bus { get; } = new();
 
@@ -648,6 +679,7 @@ public sealed class WebSocketProtocolTests
                     TicketEndpointPath = ticketEndpointPath,
                     MaximumFrameBytes = 1024,
                     MaximumMessageBytes = 1024,
+                    MaximumConnectionsPerIdentity = maximumConnectionsPerIdentity,
                     HeartbeatSeconds = 1,
                     IdleTimeoutSeconds = 2,
                 }));

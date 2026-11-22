@@ -48,6 +48,7 @@ public static class RealtimeStackGatewayHostingExtensions
                 "Redis:SentinelPassword is required when Sentinel discovery is enabled.")
             .Validate(options => !string.IsNullOrWhiteSpace(options.InstancePrefix), "Redis:InstancePrefix is required.")
             .Validate(options => options.ConnectRetryCount is >= 1 and <= 20, "Redis:ConnectRetryCount must be between 1 and 20.")
+            .Validate(options => options.PubSubQueueCapacity is >= 1 and <= 4_096, "Redis:PubSubQueueCapacity must be between 1 and 4096.")
             .Validate(options => options.StreamMaxLength is >= 100 and <= 1_000_000, "Redis:StreamMaxLength must be between 100 and 1000000.")
             .Validate(options => options.StreamReadCount is >= 1 and <= 1_000, "Redis:StreamReadCount must be between 1 and 1000.")
             .Validate(options => options.StreamClaimIdleMilliseconds is >= 1 and <= 3_600_000, "Redis:StreamClaimIdleMilliseconds must be between 1 and 3600000.")
@@ -147,6 +148,8 @@ public static class RealtimeStackGatewayHostingExtensions
             .Validate(options => options.MaximumFrameBytes is >= 1024 and <= 1_048_576, "RealtimeStack:MaximumFrameBytes must be between 1024 and 1048576.")
             .Validate(options => options.MaximumMessageBytes >= options.MaximumFrameBytes, "RealtimeStack:MaximumMessageBytes must be at least MaximumFrameBytes.")
             .Validate(options => options.OutboundQueueCapacity is >= 1 and <= 10_000, "RealtimeStack:OutboundQueueCapacity must be between 1 and 10000.")
+            .Validate(options => options.MaximumConnections > 0, "RealtimeStack:MaximumConnections must be positive.")
+            .Validate(options => options.MaximumConnectionsPerIdentity > 0, "RealtimeStack:MaximumConnectionsPerIdentity must be positive.")
             .Validate(options => options.MaximumSubscriptions is >= 1 and <= 10_000, "RealtimeStack:MaximumSubscriptions must be between 1 and 10000.")
             .Validate(options => options.MaximumTrackedCorrelations is >= 1 and <= 100_000, "RealtimeStack:MaximumTrackedCorrelations must be between 1 and 100000.")
             .Validate(options => options.SlowConsumerStrikeLimit is >= 1 and <= 1_000, "RealtimeStack:SlowConsumerStrikeLimit must be between 1 and 1000.")
@@ -199,7 +202,7 @@ public static class RealtimeStackGatewayHostingExtensions
             services.AddOpenTelemetry()
                 .ConfigureResource(resource => resource.AddService(serviceName))
                 .WithMetrics(metrics => metrics
-                    .AddMeter("RealtimeStack.Gateway")
+                    .AddMeter("RealtimeStack.Gateway", "RealtimeStack.Redis")
                     .AddView(
                         "realtimestack_connection_duration_seconds",
                         new ExplicitBucketHistogramConfiguration
