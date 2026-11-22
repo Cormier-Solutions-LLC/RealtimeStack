@@ -176,12 +176,14 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn is_public_gateway_route(method: &Method, path: &str) -> bool {
-    match path {
+    if matches!(
+        path,
         "/realtimestack/http/connect"
-        | "/realtimestack/persistence/records/read"
-        | "/realtimestack/persistence/records/ack"
-        | "/realtimestack/persistence/tasks/read" => return *method == Method::POST,
-        _ => {}
+            | "/realtimestack/persistence/records/read"
+            | "/realtimestack/persistence/records/ack"
+            | "/realtimestack/persistence/tasks/read"
+    ) {
+        return *method == Method::POST;
     }
     let Some(connection) = path.strip_prefix("/realtimestack/http/connections/") else {
         return false;
