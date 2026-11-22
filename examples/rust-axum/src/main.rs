@@ -757,9 +757,18 @@ mod tests {
     fn allows_only_public_gateway_methods_and_paths() {
         for (method, path) in [
             (Method::POST, "/realtimestack/http/connect"),
-            (Method::GET, "/realtimestack/http/connections/example-id/stream"),
-            (Method::POST, "/realtimestack/http/connections/example-id/messages"),
-            (Method::POST, "/realtimestack/http/connections/example-id/poll"),
+            (
+                Method::GET,
+                "/realtimestack/http/connections/example-id/stream",
+            ),
+            (
+                Method::POST,
+                "/realtimestack/http/connections/example-id/messages",
+            ),
+            (
+                Method::POST,
+                "/realtimestack/http/connections/example-id/poll",
+            ),
             (Method::DELETE, "/realtimestack/http/connections/example-id"),
             (Method::POST, "/realtimestack/persistence/records/read"),
             (Method::POST, "/realtimestack/persistence/records/ack"),
@@ -769,9 +778,18 @@ mod tests {
         }
         for (method, path) in [
             (Method::GET, "/realtimestack/http/unknown"),
-            (Method::GET, "/realtimestack/http/connections/invalid.id/stream"),
-            (Method::POST, "/realtimestack/http/connections/example-id/stream"),
-            (Method::DELETE, "/realtimestack/http/connections/example-id/"),
+            (
+                Method::GET,
+                "/realtimestack/http/connections/invalid.id/stream",
+            ),
+            (
+                Method::POST,
+                "/realtimestack/http/connections/example-id/stream",
+            ),
+            (
+                Method::DELETE,
+                "/realtimestack/http/connections/example-id/",
+            ),
             (Method::POST, "/realtimestack/persistence/tasks/ack"),
         ] {
             assert!(!is_public_gateway_route(&method, path));
