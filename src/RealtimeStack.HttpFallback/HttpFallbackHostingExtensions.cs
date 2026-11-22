@@ -126,6 +126,7 @@ public static class HttpFallbackHostingExtensions
         var connectionId = GetConnectionId(context);
         var manager = context.RequestServices.GetRequiredService<HttpFallbackConnectionManager>();
         var options = context.RequestServices.GetRequiredService<RealtimeStackOptions>();
+        var fallback = context.RequestServices.GetRequiredService<HttpFallbackOptions>();
         if (!TryGet(context, connectionId, manager, out var state))
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -136,14 +137,22 @@ public static class HttpFallbackHostingExtensions
             context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
             return;
         }
+        if (!await state.InboundBodyGate.WaitAsync(0, context.RequestAborted))
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            return;
+        }
+
         MessageEnvelope? envelope;
+        using var bodyDeadline = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, state.Lifetime.Token);
+        bodyDeadline.CancelAfter(TimeSpan.FromSeconds(fallback.ConnectionTimeoutSeconds));
         try
         {
             var payload = new byte[options.MaximumMessageBytes + 1];
             var length = 0;
             while (length < payload.Length)
             {
-                var read = await context.Request.Body.ReadAsync(payload.AsMemory(length), context.RequestAborted);
+                var read = await context.Request.Body.ReadAsync(payload.AsMemory(length), bodyDeadline.Token);
                 if (read == 0) break;
                 length += read;
             }
@@ -160,6 +169,18 @@ public static class HttpFallbackHostingExtensions
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
+        }
+        catch (OperationCanceledException) when (!context.RequestAborted.IsCancellationRequested &&
+            bodyDeadline.IsCancellationRequested)
+        {
+            context.Response.StatusCode = state.Lifetime.IsCancellationRequested
+                ? StatusCodes.Status404NotFound
+                : StatusCodes.Status408RequestTimeout;
+            return;
+        }
+        finally
+        {
+            state.InboundBodyGate.Release();
         }
         if (envelope is null)
         {

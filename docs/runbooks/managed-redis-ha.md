@@ -141,6 +141,8 @@ bash ./scripts/realtimestack-bootstrap.sh install \
 
 The gateway IngressRoute sends both the configured WebSocket path and HTTP fallback path to the same sticky backend. The paths must differ case-insensitively, and the WebSocket path cannot reuse the gateway's fixed ticket, health, or metrics endpoints. WebSockets require connection upgrade support; HTTP fallback requests require cookie affinity so all requests for one fallback connection reach the same gateway replica. The managed-HA Redis endpoint includes `sentinelUser=default`: Sentinel uses the administrator credential while Redis data traffic uses the restricted `realtimestack` ACL identity.
 
+The managed application ACL grants specific connection and data commands and limits key and channel access to the configured instance prefix. Apply an updated bootstrap plan or managed Redis values to update the ACL on an existing installation.
+
 Verify Redis first:
 
 ```bash

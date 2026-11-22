@@ -34,6 +34,7 @@ const maximumBodyBytes = 64 << 10
 
 var sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{16,256}$`)
 var sdkAssetPattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+var fallbackConnectionPath = regexp.MustCompile(`^/realtimestack/http/connections/[A-Za-z0-9_-]+(?:/(stream|messages|poll))?$`)
 
 type App struct {
 	config      Config
@@ -205,8 +206,33 @@ func (a *App) router() http.Handler {
 	return router
 }
 
+func isPublicGatewayRoute(method, path string) bool {
+	switch path {
+	case "/realtimestack/http/connect", "/realtimestack/persistence/records/read",
+		"/realtimestack/persistence/records/ack", "/realtimestack/persistence/tasks/read":
+		return method == http.MethodPost
+	}
+	match := fallbackConnectionPath.FindStringSubmatch(path)
+	if match == nil {
+		return false
+	}
+	switch match[1] {
+	case "stream":
+		return method == http.MethodGet
+	case "messages", "poll":
+		return method == http.MethodPost
+	default:
+		return method == http.MethodDelete
+	}
+}
+
 func (a *App) httpFallback(c *gin.Context) {
-	if c.Request.Method == http.MethodGet && strings.HasSuffix(c.Request.URL.Path, "/stream") {
+	path := c.Request.URL.EscapedPath()
+	if !isPublicGatewayRoute(c.Request.Method, path) {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	if c.Request.Method == http.MethodGet {
 		if err := http.NewResponseController(c.Writer).SetWriteDeadline(time.Time{}); err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
@@ -219,6 +245,11 @@ func (a *App) httpFallback(c *gin.Context) {
 		Rewrite: func(request *httputil.ProxyRequest) {
 			request.SetURL(&target)
 			request.Out.Host = request.In.Host
+			for name := range request.Out.Header {
+				if strings.HasPrefix(strings.ToLower(name), "x-forwarded-") {
+					delete(request.Out.Header, name)
+				}
+			}
 			request.Out.Header.Set("X-Forwarded-Proto", a.config.PublicScheme())
 		},
 		ErrorHandler: func(writer http.ResponseWriter, _ *http.Request, _ error) {

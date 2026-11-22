@@ -105,6 +105,27 @@ class ReferenceApplicationTest {
     }
 
     @Test
+    fun `fallback proxy forwards only public routes and methods`() = testApplication {
+        val requests = mutableListOf<Pair<String, String?>>()
+        val upstream = HttpClient(MockEngine { request ->
+            val target = request.url.toString().removePrefix(fixtureEnvironment.getValue("GATEWAY_URL"))
+            requests += target to request.headers["X-RealtimeStack-Connection"]
+            error("fixture gateway unavailable")
+        })
+        application { referenceModule(ReferenceConfig.load(fixtureEnvironment), MemoryStore(), upstream) }
+
+        val path = "/realtimestack/http/connections/connection-a/messages?mode=test"
+        assertEquals(HttpStatusCode.ServiceUnavailable, client.post(path) {
+            header("X-RealtimeStack-Connection", "fixture-token")
+        }.status)
+        assertEquals(HttpStatusCode.ServiceUnavailable, client.post("/realtimestack/persistence/records/read").status)
+        assertEquals(HttpStatusCode.NotFound, client.get(path).status)
+        assertEquals(HttpStatusCode.NotFound, client.post("/realtimestack/http/unknown").status)
+        assertEquals(listOf(path to "fixture-token", "/realtimestack/persistence/records/read" to null), requests)
+        upstream.close()
+    }
+
+    @Test
     fun `gateway failures are generic and redacted`() = testApplication {
         val upstream = HttpClient(MockEngine { error("http://private-gateway.invalid/credential") })
         application { referenceModule(ReferenceConfig.load(fixtureEnvironment), MemoryStore(), upstream) }
