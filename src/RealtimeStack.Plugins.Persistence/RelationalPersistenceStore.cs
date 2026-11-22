@@ -146,8 +146,23 @@ public class RelationalPersistenceStore : IRealtimeStackPersistenceStore
     }
 
     private string Scope(DbCommand command, DurableStreamKey stream) =>
-        $"tenant_id = {Add(command, stream.TenantId, DbType.String)} AND owner_id = {Add(command, stream.OwnerId, DbType.String)} " +
-        $"AND stream_id = {Add(command, stream.StreamId, DbType.String)} AND record_kind = {Add(command, (int)stream.Kind, DbType.Int32)}";
+        $"{MatchScopeId(command, "tenant_id", stream.TenantId)} AND {MatchScopeId(command, "owner_id", stream.OwnerId)} " +
+        $"AND {MatchScopeId(command, "stream_id", stream.StreamId)} AND record_kind = {Add(command, (int)stream.Kind, DbType.Int32)}";
+
+    private string MatchScopeId(DbCommand command, string column, string value)
+    {
+        var parameter = Add(command, value, DbType.String);
+        var equality = $"{column} = {parameter}";
+        // Preserve the indexed comparison and require equal lengths on engines that pad text for equality.
+        return dialect switch
+        {
+            RelationalDialect.MySql or RelationalDialect.MariaDb =>
+                $"{equality} AND CHAR_LENGTH({column}) = CHAR_LENGTH({parameter})",
+            RelationalDialect.SqlServer or RelationalDialect.AzureSql =>
+                $"{equality} AND DATALENGTH(CONVERT(nvarchar(max), {column})) = DATALENGTH(CONVERT(nvarchar(max), {parameter}))",
+            _ => equality
+        };
+    }
 
     private string Add(DbCommand command, object? value, DbType type)
     {

@@ -21,6 +21,8 @@ Drivers are installed by the host, separately from these plugins. This avoids fo
 
 Apply `store.CreateTableSql` through an explicit host migration before using the store. No DDL is executed automatically. The optional table name is a simple ASCII SQL identifier up to 30 characters; choose the schema through the connection's configuration. Reserve this table for this library. Use case-sensitive ID comparison; generated MySQL/MariaDB and SQL Server/Azure SQL ID columns explicitly use binary collations. Configure Oracle and Db2 sessions/database appropriately and qualify Unicode handling with your installed driver. SQL text uses bound values for all record data.
 
+On MySQL, MariaDB, SQL Server and Azure SQL, reads and acknowledgements match the stored length of each scope ID, so trailing spaces remain significant for those operations on existing tables. The primary key still follows database equality rules. An append can fail with a duplicate-key error when scope IDs differ only by trailing spaces and the record kind and sequence are identical.
+
 Snowflake uses `CREATE HYBRID TABLE`, because hybrid tables enforce primary keys while ordinary tables do not. See [Snowflake hybrid table constraints](https://docs.snowflake.com/en/user-guide/tables-hybrid). An account without hybrid table support cannot use this adapter's schema.
 
 Every operation scopes records by tenant, owner, stream ID, and kind. Resolve tenant and owner from authenticated server context; a client-provided ID is not authorization. Expose replay and task queries only behind your application's authorization policy. Never expose maintenance operations directly to clients.

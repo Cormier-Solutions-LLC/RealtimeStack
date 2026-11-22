@@ -188,29 +188,7 @@ public sealed class RealtimeStackConnectionRegistry(
         CancellationToken cancellationToken)
     {
         closeTasks ??= [];
-        closeTasks.Add(CloseWithinTimeoutAsync(
-            connection,
-            status,
-            description,
-            cancellationToken));
-    }
-
-    private static async Task CloseWithinTimeoutAsync(
-        RealtimeStackConnection connection,
-        WebSocketCloseStatus status,
-        string description,
-        CancellationToken cancellationToken)
-    {
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(1));
-        try
-        {
-            await connection.RequestCloseAsync(status, description, timeout.Token);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            connection.Abort(status);
-        }
+        closeTasks.Add(connection.RequestCloseAsync(status, description, cancellationToken).AsTask());
     }
 
     public ValueTask NotifyServiceRestartAsync()
