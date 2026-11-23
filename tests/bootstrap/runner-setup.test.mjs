@@ -61,7 +61,7 @@ test('all Linux jobs use shared setup after checkout and before dependent steps'
         assert.ok(!job.includes(setup));
         continue;
       }
-      assert.match(job, /runs-on: \$\{\{ vars\.CI_RUNNER_LABEL \}\}/, `${file}: ${name}`);
+      assert.match(job, /^    runs-on: cormier-runners$/m, `${file}: ${name}`);
       const setupIndex = job.indexOf(`uses: ${setup}`);
       assert.ok(setupIndex > job.indexOf('uses: actions/checkout@'), `${file}: ${name} setup follows checkout`);
       assert.ok(setupIndex >= 0, `${file}: ${name} includes setup`);
