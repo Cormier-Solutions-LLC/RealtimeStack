@@ -13,7 +13,7 @@ test('workflow triggers only on failed CI runs and runs on RealtimeStack runners
   assert.match(workflow, /workflow_run:\n    workflows: \[RealtimeStack gateway CI\]\n    types: \[completed\]/);
   assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'failure'/);
   assert.match(workflow, /head_repository\.full_name == github\.repository/);
-  assert.match(workflow, /runs-on: \$\{\{ vars\.CI_RUNNER_LABEL \}\}/);
+  assert.match(workflow, /^    runs-on: cormier-runners$/m);
   assert.match(workflow, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /ref: \$\{\{ github\.event\.workflow_run\.head/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.CI_AUTOFIX_TOKEN \}\}/);
