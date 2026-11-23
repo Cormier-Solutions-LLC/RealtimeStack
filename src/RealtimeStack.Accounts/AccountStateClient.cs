@@ -43,6 +43,25 @@ public sealed class AccountStateClient : IDisposable
 
     public void Clear(string subject) => cache.TryRemove(subject, out _);
 
+    public async Task LogoutAsync(string subject, string idToken, CancellationToken cancellationToken)
+    {
+        var logoutEndpoint = new Uri(endpoint, "/api/sso/logout");
+        using var request = new HttpRequestMessage(HttpMethod.Post, logoutEndpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", authorization);
+        request.Content = new StringContent(JsonSerializer.Serialize(new { idToken }), Encoding.UTF8, "application/json");
+        try
+        {
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode != HttpStatusCode.NoContent || response.RequestMessage?.RequestUri != logoutEndpoint)
+                throw new AccountStateUnavailableException();
+        }
+        catch (Exception error) when (!cancellationToken.IsCancellationRequested && (error is HttpRequestException or OperationCanceledException or IOException))
+        {
+            throw new AccountStateUnavailableException();
+        }
+        Clear(subject);
+    }
+
     public async Task<CentralAccountState> GetAsync(string subject, bool fresh = false, CancellationToken cancellationToken = default)
     {
         if (subject.Length is < 1 or > 128) throw new ArgumentException("Invalid central subject.");

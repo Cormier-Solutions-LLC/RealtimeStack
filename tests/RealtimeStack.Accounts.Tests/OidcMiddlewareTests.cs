@@ -110,6 +110,34 @@ public sealed class OidcMiddlewareTests
         Assert.False(session.RootElement.GetProperty("authenticated").GetBoolean());
     }
 
+    [RedisAvailableFact]
+    public async Task LogoutRequiresCsrfAndKeepsTheSessionUntilAccessAcknowledgesRevocation()
+    {
+        using var issuer = new Issuer { LogoutStatus = HttpStatusCode.ServiceUnavailable };
+        await using var fixture = await Fixture.Start(issuer);
+        var cookies = new BrowserCookies();
+        using var callback = await fixture.Send(fixture.First, cookies, await fixture.Begin(cookies));
+        Assert.Equal(HttpStatusCode.Redirect, callback.StatusCode);
+        using var session = await fixture.Session(fixture.Second, cookies);
+        var csrf = session.RootElement.GetProperty("csrfToken").GetString();
+
+        using var rejected = await fixture.Send(fixture.Second, cookies, "/api/auth/sso/logout", HttpMethod.Post);
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        Assert.Equal(0, issuer.LogoutCalls);
+
+        using var unavailable = await fixture.Send(fixture.Second, cookies, "/api/auth/sso/logout", HttpMethod.Post, csrf);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, unavailable.StatusCode);
+        using var stillSignedIn = await fixture.Session(fixture.Second, cookies);
+        Assert.True(stillSignedIn.RootElement.GetProperty("authenticated").GetBoolean());
+
+        issuer.LogoutStatus = HttpStatusCode.NoContent;
+        using var accepted = await fixture.Send(fixture.Second, cookies, "/api/auth/sso/logout", HttpMethod.Post, csrf);
+        Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
+        Assert.Equal(2, issuer.LogoutCalls);
+        using var signedOut = await fixture.Session(fixture.First, cookies);
+        Assert.False(signedOut.RootElement.GetProperty("authenticated").GetBoolean());
+    }
+
     private sealed class LogCapture : ILoggerProvider
     {
         public ConcurrentQueue<string> Messages { get; } = new();
@@ -197,12 +225,13 @@ public sealed class OidcMiddlewareTests
             return new Fixture { First = await Host(), Second = await Host(), Prefix = prefix, Redis = await ConnectionMultiplexer.ConnectAsync(endpoint), Authority = issuer, Diagnostics = diagnostics, KeyringDirectory = keyringDirectory };
         }
 
-        public async Task<HttpResponseMessage> Send(WebApplication app, BrowserCookies cookies, string path)
+        public async Task<HttpResponseMessage> Send(WebApplication app, BrowserCookies cookies, string path, HttpMethod? method = null, string? csrf = null)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, app.Urls.Single().TrimEnd('/') + path);
+            using var request = new HttpRequestMessage(method ?? HttpMethod.Get, app.Urls.Single().TrimEnd('/') + path);
             request.Headers.Host = "realtime.example.test";
             request.Headers.Add("X-Forwarded-Proto", "https");
             if (cookies.Header.Length > 0) request.Headers.Add("Cookie", cookies.Header);
+            if (csrf is not null) request.Headers.Add("X-RealtimeStack-CSRF", csrf);
             var response = await client.SendAsync(request); cookies.Capture(response); return response;
         }
         public async Task<string> Begin(BrowserCookies cookies)
@@ -258,6 +287,9 @@ public sealed class OidcMiddlewareTests
         public string Nonce { get; set; } = "";
         public string Challenge { get; set; } = "";
         public bool PkceVerified { get; private set; }
+        public HttpStatusCode LogoutStatus { get; set; } = HttpStatusCode.NoContent;
+        public int LogoutCalls { get; private set; }
+        private string? idToken;
         public string PrincipalMetadata { get; set; } = "ticket event not reached";
         public HttpMessageHandler Handler() => new Transport(this);
         private sealed class Transport(Issuer issuer) : HttpMessageHandler
@@ -295,6 +327,16 @@ public sealed class OidcMiddlewareTests
                 if (Failure == "outage") return new(HttpStatusCode.ServiceUnavailable);
                 return Response(new { accounts = new[] { new { subject = Subject, enabled = Failure != "disabled", email = "owner@example.test", name = "Synthetic owner", emailVerified = true, credentialStamp = Failure == "stamp-change" ? new string('b', 64) : StateStamp } } });
             }
+            if (path == "/api/sso/logout")
+            {
+                Assert.Equal(HttpMethod.Post, request.Method);
+                Assert.Equal("Basic", request.Headers.Authorization?.Scheme);
+                Assert.Equal("realtime:" + Secret, Encoding.UTF8.GetString(Convert.FromBase64String(request.Headers.Authorization!.Parameter!)));
+                using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
+                Assert.True(idToken == body.RootElement.GetProperty("idToken").GetString(), "Logout must use the ID token from the protected session.");
+                LogoutCalls++;
+                return new(LogoutStatus);
+            }
             if (path != "/token") return new(HttpStatusCode.NotFound);
             var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync(cancellationToken));
             Assert.Equal(Secret, form["client_secret"]); Assert.Equal("realtime", form["client_id"]);
@@ -303,6 +345,7 @@ public sealed class OidcMiddlewareTests
             var claims = new Dictionary<string, object> { ["sub"] = Subject, ["email"] = "owner@example.test", ["name"] = "Synthetic owner", ["email_verified"] = Failure != "unverified", ["god"] = God, ["nonce"] = Nonce };
             if (Failure != "missing-acr") claims["acr"] = "urn:cormier:access:credential:" + new string('a', 64);
             var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor { Issuer = Origin, Audience = "realtime", IssuedAt = DateTime.UtcNow, NotBefore = DateTime.UtcNow.AddSeconds(-1), Expires = DateTime.UtcNow.AddMinutes(5), Claims = claims, SigningCredentials = new(new RsaSecurityKey(key) { KeyId = "synthetic-fixture" }, SecurityAlgorithms.RsaSha256) });
+            idToken = token;
             return Response(new { access_token = "fixture-access-token", token_type = "Bearer", expires_in = 300, id_token = token });
         }
         private static HttpResponseMessage Response(object body) => new(HttpStatusCode.OK) { Content = JsonContent.Create(body) };
