@@ -188,6 +188,17 @@ public static class AccountsAccess
             if (!access.Enabled) return Results.NotFound();
             if (!ValidIdentity(context.User, access.Authority)) return Results.Unauthorized();
             try { await antiforgery.ValidateRequestAsync(context); } catch (AntiforgeryValidationException) { return Results.BadRequest(new { error = "Refresh your account session before signing out." }); }
+            var idToken = await context.GetTokenAsync(AccountsAccessOptions.CookieScheme, "id_token");
+            if (string.IsNullOrEmpty(idToken))
+                return Results.Conflict(new { error = "Sign in again before signing out everywhere." });
+            try
+            {
+                await context.RequestServices.GetRequiredService<AccountStateClient>().LogoutAsync(context.User.FindFirstValue("sub")!, idToken, context.RequestAborted);
+            }
+            catch (AccountStateUnavailableException)
+            {
+                return Results.Json(new { error = "Access could not sign you out everywhere. Try again." }, statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
             await context.SignOutAsync(AccountsAccessOptions.CookieScheme); return Results.NoContent();
         });
     }
