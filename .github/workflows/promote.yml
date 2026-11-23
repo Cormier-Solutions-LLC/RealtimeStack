@@ -67,7 +67,7 @@ concurrency:
 
 jobs:
   promote:
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 30
     environment: ${{ inputs.environment }}
     steps:

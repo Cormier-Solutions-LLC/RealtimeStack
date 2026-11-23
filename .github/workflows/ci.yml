@@ -47,7 +47,7 @@ env:
 
 jobs:
   changes:
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 15
     outputs:
       selected: ${{ steps.impact.outputs.selected }}
@@ -75,7 +75,7 @@ jobs:
   helm-and-automation:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'helm-and-automation')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
@@ -254,7 +254,7 @@ jobs:
   bootstrap-lifecycle-parity:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'bootstrap-lifecycle-parity')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -283,7 +283,7 @@ jobs:
   build-test-aot:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'build-test-aot')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
@@ -528,7 +528,7 @@ jobs:
   dependency-review:
     needs: changes
     if: github.event_name == 'pull_request' && contains(fromJSON(needs.changes.outputs.selected), 'dependency-review')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 15
     permissions:
       contents: read
@@ -543,7 +543,7 @@ jobs:
   node-express:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'node-express')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -617,7 +617,7 @@ jobs:
   java-spring-boot:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'java-spring-boot')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -692,7 +692,7 @@ jobs:
   kotlin-ktor:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'kotlin-ktor')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -766,7 +766,7 @@ jobs:
   rust-axum:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'rust-axum')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -843,7 +843,7 @@ jobs:
   go-gin:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'go-gin')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -919,7 +919,7 @@ jobs:
   elixir-phoenix:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'elixir-phoenix')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -997,7 +997,7 @@ jobs:
   php-laravel:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'php-laravel')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     concurrency:
       group: php-laravel-${{ github.workflow }}-${{ github.ref }}
@@ -1079,7 +1079,7 @@ jobs:
   python-fastapi:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'python-fastapi')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -1152,7 +1152,7 @@ jobs:
   ruby-rails:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'ruby-rails')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
@@ -1225,7 +1225,7 @@ jobs:
   swift-vapor:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'swift-vapor')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 60
     # The locked adapter test and the container build each compile the Vapor
     # dependency graph; run them on separate runners so they overlap.
@@ -1349,7 +1349,7 @@ jobs:
   full-circle:
     needs: changes
     if: contains(fromJSON(needs.changes.outputs.selected), 'full-circle')
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 45
     env:
       REDIS_TEST_ENDPOINT: 127.0.0.1:6379
@@ -1424,7 +1424,7 @@ jobs:
 
   ci-failed:
     if: ${{ always() }}
-    runs-on: ${{ vars.CI_RUNNER_LABEL }}
+    runs-on: cormier-runners
     timeout-minutes: 15
     needs:
       - changes
