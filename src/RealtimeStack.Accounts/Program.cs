@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
@@ -33,7 +34,13 @@ app.MapAccountsAccess(access);
 app.MapGet("/health/live", () => Results.Json(new { status = "live" }));
 app.MapGet("/health/ready", (HttpContext context) => { var ready = !access.Enabled || context.RequestServices.GetRequiredService<RedisTicketStore>().IsConnected; return Results.Json(new { status = ready ? "ready" : "storage-unavailable" }, statusCode: ready ? 200 : 503); });
 app.MapGet("/", () => Results.Redirect("/account"));
-app.MapGet("/account", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "wwwroot/account.html"), "text/html; charset=utf-8"));
+var accountAssets = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var accountPage = File.ReadAllText(Path.Combine(accountAssets, "account.html"))
+    .Replace("<!-- app-version -->", WebUtility.HtmlEncode(applicationVersion), StringComparison.Ordinal);
+app.MapGet("/account", () => Results.Content(accountPage, "text/html; charset=utf-8"));
+app.MapGet("/api/auth/sso/account.css", () => Results.File(Path.Combine(accountAssets, "account.css"), "text/css; charset=utf-8"));
+app.MapGet("/api/auth/sso/common-ui-tokens.css", () => Results.File(Path.Combine(accountAssets, "common-ui-tokens.css"), "text/css; charset=utf-8"));
+app.MapGet("/api/auth/sso/display-mode.js", () => Results.File(Path.Combine(accountAssets, "display-mode.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/api/auth/sso/account.js", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "wwwroot/account.js"), "text/javascript; charset=utf-8"));
 app.MapGet("/api/product/config", (HttpContext context, ProductConfigurationClient catalog) =>
 {

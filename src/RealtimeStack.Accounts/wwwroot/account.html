@@ -1,4 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RealtimeStack account</title>
-<style>body{font:17px/1.6 system-ui,sans-serif;max-width:680px;margin:8vh auto;padding:24px;color:#172b39;background:#f4f8fa}main{background:white;padding:32px;border:1px solid #d7e2e7;border-radius:16px}h1{line-height:1.2}a,button{font:inherit;color:#075c75}button{padding:10px 16px;border:1px solid #8db4bf;border-radius:8px;background:#eff9fa;cursor:pointer}[hidden]{display:none}#status{white-space:pre-wrap}</style>
-</head><body><main><p>RealtimeStack</p><h1>Your account and registration</h1><p>Free and open source. Register this installation with your Cormier Access account. Registration has no charges or resource limits.</p><p id="identity">Checking your account…</p><p><a id="login" hidden>Sign in with Cormier Access</a></p><p><a id="account" hidden>Manage your account in Access</a> <a id="admin-accounts" hidden>Manage accounts in Access</a> <a id="integrations" hidden>Manage shared integrations in Access</a></p><button id="register" type="button" hidden>Register this installation</button> <button id="logout" type="button" hidden>Sign out</button><p id="status" role="status" aria-live="polite"></p></main><script type="module" src="/api/auth/sso/account.js"></script></body></html>
+<link rel="stylesheet" href="/api/auth/sso/common-ui-tokens.css">
+<link rel="stylesheet" href="/api/auth/sso/account.css">
+<script src="/api/auth/sso/display-mode.js"></script>
+</head><body><main><p>RealtimeStack</p><h1>Your account and registration</h1><p>Free and open source. Register this installation with your Cormier Access account. Registration has no charges or resource limits.</p><p id="identity">Checking your account…</p><p><a id="login" hidden>Sign in with Cormier Access</a></p><p><a id="account" hidden>Manage your account in Access</a> <a id="admin-accounts" hidden>Manage accounts in Access</a> <a id="integrations" hidden>Manage shared integrations in Access</a></p><button id="register" type="button" hidden>Register this installation</button> <button id="logout" type="button" hidden>Sign out</button><p id="status" role="status" aria-live="polite"></p><div class="display-mode" role="group" aria-label="Display mode">
+  <button type="button" data-cui-mode="system">System</button>
+  <button type="button" data-cui-mode="light">Light</button>
+  <button type="button" data-cui-mode="dark">Dark</button>
+</div>
+<footer><small>RealtimeStack v<!-- app-version --></small></footer>
+</main><script type="module" src="/api/auth/sso/account.js"></script></body></html>
